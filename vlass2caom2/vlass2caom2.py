@@ -81,6 +81,7 @@ from management import decompose_lineage
 __all__ = ['main_app', 'update', 'VlassNameHandler', 'VlassArgsPassThrough']
 
 COLLECTION = 'VLASS'
+APPLICATION = 'vlass2caom2'
 
 
 class VlassNameHandler(util.NameHandler):
@@ -107,6 +108,7 @@ def accumulate_wcs(bp):
 
     bp.set('Plane.calibrationLevel', '1')
     bp.set('Plane.dataProductType', 'cube')
+    bp.set_fits_attribute('Plane.metaRelease', ['DATE-OBS'])
 
 
 def update(observation, **kwargs):
@@ -183,10 +185,10 @@ def main_app():
     try:
         VlassArgsPassThrough().collection_augment(args)
     except Exception as e:
-        logging.error('Failed caom2gen execution.')
+        logging.error('Failed {} execution.'.format(APPLICATION))
         logging.error(e)
         tb = traceback.format_exc()
         logging.error(tb)
         sys.exit(-1)
 
-    logging.debug('Done vlass2caom2 processing.')
+    logging.debug('Done {} processing.'.format(APPLICATION))
