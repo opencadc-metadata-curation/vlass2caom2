@@ -78,7 +78,7 @@ __all__ = ['Vlass2Caom2Meta', 'run_by_file']
 
 
 class Vlass2Caom2Meta(CaomExecute):
-    """Defines the pipeline step for OMM ingestion of metadata into CAOM2.
+    """Defines the pipeline step for VLASS ingestion of metadata into CAOM2.
     This requires access to only header information."""
 
     def __init__(self, config, obs_id):
@@ -103,7 +103,7 @@ class Vlass2Caom2Meta(CaomExecute):
                           'the headers')
         artifact_uri = self.name_handler.get_file_uri()
         kwargs = {'params': {
-            'observation': self.fname.split('.')[0],
+            'observation': self.name_handler.get_obs_id(),
             'out_obs_xml': self.model_fqn,
             'collection': self.collection,
             'netrc': self.netrc_fqn,

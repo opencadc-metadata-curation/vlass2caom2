@@ -156,10 +156,6 @@ class VlassArgsPassThrough(CaomExecuteArgPassThrough):
         blueprints = {artifact_uri: blueprint}
         return blueprints
 
-    @staticmethod
-    def build_visit_args(artifact_uri):
-        return {'omm_science_file': artifact_uri}
-
     def build_cardinality(self, args):
         if args.observation:
             fname = args.observation[1]

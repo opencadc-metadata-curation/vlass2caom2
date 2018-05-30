@@ -73,52 +73,53 @@ from mock import Mock, patch
 
 from astropy.io import fits
 
-# from caom2utils import fits2caom2
+from caom2utils import fits2caom2
 from caom2 import obs_reader_writer, SimpleObservation, Algorithm
-# from management import CadcException, Config
-# from vlass2caom2 import vlass_composable
+from management import CadcException, Config
+from vlass2caom2 import vlass_composable
 
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
 
 
-# def test_meta_execute():
-#     test_obs_id = 'test_obs_id'
-#     test_dir = os.path.join(THIS_DIR, test_obs_id)
-#
-#     # clean up from previous tests
-#     if os.path.exists(test_dir):
-#         for ii in os.listdir(test_dir):
-#             os.remove(os.path.join(test_dir, ii))
-#         os.rmdir(test_dir)
-#     netrc = os.path.join(THIS_DIR, 'test_netrc')
-#     assert os.path.exists(netrc)
-#
-#     # mocks for this test
-#     fits2caom2._get_cadc_meta = Mock(return_value={'size': 37,
-#             'md5sum': 'e330482de75d5c4c88ce6f6ef99035ea',
-#             'type': 'applicaton/octect-stream'})
-#     fits2caom2.get_cadc_headers = Mock(side_effect=_get_headers)
-#
-#     test_config = Config()
-#     test_config.working_directory = THIS_DIR
-#     test_config.collection = 'VLASS'
-#     test_config.netrc_file = 'test_netrc'
-#     test_config.work_file = 'todo.txt'
-#     test_config.logging_level = 'DEBUG'
-#
-#     # run the test
-#     with patch('subprocess.Popen') as subprocess_mock:
-#         subprocess_mock.return_value.communicate.side_effect = _communicate
-#         test_executor = vlass_composable.Vlass2Caom2Meta(test_config, test_obs_id)
-#         try:
-#             test_executor.execute(None)
-#         except CadcException as e:
-#             assert False, e
-#
-#     # check that things worked as expected
-#     assert fits2caom2._get_cadc_meta.called
+def test_meta_execute():
+    test_obs_id = 'test_obs_id'
+    test_dir = os.path.join(THIS_DIR, test_obs_id)
+
+    # clean up from previous tests
+    if os.path.exists(test_dir):
+        for ii in os.listdir(test_dir):
+            os.remove(os.path.join(test_dir, ii))
+        os.rmdir(test_dir)
+    netrc = os.path.join(THIS_DIR, 'test_netrc')
+    assert os.path.exists(netrc)
+
+    # mocks for this test
+    fits2caom2._get_cadc_meta = Mock(return_value={'size': 37,
+            'md5sum': 'e330482de75d5c4c88ce6f6ef99035ea',
+            'type': 'applicaton/octect-stream'})
+    fits2caom2.get_cadc_headers = Mock(side_effect=_get_headers)
+
+    test_config = Config()
+    test_config.working_directory = THIS_DIR
+    test_config.collection = 'VLASS'
+    test_config.netrc_file = 'test_netrc'
+    test_config.work_file = 'todo.txt'
+    test_config.logging_level = 'DEBUG'
+
+    # run the test
+    with patch('subprocess.Popen') as subprocess_mock:
+        subprocess_mock.return_value.communicate.side_effect = _communicate
+        test_executor = vlass_composable.Vlass2Caom2Meta(test_config,
+                                                         test_obs_id)
+        try:
+            test_executor.execute(None)
+        except CadcException as e:
+            assert False, e
+
+    # check that things worked as expected
+    assert fits2caom2._get_cadc_meta.called
 
 
 # def test_data_execute():
@@ -162,6 +163,21 @@ TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
 #         obs_reader_writer.ObservationReader.read = read_orig
 #         omm_footprint_augmentation.visit = footprint_orig
 #         omm_preview_augmentation.visit = preview_orig
+
+
+def test_run_by_file():
+    getcwd_orig = os.getcwd
+    try:
+        os.getcwd = Mock(return_value=TESTDATA_DIR)
+        todo_file = os.path.join(os.getcwd(), 'todo.txt')
+        f = open(todo_file, 'w')
+        f.write('')
+        f.close()
+        vlass_composable.run_by_file()
+    except CadcException as e:
+        assert False, 'but the work list is empty'
+    finally:
+        os.getcwd = getcwd_orig
 
 
 def _communicate():
