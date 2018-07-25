@@ -76,6 +76,7 @@ class PyTest(TestCommand):
 # ``setup``, since these are now deprecated. See this link for more details:
 # https://groups.google.com/forum/#!topic/astropy-dev/urYO8ckB2uM
 
+
 setup(name=PACKAGENAME,
       version=VERSION,
       description=DESCRIPTION,
@@ -99,7 +100,7 @@ setup(name=PACKAGENAME,
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6'
       ],
-      cmdclass = {
+      cmdclass={
           'coverage': PyTest,
       }
 )

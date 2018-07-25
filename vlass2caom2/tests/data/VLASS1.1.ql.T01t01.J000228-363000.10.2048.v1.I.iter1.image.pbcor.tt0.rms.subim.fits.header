@@ -1,0 +1,122 @@
+SIMPLE  =                    T /Standard FITS                                   
+BITPIX  =                  -32 /Floating point (32 bit)                         
+NAXIS   =                    4                                                  
+NAXIS1  =                 3722                                                  
+NAXIS2  =                 3722                                                  
+NAXIS3  =                    1                                                  
+NAXIS4  =                    1                                                  
+EXTEND  =                    T                                                  
+BSCALE  =   1.000000000000E+00 /PHYSICAL = PIXEL*BSCALE + BZERO                 
+BZERO   =   0.000000000000E+00                                                  
+BMAJ    =   1.118623018265E-03                                                  
+BMIN    =   4.379376769066E-04                                                  
+BPA     =   3.719155502319E+01                                                  
+BTYPE   = 'Intensity'                                                           
+OBJECT  = '        '                                                            
+                                                                                
+BUNIT   = 'Jy/beam '           /Brightness (pixel) unit                         
+EQUINOX =   2.000000000000E+03                                                  
+RADESYS = 'FK5     '                                                            
+LONPOLE =   1.800000000000E+02                                                  
+LATPOLE =  -3.650000000000E+01                                                  
+PC1_1   =   1.000000000000E+00                                                  
+PC2_1   =   0.000000000000E+00                                                  
+PC3_1   =   0.000000000000E+00                                                  
+PC4_1   =   0.000000000000E+00                                                  
+PC1_2   =   0.000000000000E+00                                                  
+PC2_2   =   1.000000000000E+00                                                  
+PC3_2   =   0.000000000000E+00                                                  
+PC4_2   =   0.000000000000E+00                                                  
+PC1_3   =   0.000000000000E+00                                                  
+PC2_3   =   0.000000000000E+00                                                  
+PC3_3   =   1.000000000000E+00                                                  
+PC4_3   =   0.000000000000E+00                                                  
+PC1_4   =   0.000000000000E+00                                                  
+PC2_4   =   0.000000000000E+00                                                  
+PC3_4   =   0.000000000000E+00                                                  
+PC4_4   =   1.000000000000E+00                                                  
+CTYPE1  = 'RA---SIN'                                                            
+CRVAL1  =   6.180333333333E-01                                                  
+CDELT1  =  -2.777777777778E-04                                                  
+CRPIX1  =   1.861000000000E+03                                                  
+CUNIT1  = 'deg     '                                                            
+CTYPE2  = 'DEC--SIN'                                                            
+CRVAL2  =  -3.650000000000E+01                                                  
+CDELT2  =   2.777777777778E-04                                                  
+CRPIX2  =   1.861000000000E+03                                                  
+CUNIT2  = 'deg     '                                                            
+CTYPE3  = 'FREQ    '                                                            
+CRVAL3  =   3.000000000000E+09                                                  
+CDELT3  =   2.071773682575E+09                                                  
+CRPIX3  =   1.000000000000E+00                                                  
+CUNIT3  = 'Hz      '                                                            
+CTYPE4  = 'STOKES  '                                                            
+CRVAL4  =   1.000000000000E+00                                                  
+CDELT4  =   1.000000000000E+00                                                  
+CRPIX4  =   1.000000000000E+00                                                  
+CUNIT4  = '        '                                                            
+PV2_1   =   0.000000000000E+00                                                  
+PV2_2   =   0.000000000000E+00                                                  
+RESTFRQ =   2.988172381310E+09 /Rest Frequency (Hz)                             
+SPECSYS = 'LSRK    '           /Spectral reference frame                        
+ALTRVAL =  -1.186621930405E+06 /Alternate frequency reference value             
+ALTRPIX =   1.000000000000E+00 /Alternate frequency reference pixel             
+VELREF  =                  257 /1 LSR, 2 HEL, 3 OBS, +256 Radio                 
+COMMENT casacore non-standard usage: 4 LSD, 5 GEO, 6 SOU, 7 GAL                 
+TELESCOP= 'EVLA    '                                                            
+OBSERVER= 'Dr. Vlass Scientist'                                                 
+DATE-OBS= '2018-02-07T22:38:34.124999'                                          
+TIMESYS = 'UTC     '                                                            
+OBSRA   =   6.180333333333E-01                                                  
+OBSDEC  =  -3.650000000000E+01                                                  
+OBSGEO-X=  -1.601156673287E+06                                                  
+OBSGEO-Y=  -5.041988986066E+06                                                  
+OBSGEO-Z=   3.554879236821E+06                                                  
+FIELD   = '4922    '                                                            
+FILNAM01= 'VLASS1  '                                                            
+FILNAM02= '1       '                                                            
+FILNAM03= 'ql      '                                                            
+FILNAM04= 'T01t01  '                                                            
+FILNAM05= 'J000228-363000'                                                      
+FILNAM06= '10      '                                                            
+FILNAM07= '2048    '                                                            
+FILNAM08= 'v1      '                                                            
+FILNAM09= 'I       '                                                            
+FILNAM10= 'iter1   '                                                            
+FILNAM11= 'image   '                                                            
+FILNAM12= 'tt0     '                                                            
+INTENT  = 'TARGET  '                                                            
+ITER    =                    1                                                  
+NFILNAM =                   12                                                  
+SPECMODE= 'mfs     '                                                            
+SPW     = '2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17'                             
+TYPE    = 'image   '                                                            
+DATE    = '2018-04-13T23:05:32.273999' /Date FITS file was written              
+ORIGIN  = 'CASA 5.3.0-21'                                                       
+HISTORY CASA START LOGTABLE                                                     
+HISTORY 2018-04-13T22:51:46 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2018-04-13T22:51:46 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2018-04-13T22:58:32 INFO SRCCODE='::image::pbcor'                       
+HISTORY Ran ia.pbcor                                                            
+HISTORY 2018-04-13T22:58:32 INFO SRCCODE='::image::pbcor'                       
+HISTORY ia.pbcor(pbimage="VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.p
+HISTORY >b.tt0", outfile="VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.i
+HISTORY >age.pbcor.tt0", overwrite=false, box="", region="", chans="", stokes=""
+HISTORY > mask="", mode="divide", cutoff=-1.000000, stretch=false)              
+HISTORY 2018-04-13T23:01:38 INFO SRCCODE='::image::deviation'                   
+HISTORY Ran ia.deviation                                                        
+HISTORY 2018-04-13T23:01:38 INFO SRCCODE='::image::deviation'                   
+HISTORY ia.deviation(outfile="VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.ite
+HISTORY >r1.image.pbcor.tt0.rms", region={...}, mask="", overwrite=true, stretch
+HISTORY >false, grid=[10,10], anchor="ref", xlength="60arcsec", ylength="60arcse
+HISTORY >", interp="cubic", stattype="xmadm", statalg="chauvenet", zscore=-1.000
+HISTORY >00, maxiter=-1)                                                        
+HISTORY 2018-04-13T23:03:17 INFO SRCCODE='::image::subimage'                    
+HISTORY Ran ia.subimage                                                         
+HISTORY 2018-04-13T23:03:17 INFO SRCCODE='::image::subimage'                    
+HISTORY ia.subimage(outfile="VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter
+HISTORY >1.image.pbcor.tt0.rms.subim", region={...}, mask="", dropdeg=false, ove
+HISTORY >write=false, list=true, stretch=false, wantreturn=true, keepaxes=[])   
+HISTORY CASA END LOGTABLE                                                       
