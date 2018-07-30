@@ -72,7 +72,6 @@ from vlass2caom2 import main_app, VlassName
 from caom2 import ObservationReader
 from caom2.diff import get_differences
 
-from hashlib import md5
 import os
 import pytest
 import sys
@@ -146,10 +145,5 @@ def _read_obs(fname):
 def _get_local(test_files):
     result = ''
     for test_name in test_files:
-        # prev_name = test_name.replace('.fits.header', '_prev.jpg')
-        # prev_256_name = test_name.replace('.fits.header', '_prev_256.jpg')
-        # result = '{} {}/{} {}/{} {}/{}'.format(result, TESTDATA_DIR, test_name,
-        #                                        TESTDATA_DIR, prev_name,
-        #                                        TESTDATA_DIR, prev_256_name)
         result = '{} {}/{}'.format(result, TESTDATA_DIR, test_name)
     return result

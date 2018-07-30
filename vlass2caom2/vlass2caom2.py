@@ -126,8 +126,8 @@ def accumulate_wcs(bp):
     bp.set('Observation.type', 'OBJECT')
 
     bp.clear('Observation.target.name')
-    bp.add_fits_attribute('Observation.target.name', 'FILENAM04')
-    bp.set('Observation.target.type', 'FIELD')
+    bp.add_fits_attribute('Observation.target.name', 'FILNAM04')
+    bp.set('Observation.target.type', 'field')
 
     bp.set('Observation.instrument.name', 'VLA')
 
@@ -139,6 +139,7 @@ def accumulate_wcs(bp):
 
     bp.set('Plane.provenance.name', 'get_provenance_name(header)')
     bp.set('Plane.provenance.version', 'get_provenance_version(header)')
+    bp.set('Plane.provenance.producer', 'NRAO')
 
     # VLASS data is public, says Eric Rosolowsky via JJK May 30/18
     bp.clear('Plane.metaRelease')
@@ -156,9 +157,6 @@ def accumulate_wcs(bp):
     bp.set('Chunk.position.axis.function.cd21', 0.0)
     bp.add_fits_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
 
-    # TODO - why isn't this having the effect I think it should?
-    bp.set('Chunk.energy.restfrq', 'None')
-
     bp.clear('Chunk.time.timesys')
     bp.add_fits_attribute('Chunk.time.timesys', 'TIMESYS')
     bp.set('Chunk.time.axis.axis.ctype', 'TIME')
@@ -172,12 +170,11 @@ def accumulate_wcs(bp):
 def get_position_resolution(header):
     bmaj = header[0]['BMAJ']
     bmin = header[0]['BMIN']
-    return sqrt(bmaj * bmin)
+    # From CW via slack 2018-07-26
+    return 3600.0 * (bmaj + bmin)
 
 
 def get_product_type(uri):
-    logging.error(uri)
-    # TODO - where's the *other* URI?
     if '.rms.' in uri:
         return ProductType.NOISE
     else:
@@ -218,10 +215,7 @@ def update(observation, **kwargs):
     :param **kwargs Everything else."""
     logging.debug('Begin update.')
 
-    if observation is None or not isinstance(observation, Observation):
-        raise mc.CadcException('Input parameter failure {}'.format(
-            observation))
-
+    mc.check_param(observation, Observation)
     for plane in observation.planes:
         for artifact in observation.planes[plane].artifacts:
             for part in observation.planes[plane].artifacts[artifact].parts:
@@ -231,6 +225,12 @@ def update(observation, **kwargs):
                         headers = kwargs['headers']
                         chunk.position.resolution = get_position_resolution(
                             headers)
+                        if chunk.energy is not None:
+                            # A value of None per Chris, 2018-07-26
+                            # Set the value to None here, because the
+                            # blueprint is coded to not set WCS information
+                            # to None
+                            chunk.energy.restfrq = None
 
     logging.debug('Done update.')
     return True
@@ -253,8 +253,10 @@ class VlassCardinality(object):
 
         :param args """
         module = importlib.import_module(__name__)
-        blueprint = ObsBlueprint(module=module)
-        accumulate_wcs(blueprint)
+        blueprint1 = ObsBlueprint(module=module)
+        blueprint2 = ObsBlueprint(module=module)
+        accumulate_wcs(blueprint1)
+        accumulate_wcs(blueprint2)
         # product_id, artifact_uri = mc.decompose_lineage(args.lineage[0])
         artifact_uri1 = 'ad:{}/VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
                         'v1.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
@@ -262,8 +264,8 @@ class VlassCardinality(object):
         artifact_uri2 = 'ad:{}/VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
                         'v1.I.iter1.image.pbcor.tt0.subim.fits'.format(
                             COLLECTION)
-        blueprints = {artifact_uri1: blueprint,
-                      artifact_uri2: blueprint}
+        blueprints = {artifact_uri1: blueprint1,
+                      artifact_uri2: blueprint2}
         return blueprints
 
     def build_cardinality(self):
