@@ -69,11 +69,8 @@
 
 import importlib
 import logging
-import os
 import sys
 import traceback
-
-from math import sqrt
 
 from caom2 import Observation, ProductType
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
@@ -82,7 +79,7 @@ from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['main_app', 'update', 'VlassName', 'VlassCardinality']
+__all__ = ['main_app', 'update', 'VlassName', 'VlassCardinality', 'COLLECTION']
 
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
@@ -110,12 +107,26 @@ class VlassName(StorageName):
     def get_lineage(self, product_id):
         return '{}/{}'.format(product_id, self.get_file_uri())
 
+    def get_product_id(self):
+        obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
+        return '{}.quicklook.v1'.format(obs_id)
+
     def _get_file_id(self):
         return self.file_id
 
+    @staticmethod
+    def get_obs_id_from_file_name(file_name):
+        bits = file_name.split('.')
+        obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
+        return obs_id
+
+    @staticmethod
+    def is_valid(file_name):
+        return True
+
 
 def accumulate_wcs(bp):
-    """Configure the OMM-specific ObsBlueprint for the CAOM model
+    """Configure the VLASS-specific ObsBlueprint for the CAOM model
     SpatialWCS."""
     logging.debug('Begin accumulate_position.')
     bp.configure_position_axes((1, 2))
@@ -228,8 +239,8 @@ def update(observation, **kwargs):
                         if chunk.energy is not None:
                             # A value of None per Chris, 2018-07-26
                             # Set the value to None here, because the
-                            # blueprint is coded to not set WCS information
-                            # to None
+                            # blueprint is implemented to not set WCS
+                            # information to None
                             chunk.energy.restfrq = None
 
     logging.debug('Done update.')
@@ -253,19 +264,13 @@ class VlassCardinality(object):
 
         :param args """
         module = importlib.import_module(__name__)
-        blueprint1 = ObsBlueprint(module=module)
-        blueprint2 = ObsBlueprint(module=module)
-        accumulate_wcs(blueprint1)
-        accumulate_wcs(blueprint2)
-        # product_id, artifact_uri = mc.decompose_lineage(args.lineage[0])
-        artifact_uri1 = 'ad:{}/VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
-                        'v1.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
-                            COLLECTION)
-        artifact_uri2 = 'ad:{}/VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
-                        'v1.I.iter1.image.pbcor.tt0.subim.fits'.format(
-                            COLLECTION)
-        blueprints = {artifact_uri1: blueprint1,
-                      artifact_uri2: blueprint2}
+        blueprints = {}
+        for ii in args.lineage:
+            blueprint = ObsBlueprint(module=module)
+            logging.error('module name is {}'.format(module))
+            accumulate_wcs(blueprint)
+            product_id, artifact_uri = mc.decompose_lineage(ii)
+            blueprints[artifact_uri] = blueprint
         return blueprints
 
     def build_cardinality(self):
