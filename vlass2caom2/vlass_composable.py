@@ -104,5 +104,5 @@ def vlass_run_single():
     config.proxy = temp.name
     config.stream = 'raw'
     file_name = sys.argv[1]
-    obs_id = map_todo_to_obs_id(file_name)
+    obs_id = VlassName.get_obs_id_from_file_name(file_name)
     ec.run_single(config, VlassName, 'vlass2caom2', obs_id, file_name)
