@@ -114,15 +114,14 @@ class VlassName(StorageName):
     def _get_file_id(self):
         return self.file_id
 
+    def is_valid(self):
+        return True
+
     @staticmethod
     def get_obs_id_from_file_name(file_name):
         bits = file_name.split('.')
         obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
         return obs_id
-
-    @staticmethod
-    def is_valid(file_name):
-        return True
 
 
 def accumulate_wcs(bp):

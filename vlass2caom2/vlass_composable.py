@@ -93,16 +93,18 @@ def vlass_run_single():
     import sys
     config = mc.Config()
     config.collection = COLLECTION
-    config.working_directory = '/root/airflow'
+    # config.working_directory = '/root/airflow'
+    config.working_directory = '/usr/src/app'
     config.use_local_files = False
-    config.logging_level = 'DEBUG'
+    config.logging_level = 'INFO'
     config.log_to_file = False
     config.task_types = [mc.TaskType.AUGMENT]
     config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
-    temp = tempfile.NamedTemporaryFile()
-    _write_cert_to_temp_file(temp.name, sys.argv[2])
-    config.proxy = temp.name
+    # temp = tempfile.NamedTemporaryFile()
+    # _write_cert_to_temp_file(temp.name, sys.argv[2])
+    # config.proxy = temp.name
+    config.proxy = sys.argv[2]
     config.stream = 'raw'
     file_name = sys.argv[1]
-    obs_id = map_todo_to_obs_id(file_name)
+    obs_id = VlassName.get_obs_id_from_file_name(file_name)
     ec.run_single(config, VlassName, 'vlass2caom2', obs_id, file_name)
