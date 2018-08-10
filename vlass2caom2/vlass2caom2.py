@@ -127,18 +127,18 @@ class VlassName(StorageName):
         return obs_id
 
     @staticmethod
-    def get_url_bits_from_file_name(file_name):
+    def make_url_from_obs_id(obs_id):
         """The url from retrieval at NRAO is made of the VLASS epoch,
         ql, tile name, image centre, pixel size, and bandwidth in MHz
         from the file name, plus separately the epoch and tile name.
         """
-        bits = file_name.split('.')
+        bits = obs_id.split('.')
         epoch = '{}.{}'.format(bits[0], bits[1])
-        tile_name = '{}'.format(bits[3])
-        run_id = '{}.{}.{}.{}.{}.{}.{}.{}'.format(bits[0], bits[1], bits[2],
-                                                  bits[3], bits[4], bits[5],
-                                                  bits[6], bits[7])
-        return epoch, tile_name, run_id
+        tile_name = '{}'.format(bits[2])
+        run_id = '{}.{}.ql.{}.{}.10.2048.v1'.format(bits[0], bits[1], bits[2],
+                                                    bits[3])
+        return 'https://archive-new.nrao.edu/vlass/quicklook/{}/{}/{}/' \
+               'casa_commands.log'.format(epoch, tile_name, run_id)
 
 
 def accumulate_wcs(bp):

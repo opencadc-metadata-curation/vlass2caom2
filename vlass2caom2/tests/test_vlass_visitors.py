@@ -74,7 +74,7 @@ from mock import Mock
 
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import vlass_time_bounds_augmentation
+from vlass2caom2 import vlass_time_bounds_augmentation, VlassName
 
 from collection2caom2 import testing_support as ts
 
@@ -95,11 +95,10 @@ def test_aug_visit_works():
     test_obs = ts.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
-    make_log_orig = vlass_time_bounds_augmentation._make_log_url
+    make_log_orig = VlassName.make_url_from_obs_id
     local_casa_commands = 'file://{}/casa_commands.log'.format(TESTDATA_DIR)
     try:
-        vlass_time_bounds_augmentation._make_log_url = Mock(
-            return_value=local_casa_commands)
+        VlassName.make_url_from_obs_id = Mock(return_value=local_casa_commands)
         data_dir = os.path.join(THIS_DIR, '../../data')
         kwargs = {'working_directory': data_dir}
         test_result = vlass_time_bounds_augmentation.visit(test_obs, **kwargs)
@@ -113,15 +112,6 @@ def test_aug_visit_works():
         assert len(plane.time.bounds.samples) == 1, \
             'wrong amount of bounds info'
         assert plane.time.exposure == 28710.0, 'wrong exposure value'
-        ts.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR,'x.xml'))
+        ts.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
     finally:
-        vlass_time_bounds_augmentation._make_log_url = make_log_orig
-
-
-def test_make_log_url():
-    # test_result = vlass_time_bounds_augmentation._make_log_url(TEST_URI)
-    test_result = vlass_time_bounds_augmentation._make_log_url('VLASS1.1.T01t01.J000228-363000')
-    assert test_result == 'https://archive-new.nrao.edu/vlass/quicklook/' \
-                          'VLASS1.1/T01t01/VLASS1.1.ql.T01t01.' \
-                          'J000228-363000.10.2048.v1/casa_commands.log', \
-        'wrong log url'
+        VlassName.make_url_from_obs_id = make_log_orig

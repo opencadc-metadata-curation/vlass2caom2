@@ -69,10 +69,8 @@
 
 import logging
 
-from caom2 import Observation, TemporalWCS, Axis, RefCoord, CoordAxis1D
-from caom2 import CoordBounds1D, CoordRange1D
+from caom2 import Observation
 from caom2pipe import astro_composable as ac
-from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName
 
@@ -115,7 +113,7 @@ def _augment(working_dir, obs_id, plane):
     # the casa_commands.log file is the same for the science and noise files
 
     logging.debug('retrieve casa_commands.log file with measurement set info')
-    log_url = _make_log_url(obs_id)
+    log_url = VlassName.make_url_from_obs_id(obs_id)
     log_file_content = mc.read_url_file(log_url)
 
     logging.debug('retrieve the measurement set information from the logs')
@@ -156,13 +154,3 @@ def _find_measurement_sets(from_content):
             result = ii.split('vis=[')[1].split(']')[0].split(',')
             break
     return result
-
-
-def _make_log_url(from_obs_id):
-    bits = from_obs_id.split('.')
-    epoch = '{}.{}'.format(bits[0], bits[1])
-    tile_name = '{}'.format(bits[2])
-    run_id = '{}.{}.ql.{}.{}.10.2048.v1'.format(bits[0], bits[1], bits[2],
-                                                bits[3])
-    return 'https://archive-new.nrao.edu/vlass/quicklook/{}/{}/{}/' \
-           'casa_commands.log'.format(epoch, tile_name, run_id)

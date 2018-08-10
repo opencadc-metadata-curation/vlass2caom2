@@ -102,8 +102,8 @@ def vlass_run_single():
     config.log_to_file = False
     config.task_types = [mc.TaskType.AUGMENT]
     config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
-    # temp = tempfile.NamedTemporaryFile()
-    # _write_cert_to_temp_file(temp.name, sys.argv[2])
+    temp = tempfile.NamedTemporaryFile()
+    _write_cert_to_temp_file(temp.name, sys.argv[2])
     # config.proxy = temp.name
     config.proxy = sys.argv[2]
     config.stream = 'raw'

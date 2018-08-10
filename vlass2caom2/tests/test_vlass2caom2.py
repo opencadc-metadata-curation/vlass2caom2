@@ -68,8 +68,8 @@
 #
 
 
+from collection2caom2 import testing_support as ts
 from vlass2caom2 import main_app, VlassName
-from caom2 import ObservationReader
 from caom2.diff import get_differences
 
 import os
@@ -124,22 +124,24 @@ def test_main_app(test_files):
         print(sys.argv)
         main_app()
         obs_path = os.path.join(TESTDATA_DIR, '{}.xml'.format(obs_id))
-        expected = _read_obs(obs_path)
-        actual = _read_obs(output_file)
+        expected = ts.read_obs_from_file(obs_path)
+        actual = ts.read_obs_from_file(output_file)
         result = get_differences(expected, actual, 'Observation')
         if result:
             msg = 'Differences found in observation {}\n{}'. \
                 format(expected.observation_id, '\n'.join(
-                [r for r in result]))
+                    [r for r in result]))
             raise AssertionError(msg)
         # assert False  # cause I want to see logging messages
 
 
-def _read_obs(fname):
-    assert os.path.exists(fname), fname
-    reader = ObservationReader(False)
-    result = reader.read(fname)
-    return result
+def test_make_log_url():
+    test_result = VlassName.make_url_from_obs_id(
+        'VLASS1.1.T01t01.J000228-363000')
+    assert test_result == 'https://archive-new.nrao.edu/vlass/quicklook/' \
+                          'VLASS1.1/T01t01/VLASS1.1.ql.T01t01.' \
+                          'J000228-363000.10.2048.v1/casa_commands.log', \
+        'wrong log url'
 
 
 def _get_local(test_files):
