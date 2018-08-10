@@ -50,7 +50,6 @@
                   <caom2:positionAxis1>1</caom2:positionAxis1>
                   <caom2:positionAxis2>2</caom2:positionAxis2>
                   <caom2:energyAxis>3</caom2:energyAxis>
-                  <caom2:timeAxis>5</caom2:timeAxis>
                   <caom2:polarizationAxis>4</caom2:polarizationAxis>
                   <caom2:position>
                     <caom2:axis>
@@ -104,23 +103,6 @@
                     </caom2:axis>
                     <caom2:specsys>LSRK</caom2:specsys>
                   </caom2:energy>
-                  <caom2:time>
-                    <caom2:axis>
-                      <caom2:axis>
-                        <caom2:ctype>TIME</caom2:ctype>
-                        <caom2:cunit>d</caom2:cunit>
-                      </caom2:axis>
-                      <caom2:function>
-                        <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>0.0</caom2:delta>
-                        <caom2:refCoord>
-                          <caom2:pix>0.5</caom2:pix>
-                          <caom2:val>58156.94345052082</caom2:val>
-                        </caom2:refCoord>
-                      </caom2:function>
-                    </caom2:axis>
-                    <caom2:timesys>UTC</caom2:timesys>
-                  </caom2:time>
                   <caom2:polarization>
                     <caom2:axis>
                       <caom2:axis>
@@ -157,7 +139,6 @@
                   <caom2:positionAxis1>1</caom2:positionAxis1>
                   <caom2:positionAxis2>2</caom2:positionAxis2>
                   <caom2:energyAxis>3</caom2:energyAxis>
-                  <caom2:timeAxis>5</caom2:timeAxis>
                   <caom2:polarizationAxis>4</caom2:polarizationAxis>
                   <caom2:position>
                     <caom2:axis>
@@ -211,23 +192,6 @@
                     </caom2:axis>
                     <caom2:specsys>LSRK</caom2:specsys>
                   </caom2:energy>
-                  <caom2:time>
-                    <caom2:axis>
-                      <caom2:axis>
-                        <caom2:ctype>TIME</caom2:ctype>
-                        <caom2:cunit>d</caom2:cunit>
-                      </caom2:axis>
-                      <caom2:function>
-                        <caom2:naxis>1</caom2:naxis>
-                        <caom2:delta>0.0</caom2:delta>
-                        <caom2:refCoord>
-                          <caom2:pix>0.5</caom2:pix>
-                          <caom2:val>58156.94345052082</caom2:val>
-                        </caom2:refCoord>
-                      </caom2:function>
-                    </caom2:axis>
-                    <caom2:timesys>UTC</caom2:timesys>
-                  </caom2:time>
                   <caom2:polarization>
                     <caom2:axis>
                       <caom2:axis>

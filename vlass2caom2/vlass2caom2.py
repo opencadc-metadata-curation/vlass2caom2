@@ -119,9 +119,26 @@ class VlassName(StorageName):
 
     @staticmethod
     def get_obs_id_from_file_name(file_name):
+        """The obs id is made of the VLASS epoch, tile name, and image centre
+        from the file name.
+        """
         bits = file_name.split('.')
         obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
         return obs_id
+
+    @staticmethod
+    def get_url_bits_from_file_name(file_name):
+        """The url from retrieval at NRAO is made of the VLASS epoch,
+        ql, tile name, image centre, pixel size, and bandwidth in MHz
+        from the file name, plus separately the epoch and tile name.
+        """
+        bits = file_name.split('.')
+        epoch = '{}.{}'.format(bits[0], bits[1])
+        tile_name = '{}'.format(bits[3])
+        run_id = '{}.{}.{}.{}.{}.{}.{}.{}'.format(bits[0], bits[1], bits[2],
+                                                  bits[3], bits[4], bits[5],
+                                                  bits[6], bits[7])
+        return epoch, tile_name, run_id
 
 
 def accumulate_wcs(bp):
@@ -131,7 +148,6 @@ def accumulate_wcs(bp):
     bp.configure_position_axes((1, 2))
     bp.configure_energy_axis(3)
     bp.configure_polarization_axis(4)
-    bp.configure_time_axis(5)
 
     bp.set('Observation.type', 'OBJECT')
 
@@ -166,15 +182,6 @@ def accumulate_wcs(bp):
     bp.set('Chunk.position.axis.function.cd12', 0.0)
     bp.set('Chunk.position.axis.function.cd21', 0.0)
     bp.add_fits_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
-
-    bp.clear('Chunk.time.timesys')
-    bp.add_fits_attribute('Chunk.time.timesys', 'TIMESYS')
-    bp.set('Chunk.time.axis.axis.ctype', 'TIME')
-    bp.set('Chunk.time.axis.axis.cunit', 'd')
-    bp.set('Chunk.time.axis.function.naxis', '1')
-    bp.set('Chunk.time.axis.function.refCoord.pix', '0.5')
-    bp.set('Chunk.time.axis.function.refCoord.val',
-           'get_time_refcoord_value(header)')
 
 
 def get_position_resolution(header):

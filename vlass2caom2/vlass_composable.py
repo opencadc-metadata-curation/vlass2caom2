@@ -71,7 +71,9 @@ import tempfile
 
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import VlassName, COLLECTION
+from vlass2caom2 import VlassName, COLLECTION, vlass_time_bounds_augmentation
+
+visitors = [vlass_time_bounds_augmentation]
 
 
 def _write_cert_to_temp_file(fqn, cert_content):
@@ -86,7 +88,7 @@ def map_todo_to_obs_id(file_name):
 def vlass_run():
     proxy = '/root/.ssl/cadcproxy.pem'
     ec.run_by_file(VlassName, 'vlass2caom2', COLLECTION, map_todo_to_obs_id,
-                   use_client=True, proxy=proxy)
+                   use_client=True, proxy=proxy, visitors=visitors)
 
 
 def vlass_run_single():
@@ -107,4 +109,5 @@ def vlass_run_single():
     config.stream = 'raw'
     file_name = sys.argv[1]
     obs_id = VlassName.get_obs_id_from_file_name(file_name)
-    ec.run_single(config, VlassName, 'vlass2caom2', obs_id, file_name)
+    ec.run_single(config, VlassName, 'vlass2caom2', obs_id, file_name,
+                  visitors=visitors)
