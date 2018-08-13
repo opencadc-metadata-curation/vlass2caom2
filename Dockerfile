@@ -18,8 +18,7 @@ RUN git clone https://github.com/SharonGoliath/caom2tools.git && \
   pip install ./caom2utils && pip install ./caom2pipe
 
 RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
-  cd vlass2caom2 && git checkout s2303 && git pull origin s2303 && \
-  cd .. && pip install ./vlass2caom2 
+  cd vlass2caom2 && pip install ./vlass2caom2 
 
 COPY ./docker-entrypoint.sh ./
 
