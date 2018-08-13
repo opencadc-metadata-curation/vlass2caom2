@@ -91,7 +91,7 @@ def map_todo_to_obs_id(file_name):
 def vlass_run():
     proxy = '/root/.ssl/cadcproxy.pem'
     ec.run_by_file(VlassName, APPLICATION, COLLECTION, map_todo_to_obs_id,
-                   use_client=True, proxy=proxy, visitors=visitors)
+                   use_client=True, proxy=proxy, meta_visitors=visitors)
 
 
 def vlass_run_single():
