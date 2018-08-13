@@ -76,8 +76,6 @@ from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import vlass_time_bounds_augmentation, VlassName
 
-from collection2caom2 import testing_support as ts
-
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
 TEST_URI = 'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.' \
@@ -92,7 +90,7 @@ def test_aug_visit():
 def test_aug_visit_works():
     test_file = os.path.join(
         TESTDATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
-    test_obs = ts.read_obs_from_file(test_file)
+    test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
     make_log_orig = VlassName.make_url_from_obs_id
@@ -112,6 +110,6 @@ def test_aug_visit_works():
         assert len(plane.time.bounds.samples) == 1, \
             'wrong amount of bounds info'
         assert plane.time.exposure == 28710.0, 'wrong exposure value'
-        ts.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
+        mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
     finally:
         VlassName.make_url_from_obs_id = make_log_orig

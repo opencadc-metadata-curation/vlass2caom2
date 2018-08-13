@@ -68,7 +68,7 @@
 #
 
 
-from collection2caom2 import testing_support as ts
+from caom2pipe import manage_composable as mc
 from vlass2caom2 import main_app, VlassName
 from caom2.diff import get_differences
 
@@ -124,8 +124,8 @@ def test_main_app(test_files):
         print(sys.argv)
         main_app()
         obs_path = os.path.join(TESTDATA_DIR, '{}.xml'.format(obs_id))
-        expected = ts.read_obs_from_file(obs_path)
-        actual = ts.read_obs_from_file(output_file)
+        expected = mc.read_obs_from_file(obs_path)
+        actual = mc.read_obs_from_file(output_file)
         result = get_differences(expected, actual, 'Observation')
         if result:
             msg = 'Differences found in observation {}\n{}'. \

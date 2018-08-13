@@ -79,7 +79,8 @@ from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['main_app', 'update', 'VlassName', 'VlassCardinality', 'COLLECTION']
+__all__ = ['main_app', 'update', 'VlassName', 'VlassCardinality', 'COLLECTION',
+           'APPLICATION']
 
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
