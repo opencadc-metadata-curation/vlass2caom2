@@ -98,8 +98,8 @@ def vlass_run_single():
     import sys
     config = mc.Config()
     config.collection = COLLECTION
-    # config.working_directory = '/root/airflow'
-    config.working_directory = '/usr/src/app'
+    config.working_directory = '/root/airflow'
+    # config.working_directory = '/usr/src/app'
     config.use_local_files = False
     config.logging_level = 'INFO'
     config.log_to_file = False
@@ -107,8 +107,8 @@ def vlass_run_single():
     config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
     temp = tempfile.NamedTemporaryFile()
     _write_cert_to_temp_file(temp.name, sys.argv[2])
-    # config.proxy = temp.name
-    config.proxy = sys.argv[2]
+    config.proxy = temp.name
+    # config.proxy = sys.argv[2]
     config.stream = 'raw'
     file_name = sys.argv[1]
     obs_id = VlassName.get_obs_id_from_file_name(file_name)
