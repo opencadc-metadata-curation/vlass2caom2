@@ -74,9 +74,7 @@ from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION, COLLECTION
 from vlass2caom2 import vlass_time_bounds_augmentation
 
-# TODO waiting on word from JJK on time implementation for VLASS
-# visitors = [vlass_time_bounds_augmentation]
-visitors = []
+visitors = [vlass_time_bounds_augmentation]
 
 
 def _write_cert_to_temp_file(fqn, cert_content):
@@ -98,7 +96,6 @@ def vlass_run_single():
     import sys
     config = mc.Config()
     config.collection = COLLECTION
-    # config.working_directory = '/root/airflow'
     config.working_directory = '/usr/src/app'
     config.use_local_files = False
     config.logging_level = 'INFO'
@@ -107,8 +104,8 @@ def vlass_run_single():
     config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
     temp = tempfile.NamedTemporaryFile()
     _write_cert_to_temp_file(temp.name, sys.argv[2])
-    # config.proxy = temp.name
-    config.proxy = sys.argv[2]
+    config.proxy = temp.name
+    # config.proxy = sys.argv[2]
     config.stream = 'raw'
     file_name = sys.argv[1]
     obs_id = VlassName.get_obs_id_from_file_name(file_name)
