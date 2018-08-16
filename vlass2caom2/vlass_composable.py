@@ -74,9 +74,7 @@ from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION, COLLECTION
 from vlass2caom2 import vlass_time_bounds_augmentation
 
-# TODO waiting on word from JJK on time implementation for VLASS
-# visitors = [vlass_time_bounds_augmentation]
-visitors = []
+visitors = [vlass_time_bounds_augmentation]
 
 
 def _write_cert_to_temp_file(fqn, cert_content):
@@ -91,15 +89,14 @@ def map_todo_to_obs_id(file_name):
 def vlass_run():
     proxy = '/root/.ssl/cadcproxy.pem'
     ec.run_by_file(VlassName, APPLICATION, COLLECTION, map_todo_to_obs_id,
-                   use_client=True, proxy=proxy, visitors=visitors)
+                   use_client=True, proxy=proxy, meta_visitors=visitors)
 
 
 def vlass_run_single():
     import sys
     config = mc.Config()
     config.collection = COLLECTION
-    config.working_directory = '/root/airflow'
-    # config.working_directory = '/usr/src/app'
+    config.working_directory = '/usr/src/app'
     config.use_local_files = False
     config.logging_level = 'INFO'
     config.log_to_file = False

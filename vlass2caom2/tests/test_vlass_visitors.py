@@ -70,11 +70,9 @@
 import os
 import pytest
 
-from mock import Mock
-
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import vlass_time_bounds_augmentation, VlassName
+from vlass2caom2 import vlass_time_bounds_augmentation
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
@@ -93,23 +91,21 @@ def test_aug_visit_works():
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
-    make_log_orig = VlassName.make_url_from_obs_id
-    local_casa_commands = 'file://{}/casa_commands.log'.format(TESTDATA_DIR)
-    try:
-        VlassName.make_url_from_obs_id = Mock(return_value=local_casa_commands)
-        data_dir = os.path.join(THIS_DIR, '../../data')
-        kwargs = {'working_directory': data_dir}
-        test_result = vlass_time_bounds_augmentation.visit(test_obs, **kwargs)
-        assert test_obs is not None, 'unexpected modification'
-        assert test_result is not None, 'should have a result status'
-        assert len(test_result) == 1, 'modified planes count'
-        assert test_result['planes'] == 1, 'plane count'
-        plane = test_obs.planes['VLASS1.1.T01t01.J000228-363000.quicklook.v1']
-        assert plane.time is not None, 'no time information'
-        assert plane.time.bounds is not None, 'no bounds information'
-        assert len(plane.time.bounds.samples) == 1, \
-            'wrong amount of bounds info'
-        assert plane.time.exposure == 28710.0, 'wrong exposure value'
-        mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
-    finally:
-        VlassName.make_url_from_obs_id = make_log_orig
+    data_dir = os.path.join(THIS_DIR, '../../data')
+    kwargs = {'working_directory': data_dir}
+    test_result = vlass_time_bounds_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'unexpected modification'
+    assert test_result is not None, 'should have a result status'
+    assert len(test_result) == 1, 'modified artifacts count'
+    assert test_result['artifacts'] == 2, 'artifact count'
+    plane = test_obs.planes['VLASS1.1.T01t01.J000228-363000.quicklook.v1']
+    chunk = plane.artifacts[TEST_URI].parts['0'].chunks[0]
+    assert chunk is not None
+    assert chunk.time is not None, 'no time information'
+    assert chunk.time.axis is not None, 'no axis information'
+    assert chunk.time.axis.bounds is not None, 'no bounds information'
+    assert len(chunk.time.axis.bounds.samples) == 1, \
+        'wrong amount of bounds info'
+    assert chunk.time.exposure == 401.0, \
+        'wrong exposure value'
+    mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))

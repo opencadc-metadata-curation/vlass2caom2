@@ -69,88 +69,64 @@
 
 import logging
 
-from caom2 import Observation
+from caom2 import Observation, RefCoord, CoordBounds1D, CoordRange1D
+from caom2 import TemporalWCS, CoordAxis1D, Axis
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import VlassName
 
 
 def visit(observation, **kwargs):
     mc.check_param(observation, Observation)
 
-    working_dir = './'
-    if 'working_directory' in kwargs:
-        working_dir = kwargs['working_directory']
-
-    count = 0
-    for i in observation.planes:
-        plane = observation.planes[i]
-        logging.debug('working on plane {}'.format(plane.product_id))
-        _augment(working_dir, observation.observation_id, plane)
-        count += 1
-    return {'planes': count}
-
-
-def _augment(working_dir, obs_id, plane):
     # conversation with JJK, 2018-08-08 - until such time as VLASS becomes
     # a dynamic collection, rely on the time information as provided for all
     # observations as retrieved on this date from:
     #
-    # https://archive.nrao.edu/archive/ArchiveQuery?PROTOCOL=TEXT-stream
-    # &QUERYTYPE=ARCHIVE&PROJECT_CODE=VLASS1.1 > observing_log.csv
+    # https://archive-new.nrao.edu/vlass/weblog/quicklook/*
     #
-    # This contains a list of the Measurement Sets (ms files) that were
-    # acquired as part of the VLASS processing.
+    # The lowest-level index.html files are scraped to create a csv file
+    # with observation ID, start time, end time, and exposure time.
 
+    count = 0
+    for i in observation.planes:
+        plane = observation.planes[i]
+        for j in plane.artifacts:
+            artifact = plane.artifacts[j]
+            logging.debug('working on artifact {}'.format(artifact.uri))
+            _augment(observation.observation_id, artifact)
+            count += 1
+    return {'artifacts': count}
+
+
+def _augment(obs_id, artifact):
+
+    # note the location of this file is hard-coded in the container
+    # structure, because so much about this is broken anyway
+    #
     logging.debug('get content of all the VLASS observations from 2018-08-08')
-    import os
-    csv_file = mc.read_csv_file(
-        os.path.join(working_dir, 'ArchiveQuery-2018-08-08.csv'))
-
-    # To determine which measurement set went into which QL data product
-    # need to look at the casa_commands.log file for the QL data product.
-    #
-    # the casa_commands.log file is the same for the science and noise files
-
-    logging.debug('retrieve casa_commands.log file with measurement set info')
-    log_url = VlassName.make_url_from_obs_id(obs_id)
-    log_file_content = mc.read_url_file(log_url)
-
-    logging.debug('retrieve the measurement set information from the logs')
-    measurement_sets = _find_measurement_sets(log_file_content)
+    csv_file = mc.read_csv_file('/usr/src/ArchiveQuery-2018-08-15.csv')
 
     logging.debug('build time bounds information from measurement set info')
-    _augment_plane(plane, measurement_sets, csv_file)
+    _augment_artifact(obs_id, artifact, csv_file)
 
 
-def _augment_plane(plane, measurement_sets, csv_file):
-    bounds = None
-    for ii in measurement_sets:
-        # Stripping the .ms. off the end allows this record to be found in
-        # the observation log CSV content.
-        mset = ii.replace('.ms', '').replace('\'', '')
-        for jj in csv_file:
-            if mset in jj:
-                start_date = ac.get_datetime(jj[5].strip())
-                end_date = ac.get_datetime(jj[6].strip())
-                exposure = end_date - start_date
-                bounds = ac.build_plane_time(start_date, end_date, exposure)
-                break
-    plane.time = bounds
-
-
-def _find_measurement_sets(from_content):
-    # find the line that contains ‘hifv_importdata’ and taking the value of
-    # the ‘vis’ parameter from that command, eg.
-    #
-    # vis=['VLASS1.1.sb34916486.eb35006898.58156.86241219907.ms']
-    #
-    # provides an  array of the input measurement sets that can be looked up
-    # in the CSV file stored with this project
-
-    result = None
-    for ii in from_content:
-        if 'hifv_importdata' in ii:
-            result = ii.split('vis=[')[1].split(']')[0].split(',')
+def _augment_artifact(obs_id, artifact, csv_file):
+    chunk = artifact.parts['0'].chunks[0]
+    bounds = CoordBounds1D()
+    exposure = None
+    for ii in csv_file:
+        if obs_id in ii:
+            start_date = ac.get_datetime(ii[1].strip())
+            end_date = ac.get_datetime(ii[2].strip())
+            start_date.format = 'mjd'
+            end_date.format = 'mjd'
+            exposure = float(ac.get_timedelta_in_s(ii[3].strip()))
+            start_ref_coord = RefCoord(0.5, start_date.value)
+            end_ref_coord = RefCoord(1.5, end_date.value)
+            bounds.samples.append(CoordRange1D(start_ref_coord,
+                                               end_ref_coord))
             break
-    return result
+    time_axis = CoordAxis1D(Axis('TIME', 'd'))
+    time_axis.bounds = bounds
+    chunk.time = TemporalWCS(time_axis)
+    chunk.time.exposure = exposure

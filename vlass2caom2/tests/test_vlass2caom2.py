@@ -135,15 +135,6 @@ def test_main_app(test_files):
         # assert False  # cause I want to see logging messages
 
 
-def test_make_log_url():
-    test_result = VlassName.make_url_from_obs_id(
-        'VLASS1.1.T01t01.J000228-363000')
-    assert test_result == 'https://archive-new.nrao.edu/vlass/quicklook/' \
-                          'VLASS1.1/T01t01/VLASS1.1.ql.T01t01.' \
-                          'J000228-363000.10.2048.v1/casa_commands.log', \
-        'wrong log url'
-
-
 def _get_local(test_files):
     result = ''
     for test_name in test_files:
