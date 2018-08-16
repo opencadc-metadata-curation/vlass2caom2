@@ -67,48 +67,162 @@
 # ***********************************************************************
 #
 
+import importlib
 import logging
-import os
 import sys
 import traceback
 
-from caom2 import Observation
-from caom2utils import ObsBlueprint, get_gen_proc_arg_parser
-from management import util, CaomExecuteArgPassThrough
-from management import decompose_lineage
+from caom2 import Observation, ProductType
+from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
+from caom2pipe import StorageName
+from caom2pipe import astro_composable as ac
+from caom2pipe import manage_composable as mc
 
 
-__all__ = ['main_app', 'update', 'VlassNameHandler', 'VlassArgsPassThrough']
+__all__ = ['main_app', 'update', 'VlassName', 'VlassCardinality', 'COLLECTION',
+           'APPLICATION']
 
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
+COLLECTION_PATTERN = '*'  # TODO what are acceptable naming patterns?
 
 
-class VlassNameHandler(util.NameHandler):
-    def __init__(self, obs_id):
-        super(VlassNameHandler, self).__init__(COLLECTION, obs_id)
+class VlassName(StorageName):
+    """Isolate the relationship between the observation id and the
+    file names.
+
+    Isolate the zipped/unzipped nature of the file names.
+    """
+    def __init__(self, obs_id, file_name=None):
+        super(VlassName, self).__init__(obs_id, COLLECTION, COLLECTION_PATTERN)
+        self.file_name = file_name
+        self.file_id = file_name.replace('.header', '')
 
     def get_file_uri(self):
         """No .gz extension, unlike the default implementation."""
-        return 'ad:{}/{}'.format(self.collection, self.get_file_name())
+        return 'ad:{}/{}'.format(self.collection, self._get_file_id())
 
     def get_file_name(self):
-        """Already comes with a .fits extension, unlike the default
-        implementation."""
-        return self.obs_id
+        return self.file_name
+
+    def get_lineage(self, product_id):
+        return '{}/{}'.format(product_id, self.get_file_uri())
+
+    def get_product_id(self):
+        obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
+        return '{}.quicklook.v1'.format(obs_id)
+
+    def _get_file_id(self):
+        return self.file_id
+
+    def is_valid(self):
+        return True
+
+    @staticmethod
+    def get_obs_id_from_file_name(file_name):
+        """The obs id is made of the VLASS epoch, tile name, and image centre
+        from the file name.
+        """
+        bits = file_name.split('.')
+        obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
+        return obs_id
+
+    @staticmethod
+    def make_url_from_obs_id(obs_id):
+        """The url from retrieval at NRAO is made of the VLASS epoch,
+        ql, tile name, image centre, pixel size, and bandwidth in MHz
+        from the file name, plus separately the epoch and tile name.
+        """
+        bits = obs_id.split('.')
+        epoch = '{}.{}'.format(bits[0], bits[1])
+        tile_name = '{}'.format(bits[2])
+        run_id = '{}.{}.ql.{}.{}.10.2048.v1'.format(bits[0], bits[1], bits[2],
+                                                    bits[3])
+        return 'https://archive-new.nrao.edu/vlass/quicklook/{}/{}/{}/' \
+               'casa_commands.log'.format(epoch, tile_name, run_id)
 
 
 def accumulate_wcs(bp):
-    """Configure the OMM-specific ObsBlueprint for the CAOM model
+    """Configure the VLASS-specific ObsBlueprint for the CAOM model
     SpatialWCS."""
     logging.debug('Begin accumulate_position.')
     bp.configure_position_axes((1, 2))
     bp.configure_energy_axis(3)
     bp.configure_polarization_axis(4)
 
-    bp.set('Plane.calibrationLevel', '1')
-    bp.set('Plane.dataProductType', 'cube')
-    bp.set_fits_attribute('Plane.metaRelease', ['DATE-OBS'])
+    bp.set('Observation.type', 'OBJECT')
+
+    bp.clear('Observation.target.name')
+    bp.add_fits_attribute('Observation.target.name', 'FILNAM04')
+    bp.set('Observation.target.type', 'field')
+
+    bp.set('Observation.instrument.name', 'VLA')
+
+    bp.set('Observation.telescope.name', 'VLA')
+
+    bp.set('Plane.calibrationLevel', '2')
+    bp.clear('Plane.dataProductType')
+    bp.add_fits_attribute('Plane.dataProductType', 'TYPE')
+
+    bp.set('Plane.provenance.name', 'get_provenance_name(header)')
+    bp.set('Plane.provenance.version', 'get_provenance_version(header)')
+    bp.set('Plane.provenance.producer', 'NRAO')
+
+    # VLASS data is public, says Eric Rosolowsky via JJK May 30/18
+    bp.clear('Plane.metaRelease')
+    bp.add_fits_attribute('Plane.metaRelease', 'DATE-OBS')
+    bp.clear('Plane.dataRelease')
+    bp.add_fits_attribute('Plane.dataRelease', 'DATE-OBS')
+
+    bp.clear('Artifact.productType')
+    bp.set('Artifact.productType', 'get_product_type(uri)')
+
+    bp.clear('Chunk.position.axis.function.cd11')
+    bp.clear('Chunk.position.axis.function.cd22')
+    bp.add_fits_attribute('Chunk.position.axis.function.cd11', 'CDELT1')
+    bp.set('Chunk.position.axis.function.cd12', 0.0)
+    bp.set('Chunk.position.axis.function.cd21', 0.0)
+    bp.add_fits_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
+
+
+def get_position_resolution(header):
+    bmaj = header[0]['BMAJ']
+    bmin = header[0]['BMIN']
+    # From CW via slack 2018-07-26
+    return 3600.0 * (bmaj + bmin)
+
+
+def get_product_type(uri):
+    if '.rms.' in uri:
+        return ProductType.NOISE
+    else:
+        return ProductType.SCIENCE
+
+
+def get_provenance_name(header):
+    origin = header[0].get('ORIGIN')
+    if origin is not None:
+        return origin.split()[0]
+    else:
+        return None
+
+
+def get_provenance_version(header):
+    origin = header[0].get('ORIGIN')
+    if origin is not None:
+        return origin.split()[1]
+    else:
+        return None
+
+
+def get_time_refcoord_value(header):
+    dateobs = header[0].get('DATE-OBS')
+    if dateobs is not None:
+        result = ac.get_datetime(dateobs)
+        if result is not None:
+            return result.mjd
+        else:
+            return None
 
 
 def update(observation, **kwargs):
@@ -119,10 +233,7 @@ def update(observation, **kwargs):
     :param **kwargs Everything else."""
     logging.debug('Begin update.')
 
-    assert observation, 'non-null observation parameter'
-    assert isinstance(observation, Observation), \
-        'observation parameter of type Observation'
-
+    mc.check_param(observation, Observation)
     for plane in observation.planes:
         for artifact in observation.planes[plane].artifacts:
             for part in observation.planes[plane].artifacts[artifact].parts:
@@ -130,18 +241,26 @@ def update(observation, **kwargs):
                 for chunk in p.chunks:
                     if 'headers' in kwargs:
                         headers = kwargs['headers']
+                        chunk.position.resolution = get_position_resolution(
+                            headers)
+                        if chunk.energy is not None:
+                            # A value of None per Chris, 2018-07-26
+                            # Set the value to None here, because the
+                            # blueprint is implemented to not set WCS
+                            # information to None
+                            chunk.energy.restfrq = None
 
     logging.debug('Done update.')
     return True
 
 
-class VlassArgsPassThrough(CaomExecuteArgPassThrough):
+class VlassCardinality(object):
 
     def __init__(self):
-        super(VlassArgsPassThrough, self).__init__(COLLECTION)
+        self.collection = COLLECTION
 
     @staticmethod
-    def build_blueprints(artifact_uri):
+    def build_blueprints(args):
         """This application relies on the caom2utils fits2caom2 ObsBlueprint
         definition for mapping FITS file values to CAOM model element
         attributes. This method builds the VLASS blueprint for a single
@@ -150,36 +269,27 @@ class VlassArgsPassThrough(CaomExecuteArgPassThrough):
         The blueprint handles the mapping of values with cardinality of 1:1
         between the blueprint entries and the model attributes.
 
-        :param artifact_uri The artifact URI for the file to be processed."""
-        blueprint = ObsBlueprint(module=None)
-        accumulate_wcs(blueprint)
-        blueprints = {artifact_uri: blueprint}
+        :param args """
+        module = importlib.import_module(__name__)
+        blueprints = {}
+        for ii in args.lineage:
+            blueprint = ObsBlueprint(module=module)
+            logging.error('module name is {}'.format(module))
+            accumulate_wcs(blueprint)
+            product_id, artifact_uri = mc.decompose_lineage(ii)
+            blueprints[artifact_uri] = blueprint
         return blueprints
 
-    def build_cardinality(self, args):
-        if args.observation:
-            fname = args.observation[1]
-            observation = args.observation[1]
-            uri = VlassNameHandler(fname).get_file_uri()
-        if args.lineage:
-            fname, uri = decompose_lineage(args.lineage[0])
-            observation = fname
-        if args.local:
-            # TODO this isn't a general VLASS solution
-            fname = args.local[0]
-            uri = VlassNameHandler(os.path.basename(fname)).get_file_uri()
-
-        kwargs = {'params': {'fname': fname,
-                             'collection': self.collection,
-                             'observation': observation,
-                             'artifact_uri': uri}}
-        return kwargs
+    def build_cardinality(self):
+        pass  # TODO
 
 
 def main_app():
     args = get_gen_proc_arg_parser().parse_args()
     try:
-        VlassArgsPassThrough().collection_augment(args)
+        vlass = VlassCardinality()
+        blueprints = vlass.build_blueprints(args)
+        gen_proc(args, blueprints)
     except Exception as e:
         logging.error('Failed {} execution.'.format(APPLICATION))
         logging.error(e)

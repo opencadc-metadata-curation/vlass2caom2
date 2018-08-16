@@ -66,27 +66,50 @@
 #
 # ***********************************************************************
 #
+
 import os
+import pytest
 
 from mock import Mock
 
-from caom2 import ObservationReader
-from management import util
+from caom2pipe import manage_composable as mc
 
+from vlass2caom2 import vlass_time_bounds_augmentation, VlassName
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
-TEST_OBS = 'C170324_0054_SCI'
+TEST_URI = 'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.' \
+           'image.pbcor.tt0.rms.subim.fits'
 
 
-def test_visit():
-    pass
+def test_aug_visit():
+    with pytest.raises(mc.CadcException):
+        vlass_time_bounds_augmentation.visit(None)
 
 
-def _read_obs_from_file():
-    test_fqn = os.path.join(TESTDATA_DIR,
-                            util.NameHandler(TEST_OBS).get_model_file_name())
-    assert os.path.exists(test_fqn), test_fqn
-    reader = ObservationReader(False)
-    test_obs = reader.read(test_fqn)
-    return test_obs
+def test_aug_visit_works():
+    test_file = os.path.join(
+        TESTDATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
+    test_obs = mc.read_obs_from_file(test_file)
+    assert test_obs is not None, 'unexpected None'
+
+    make_log_orig = VlassName.make_url_from_obs_id
+    local_casa_commands = 'file://{}/casa_commands.log'.format(TESTDATA_DIR)
+    try:
+        VlassName.make_url_from_obs_id = Mock(return_value=local_casa_commands)
+        data_dir = os.path.join(THIS_DIR, '../../data')
+        kwargs = {'working_directory': data_dir}
+        test_result = vlass_time_bounds_augmentation.visit(test_obs, **kwargs)
+        assert test_obs is not None, 'unexpected modification'
+        assert test_result is not None, 'should have a result status'
+        assert len(test_result) == 1, 'modified planes count'
+        assert test_result['planes'] == 1, 'plane count'
+        plane = test_obs.planes['VLASS1.1.T01t01.J000228-363000.quicklook.v1']
+        assert plane.time is not None, 'no time information'
+        assert plane.time.bounds is not None, 'no bounds information'
+        assert len(plane.time.bounds.samples) == 1, \
+            'wrong amount of bounds info'
+        assert plane.time.exposure == 28710.0, 'wrong exposure value'
+        mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
+    finally:
+        VlassName.make_url_from_obs_id = make_log_orig

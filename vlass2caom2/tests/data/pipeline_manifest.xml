@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<piperesults name="unknown">
+  <ous name="unknown">
+    <casaversion name="5.3.0-21"/>
+    <pipeline_version name="40876 (trunk)"/>
+    <procedure_name name="Undefined"/>
+    <weblog name="weblog.tgz"/>
+    <casa_cmdlog name="casa_commands.log"/>
+    <pipescript name="casa_pipescript.py"/>
+    <image imtype="target" name="VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits"/>
+    <image imtype="target" name="VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits"/>
+  </ous>
+</piperesults>
