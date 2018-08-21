@@ -172,13 +172,13 @@ def accumulate_wcs(bp):
     bp.set('Chunk.position.axis.function.cd21', 0.0)
     bp.add_fits_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
 
-    bp.set('Chunk.energy.bandpassName', 'S')
+    bp.set('Chunk.energy.bandpassName', 'S-band')
 
 def get_position_resolution(header):
     bmaj = header[0]['BMAJ']
     bmin = header[0]['BMIN']
     # From https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
-    return sqrt(bmaj*bmin)
+    return 3600.0 * sqrt(bmaj*bmin)
 
 
 def get_product_type(uri):
