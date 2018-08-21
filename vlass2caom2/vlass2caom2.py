@@ -72,6 +72,8 @@ import logging
 import sys
 import traceback
 
+from math import sqrt
+
 from caom2 import Observation, ProductType
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import StorageName
@@ -174,8 +176,8 @@ def accumulate_wcs(bp):
 def get_position_resolution(header):
     bmaj = header[0]['BMAJ']
     bmin = header[0]['BMIN']
-    # From CW via slack 2018-07-26
-    return 3600.0 * (bmaj + bmin)
+    # From https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
+    return sqrt(bmaj*bmin)
 
 
 def get_product_type(uri):
