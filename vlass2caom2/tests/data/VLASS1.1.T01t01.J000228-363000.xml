@@ -102,6 +102,7 @@
                       </caom2:function>
                     </caom2:axis>
                     <caom2:specsys>LSRK</caom2:specsys>
+		    <caom2:bandpassName>S</caom2:bandpassName>
                   </caom2:energy>
                   <caom2:polarization>
                     <caom2:axis>
@@ -191,6 +192,7 @@
                       </caom2:function>
                     </caom2:axis>
                     <caom2:specsys>LSRK</caom2:specsys>
+		    <caom2:bandpassName>S</caom2:bandpassName>
                   </caom2:energy>
                   <caom2:polarization>
                     <caom2:axis>

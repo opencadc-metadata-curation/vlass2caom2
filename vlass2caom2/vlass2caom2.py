@@ -172,6 +172,7 @@ def accumulate_wcs(bp):
     bp.set('Chunk.position.axis.function.cd21', 0.0)
     bp.add_fits_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
 
+    bp.set('Chunk.energy.bandpassName', 'S')
 
 def get_position_resolution(header):
     bmaj = header[0]['BMAJ']
