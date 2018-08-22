@@ -95,10 +95,17 @@ class VlassName(StorageName):
 
     Isolate the zipped/unzipped nature of the file names.
     """
-    def __init__(self, obs_id, file_name=None):
-        super(VlassName, self).__init__(obs_id, COLLECTION, COLLECTION_PATTERN)
+    def __init__(self, obs_id=None, file_name=None):
+        if obs_id is None:
+            obs_id = VlassName.get_obs_id_from_file_name(file_name)
+        super(VlassName, self).__init__(
+            obs_id, COLLECTION, COLLECTION_PATTERN)
         self.file_name = file_name
-        self.file_id = file_name.replace('.header', '')
+        if file_name is None:
+            self.file_id = None
+        else:
+            self.file_id = file_name.replace('.header', '')
+        self.obs_id = obs_id
 
     def get_file_uri(self):
         """No .gz extension, unlike the default implementation."""
@@ -111,8 +118,7 @@ class VlassName(StorageName):
         return '{}/{}'.format(product_id, self.get_file_uri())
 
     def get_product_id(self):
-        obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
-        return '{}.quicklook.v1'.format(obs_id)
+        return '{}.quicklook.v1'.format(self.obs_id)
 
     def _get_file_id(self):
         return self.file_id
@@ -144,9 +150,9 @@ def accumulate_wcs(bp):
     bp.add_fits_attribute('Observation.target.name', 'FILNAM04')
     bp.set('Observation.target.type', 'field')
 
-    bp.set('Observation.instrument.name', 'VLA')
+    bp.set('Observation.instrument.name', 'S-WIDAR')
 
-    bp.set('Observation.telescope.name', 'VLA')
+    # bp.set('Observation.telescope.name', 'VLA')
 
     bp.set('Plane.calibrationLevel', '2')
     bp.clear('Plane.dataProductType')

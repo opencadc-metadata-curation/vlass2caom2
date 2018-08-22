@@ -13,13 +13,13 @@
     <caom2:type>field</caom2:type>
   </caom2:target>
   <caom2:telescope>
-    <caom2:name>VLA</caom2:name>
+    <caom2:name>EVLA</caom2:name>
     <caom2:geoLocationX>-1601156.673287</caom2:geoLocationX>
     <caom2:geoLocationY>-5041988.986066</caom2:geoLocationY>
     <caom2:geoLocationZ>3554879.236821</caom2:geoLocationZ>
   </caom2:telescope>
   <caom2:instrument>
-    <caom2:name>VLA</caom2:name>
+    <caom2:name>S-WIDAR</caom2:name>
   </caom2:instrument>
   <caom2:planes>
     <caom2:plane caom2:id="00000000-0000-0000-82ab-9ab91176b0f9">
