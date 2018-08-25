@@ -98,8 +98,8 @@ def vlass_run_single():
     import sys
     config = mc.Config()
     config.collection = COLLECTION
-    config.working_directory = '/root/airflow'
-    # config.working_directory = '/usr/src/app'
+    # config.working_directory = '/root/airflow'
+    config.working_directory = '/usr/src/app'
     config.use_local_files = False
     config.logging_level = 'INFO'
     config.log_to_file = False
