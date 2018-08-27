@@ -77,24 +77,16 @@ from vlass2caom2 import vlass_time_bounds_augmentation
 visitors = [vlass_time_bounds_augmentation]
 
 
-def _write_cert_to_temp_file(fqn, cert_content):
-    with open(fqn, 'w') as f:
-        f.write(cert_content)
-
-
-def map_todo_to_obs_id(file_name):
-    return VlassName.get_obs_id_from_file_name(file_name), file_name
-
-
 def vlass_run():
-    proxy = '/root/.ssl/cadcproxy.pem'
-    ec.run_by_file(VlassName, APPLICATION, COLLECTION, map_todo_to_obs_id,
-                   use_client=True, proxy=proxy, meta_visitors=visitors)
+    proxy = '/usr/src/app/cadcproxy.pem'
+    ec.run_by_file(VlassName, APPLICATION, COLLECTION,
+                   proxy=proxy, meta_visitors=visitors)
 
 
 def vlass_run_single():
     import sys
     config = mc.Config()
+    config.get_config()
     config.collection = COLLECTION
     config.working_directory = '/usr/src/app'
     config.use_local_files = False
@@ -102,12 +94,16 @@ def vlass_run_single():
     config.log_to_file = False
     config.task_types = [mc.TaskType.AUGMENT]
     config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
-    temp = tempfile.NamedTemporaryFile()
-    _write_cert_to_temp_file(temp.name, sys.argv[2])
-    config.proxy = temp.name
-    # config.proxy = sys.argv[2]
+    if config.features.use_clients:
+        temp = tempfile.NamedTemporaryFile()
+        mc.write_to_file(temp.name, sys.argv[2])
+        config.proxy = temp.name
+    else:
+        config.proxy = sys.argv[2]
     config.stream = 'raw'
     file_name = sys.argv[1]
-    obs_id = VlassName.get_obs_id_from_file_name(file_name)
-    ec.run_single(config, VlassName, 'vlass2caom2', obs_id, file_name,
-                  meta_visitors=visitors)
+    if config.features.use_file_names:
+        vlass_name = VlassName(file_name=file_name)
+    else:
+        vlass_name = VlassName(obs_id=sys.argv[1])
+    ec.run_single(config, vlass_name, 'vlass2caom2', meta_visitors=visitors)
