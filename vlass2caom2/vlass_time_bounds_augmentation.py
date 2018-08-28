@@ -93,7 +93,9 @@ def visit(observation, **kwargs):
         for j in plane.artifacts:
             artifact = plane.artifacts[j]
             logging.debug('working on artifact {}'.format(artifact.uri))
-            _augment(observation.observation_id, artifact)
+            version, reference = _augment(observation.observation_id, artifact)
+            plane.provenance.version = version
+            plane.provenance.reference = reference
             count += 1
     return {'artifacts': count}
 
@@ -107,26 +109,40 @@ def _augment(obs_id, artifact):
     csv_file = mc.read_csv_file('/usr/src/ArchiveQuery-2018-08-15.csv')
 
     logging.debug('build time bounds information from measurement set info')
-    _augment_artifact(obs_id, artifact, csv_file)
+    version, reference = _augment_artifact(obs_id, artifact, csv_file)
+    return version, reference
 
 
 def _augment_artifact(obs_id, artifact, csv_file):
     chunk = artifact.parts['0'].chunks[0]
-    bounds = CoordBounds1D()
+    bounds = None
     exposure = None
+    version = None
+    reference = None
     for ii in csv_file:
         if obs_id in ii:
-            start_date = ac.get_datetime(ii[1].strip())
-            end_date = ac.get_datetime(ii[2].strip())
-            start_date.format = 'mjd'
-            end_date.format = 'mjd'
-            exposure = float(ac.get_timedelta_in_s(ii[3].strip()))
-            start_ref_coord = RefCoord(0.5, start_date.value)
-            end_ref_coord = RefCoord(1.5, end_date.value)
-            bounds.samples.append(CoordRange1D(start_ref_coord,
-                                               end_ref_coord))
+            bounds, exposure = _build_time(ii)
+            version = ii[1].strip()
+            reference = ii[2].strip()
             break
     time_axis = CoordAxis1D(Axis('TIME', 'd'))
     time_axis.bounds = bounds
     chunk.time = TemporalWCS(time_axis)
     chunk.time.exposure = exposure
+    return version, reference
+
+
+def _build_time(row):
+    bounds = CoordBounds1D()
+    start_date = ac.get_datetime(row[3].strip())
+    end_date = ac.get_datetime(row[4].strip())
+    start_date.format = 'mjd'
+    end_date.format = 'mjd'
+    exposure = float(ac.get_timedelta_in_s(row[5].strip()))
+    start_ref_coord = RefCoord(0.5, start_date.value)
+    end_ref_coord = RefCoord(1.5, end_date.value)
+    bounds.samples.append(CoordRange1D(start_ref_coord,
+                                       end_ref_coord))
+    return bounds, exposure
+
+

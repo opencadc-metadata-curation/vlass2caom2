@@ -8,6 +8,11 @@
   </caom2:algorithm>
   <caom2:type>OBJECT</caom2:type>
   <caom2:intent>science</caom2:intent>
+  <caom2:proposal>
+    <caom2:id>VLASS1.1</caom2:id>
+    <caom2:project>VLASS</caom2:project>
+    <caom2:title>VLA Sky Survey</caom2:title>
+  </caom2:proposal>
   <caom2:target>
     <caom2:name>T01t01</caom2:name>
     <caom2:type>field</caom2:type>
@@ -29,10 +34,12 @@
       <caom2:dataProductType>image</caom2:dataProductType>
       <caom2:calibrationLevel>2</caom2:calibrationLevel>
       <caom2:provenance>
-        <caom2:name>CASA</caom2:name>
-        <caom2:version>5.3.0-21</caom2:version>
+        <caom2:name>CASA 5.3.0-21</caom2:name>
+        <caom2:project>VLASS</caom2:project>
         <caom2:producer>NRAO</caom2:producer>
-      </caom2:provenance>
+        <caom2:runID>v1</caom2:runID>
+        <caom2:lastExecuted>2018-04-13T23:05:31.738</caom2:lastExecuted>
+       </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-b591-27680bff6a4b">
           <caom2:uri>ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits</caom2:uri>
@@ -102,7 +109,7 @@
                       </caom2:function>
                     </caom2:axis>
                     <caom2:specsys>LSRK</caom2:specsys>
-		    <caom2:bandpassName>S-band</caom2:bandpassName>
+                    <caom2:bandpassName>S-band</caom2:bandpassName>
                   </caom2:energy>
                   <caom2:polarization>
                     <caom2:axis>
@@ -192,7 +199,7 @@
                       </caom2:function>
                     </caom2:axis>
                     <caom2:specsys>LSRK</caom2:specsys>
-		    <caom2:bandpassName>S-band</caom2:bandpassName>
+                    <caom2:bandpassName>S-band</caom2:bandpassName>
                   </caom2:energy>
                   <caom2:polarization>
                     <caom2:axis>

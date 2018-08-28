@@ -139,28 +139,43 @@ class VlassName(StorageName):
 def accumulate_wcs(bp):
     """Configure the VLASS-specific ObsBlueprint for the CAOM model
     SpatialWCS."""
-    logging.debug('Begin accumulate_position.')
+    logging.debug('Begin accumulate_wcs.')
     bp.configure_position_axes((1, 2))
     bp.configure_energy_axis(3)
     bp.configure_polarization_axis(4)
 
+    # obervation level
     bp.set('Observation.type', 'OBJECT')
 
     bp.clear('Observation.target.name')
     bp.add_fits_attribute('Observation.target.name', 'FILNAM04')
     bp.set('Observation.target.type', 'field')
 
+    # Clare Chandler via JJK - 21-08-18
     bp.set('Observation.instrument.name', 'S-WIDAR')
+    # From JJK - 27-08-18 - slack
+    bp.set('Observation.proposal.title', 'VLA Sky Survey')
+    bp.set('Observation.proposal.project', 'VLASS')
+    bp.set('Observation.proposal.id', 'VLASS1.1')
 
-    # bp.set('Observation.telescope.name', 'VLA')
-
+    # plane level
     bp.set('Plane.calibrationLevel', '2')
     bp.clear('Plane.dataProductType')
     bp.add_fits_attribute('Plane.dataProductType', 'TYPE')
 
-    bp.set('Plane.provenance.name', 'get_provenance_name(header)')
-    bp.set('Plane.provenance.version', 'get_provenance_version(header)')
+    # Clare Chandler via slack - 28-08-18
+    bp.clear('Plane.provenance.name')
+    bp.add_fits_attribute('Plane.provenance.name', 'ORIGIN')
     bp.set('Plane.provenance.producer', 'NRAO')
+    # From JJK - 27-08-18 - slack
+    bp.set('Plane.provenance.project', 'VLASS')
+    bp.clear('Plane.provenance.runID')
+    bp.add_fits_attribute('Plane.provenance.runID', 'FILNAM08')
+    bp.clear('Plane.provenance.lastExecuted')
+    bp.add_fits_attribute('Plane.provenance.lastExecuted', 'DATE')
+
+    # From JJK - 27-08-18 - slack
+    # bp.set('Plane.dataQuality', 'passed')
 
     # VLASS data is public, says Eric Rosolowsky via JJK May 30/18
     bp.clear('Plane.metaRelease')
@@ -168,9 +183,11 @@ def accumulate_wcs(bp):
     bp.clear('Plane.dataRelease')
     bp.add_fits_attribute('Plane.dataRelease', 'DATE-OBS')
 
+    # artifact level
     bp.clear('Artifact.productType')
     bp.set('Artifact.productType', 'get_product_type(uri)')
 
+    # chunk level
     bp.clear('Chunk.position.axis.function.cd11')
     bp.clear('Chunk.position.axis.function.cd22')
     bp.add_fits_attribute('Chunk.position.axis.function.cd11', 'CDELT1')
@@ -178,12 +195,16 @@ def accumulate_wcs(bp):
     bp.set('Chunk.position.axis.function.cd21', 0.0)
     bp.add_fits_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
 
+    # Clare Chandler via JJK - 21-08-18
     bp.set('Chunk.energy.bandpassName', 'S-band')
+
 
 def get_position_resolution(header):
     bmaj = header[0]['BMAJ']
     bmin = header[0]['BMIN']
-    # From https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
+    # From
+    # https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
+    # Clare Chandler via JJK - 21-08-18
     return 3600.0 * sqrt(bmaj*bmin)
 
 
@@ -192,22 +213,6 @@ def get_product_type(uri):
         return ProductType.NOISE
     else:
         return ProductType.SCIENCE
-
-
-def get_provenance_name(header):
-    origin = header[0].get('ORIGIN')
-    if origin is not None:
-        return origin.split()[0]
-    else:
-        return None
-
-
-def get_provenance_version(header):
-    origin = header[0].get('ORIGIN')
-    if origin is not None:
-        return origin.split()[1]
-    else:
-        return None
 
 
 def get_time_refcoord_value(header):
