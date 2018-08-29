@@ -86,7 +86,7 @@ def vlass_run():
 def vlass_run_single():
     import sys
     config = mc.Config()
-    config.get_config()
+    config.get_executors()
     config.collection = COLLECTION
     config.working_directory = '/usr/src/app'
     config.use_local_files = False
@@ -94,7 +94,7 @@ def vlass_run_single():
     config.log_to_file = False
     config.task_types = [mc.TaskType.AUGMENT]
     config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
-    if config.features.use_clients:
+    if config.features.run_in_airflow:
         temp = tempfile.NamedTemporaryFile()
         mc.write_to_file(temp.name, sys.argv[2])
         config.proxy = temp.name
@@ -106,4 +106,4 @@ def vlass_run_single():
         vlass_name = VlassName(file_name=file_name)
     else:
         vlass_name = VlassName(obs_id=sys.argv[1])
-    ec.run_single(config, vlass_name, 'vlass2caom2', meta_visitors=visitors)
+    ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors)
