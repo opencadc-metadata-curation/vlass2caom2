@@ -11,7 +11,7 @@ RUN pip install caom2repo && pip install PyYAML
 
 WORKDIR /usr/src/app
 RUN git clone https://github.com/SharonGoliath/caom2tools.git && \
-  cd caom2tools && git checkout s2303 && git pull origin s2303 && \
+  cd caom2tools && git pull origin master && \
   pip install ./caom2utils && pip install ./caom2pipe
 
 RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
