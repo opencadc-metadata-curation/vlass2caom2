@@ -174,9 +174,6 @@ def accumulate_wcs(bp):
     bp.clear('Plane.provenance.lastExecuted')
     bp.add_fits_attribute('Plane.provenance.lastExecuted', 'DATE')
 
-    # From JJK - 27-08-18 - slack
-    # bp.set('Plane.dataQuality', 'passed')
-
     # VLASS data is public, says Eric Rosolowsky via JJK May 30/18
     bp.clear('Plane.metaRelease')
     bp.add_fits_attribute('Plane.metaRelease', 'DATE-OBS')
@@ -274,7 +271,6 @@ class VlassCardinality(object):
         blueprints = {}
         for ii in args.lineage:
             blueprint = ObsBlueprint(module=module)
-            logging.error('module name is {}'.format(module))
             accumulate_wcs(blueprint)
             product_id, artifact_uri = mc.decompose_lineage(ii)
             blueprints[artifact_uri] = blueprint

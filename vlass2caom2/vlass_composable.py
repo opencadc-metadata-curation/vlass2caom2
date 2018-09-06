@@ -73,8 +73,10 @@ from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION, COLLECTION
 from vlass2caom2 import vlass_time_bounds_augmentation
+from vlass2caom2 import vlass_quality_augmentation
 
-visitors = [vlass_time_bounds_augmentation]
+
+visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
 
 
 def vlass_run():
@@ -92,7 +94,7 @@ def vlass_run_single():
     config.use_local_files = False
     config.logging_level = 'INFO'
     config.log_to_file = False
-    config.task_types = [mc.TaskType.AUGMENT]
+    config.task_types = [mc.TaskType.INGEST]
     config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
     if config.features.run_in_airflow:
         temp = tempfile.NamedTemporaryFile()

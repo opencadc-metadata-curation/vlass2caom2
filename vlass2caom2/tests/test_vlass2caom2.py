@@ -88,19 +88,25 @@ a = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
     'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
 b = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
     'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
+c = 'VLASS1.1.ql.T10t12.J075402-033000.10.2048.' \
+    'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
+d = 'VLASS1.1.ql.T10t12.J075402-033000.10.2048.' \
+    'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
+obs_id_a = 'VLASS1.1.T01t01.J000228-363000'
+obs_id_c = 'VLASS1.1.T10t12.J075402-033000'
 
 COLLECTION = 'VLASS'
 
 
-@pytest.mark.parametrize('test_files', [[a, b]])
+@pytest.mark.parametrize('test_files', [[obs_id_a, a, b], [obs_id_c, c, d]])
 def test_main_app(test_files):
-    obs_id = 'VLASS1.1.T01t01.J000228-363000'
+    obs_id = test_files[0]
     product_id = '{}.quicklook.v1'.format(obs_id)
     lineage = ' '.join(
-        VlassName(obs_id, ii).get_lineage(product_id) for ii in test_files)
+        VlassName(obs_id, ii).get_lineage(product_id) for ii in test_files[1:])
 
     output_file = '{}.actual.xml'.format(obs_id)
-    local = _get_local(test_files)
+    local = _get_local(test_files[1:])
     plugin = PLUGIN
 
     with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:

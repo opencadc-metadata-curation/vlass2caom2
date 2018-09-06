@@ -70,9 +70,11 @@
 import os
 import pytest
 
+from caom2 import Status
 from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import vlass_time_bounds_augmentation
+from vlass2caom2 import vlass_quality_augmentation
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
@@ -83,6 +85,8 @@ TEST_URI = 'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.' \
 def test_aug_visit():
     with pytest.raises(mc.CadcException):
         vlass_time_bounds_augmentation.visit(None)
+    with pytest.raises(mc.CadcException):
+        vlass_quality_augmentation.visit(None)
 
 
 def test_aug_visit_works():
@@ -108,4 +112,34 @@ def test_aug_visit_works():
         'wrong amount of bounds info'
     assert chunk.time.exposure == 401.0, \
         'wrong exposure value'
+    mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
+
+
+def test_aug_visit_quality_works():
+    rejected_uri = 'ad:VLASS/VLASS1.1.ql.T10t12.J075402-033000.10.2048.v1' \
+                   '.I.iter1.image.pbcor.tt0.subim.fits'
+    test_file = os.path.join(
+        TESTDATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
+    test_obs = mc.read_obs_from_file(test_file)
+    assert test_obs is not None, 'unexpected None'
+
+    data_dir = os.path.join(THIS_DIR, '../../data')
+    kwargs = {'working_directory': data_dir}
+    test_result = vlass_quality_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'unexpected modification'
+    assert test_result is not None, 'should have a result status'
+    assert len(test_result) == 1, 'modified artifacts count'
+    assert test_result['observations'] == 0, 'observation count'
+    assert test_obs.requirements is None, 'status value should not be set'
+
+    for plane in test_obs.planes:
+        for artifact in test_obs.planes[plane].artifacts:
+            test_obs.planes[plane].artifacts[artifact].uri = rejected_uri
+    test_result = vlass_quality_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'unexpected modification'
+    assert test_result is not None, 'should have a result status'
+    assert len(test_result) == 1, 'modified artifacts count'
+    assert test_result['observations'] == 2, 'observation count'
+    assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
+
     mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
