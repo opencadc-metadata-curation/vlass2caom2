@@ -159,6 +159,8 @@ def accumulate_wcs(bp):
     bp.set('Observation.proposal.id', 'VLASS1.1')
 
     # plane level
+    # TODO TODO TODO - calibration level is 3 for coarse, level 4 for
+    # catalogs
     bp.set('Plane.calibrationLevel', '2')
     bp.clear('Plane.dataProductType')
     bp.add_fits_attribute('Plane.dataProductType', 'TYPE')
@@ -179,10 +181,14 @@ def accumulate_wcs(bp):
     bp.add_fits_attribute('Plane.metaRelease', 'DATE-OBS')
     bp.clear('Plane.dataRelease')
     bp.add_fits_attribute('Plane.dataRelease', 'DATE-OBS')
+    #
+    # TODO set the meta and data release dates to these same values?
 
     # artifact level
     bp.clear('Artifact.productType')
-    bp.set('Artifact.productType', 'get_product_type(uri)')
+    # TODO TODO TODO - multiple blueprints?
+    # bp.set('Artifact.productType', 'get_product_type(uri)')
+    bp.set('Artifact.productType', ProductType.SCIENCE)
 
     # chunk level
     bp.clear('Chunk.position.axis.function.cd11')
@@ -194,6 +200,14 @@ def accumulate_wcs(bp):
 
     # Clare Chandler via JJK - 21-08-18
     bp.set('Chunk.energy.bandpassName', 'S-band')
+
+    # TODO for catalog and coarse cube:
+    # - dataProductType == 'catalog' for the catalog plane. No, it's
+    # apparently some magic string :(
+    # http://www.opencadc.org/caom2/DataProductType#catalog
+    # - mime type == 'text/csv'
+    # - remove the .header from the file name when making the artifact uris
+    # - provenance for the catalog plane
 
 
 def get_position_resolution(header):

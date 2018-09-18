@@ -92,18 +92,27 @@ c = 'VLASS1.1.ql.T10t12.J075402-033000.10.2048.' \
     'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
 d = 'VLASS1.1.ql.T10t12.J075402-033000.10.2048.' \
     'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
+e = 'VLASS1.1.ql.T29t05.J110448+763000.10.2048.' \
+    'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
+f = 'VLASS1.1.ql.T29t05.J110448+763000.10.2048.' \
+    'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
+g = 'VLASS1.1.cat.T29t05.J110448+763000.10.2048.v1.csv'
+h = 'VLASS1.1.cc.T29t05.J110448+763000.10.2048.v1.fits.header'
 obs_id_a = 'VLASS1.1.T01t01.J000228-363000'
 obs_id_c = 'VLASS1.1.T10t12.J075402-033000'
+obs_id_e = 'VLASS1.1.T29t05.J110448+763000'
 
 COLLECTION = 'VLASS'
 
 
-@pytest.mark.parametrize('test_files', [[obs_id_a, a, b], [obs_id_c, c, d]])
+@pytest.mark.parametrize('test_files', [[obs_id_a, a, b],
+                                        [obs_id_c, c, d],
+                                        [obs_id_e, e, f, g, h]])
 def test_main_app(test_files):
     obs_id = test_files[0]
-    product_id = '{}.quicklook.v1'.format(obs_id)
-    lineage = ' '.join(
-        VlassName(obs_id, ii).get_lineage(product_id) for ii in test_files[1:])
+    lineage = _get_lineage(obs_id, test_files)
+    import logging
+    logging.error(lineage)
 
     output_file = '{}.actual.xml'.format(obs_id)
     local = _get_local(test_files[1:])
@@ -124,9 +133,9 @@ def test_main_app(test_files):
 
         sys.argv = \
             ('vlass2caom2 --local {} --observation {} {} -o {} '
-             '--plugin {} --lineage {}'.format(local, COLLECTION, obs_id,
-                                               output_file, plugin,
-                                               lineage)).split()
+             '--plugin {} --module {} --lineage {}'.format(
+                local, COLLECTION, obs_id, output_file, plugin, plugin,
+                lineage)).split()
         print(sys.argv)
         main_app()
         obs_path = os.path.join(TESTDATA_DIR, '{}.xml'.format(obs_id))
@@ -146,3 +155,18 @@ def _get_local(test_files):
     for test_name in test_files:
         result = '{} {}/{}'.format(result, TESTDATA_DIR, test_name)
     return result
+
+
+def _get_lineage(obs_id, test_files):
+    if obs_id_a is obs_id or obs_id_c is obs_id:
+        product_id = '{}.quicklook.v1'.format(obs_id)
+        return ' '.join(
+        VlassName(obs_id, ii).get_lineage(product_id) for ii in test_files[1:])
+    else:
+        ql_pid = '{}.quicklook.v1'.format(obs_id)
+        cat_pid = '{}.catalog.v1'.format(obs_id)
+        coarse_pid = '{}.coarsecube.v1'.format(obs_id)
+        return '{}/ad:VLASS/{} {}/ad:VLASS/{} {}/ad:VLASS/{} ' \
+               '{}/ad:VLASS/{}'.format(ql_pid, test_files[1], ql_pid,
+                                       test_files[2], cat_pid, test_files[3],
+                                       coarse_pid, test_files[4])
