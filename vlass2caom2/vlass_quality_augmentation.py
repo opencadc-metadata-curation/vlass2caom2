@@ -104,7 +104,7 @@ def _augment(observation, artifact):
     #
     logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
     csv_file = mc.read_csv_file('/usr/src/rejected_file_names-2018-09-05.csv')
-    file_name = ec.CaomName(artifact.uri).get_file_name()
+    file_name = ec.CaomName(artifact.uri).file_name
     for row in csv_file:
         for column in row:
             if file_name in column:

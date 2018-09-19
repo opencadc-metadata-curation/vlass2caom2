@@ -81,8 +81,8 @@ visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
 
 def vlass_run():
     proxy = '/usr/src/app/cadcproxy.pem'
-    ec.run_by_file(VlassName, APPLICATION, COLLECTION,
-                   proxy=proxy, meta_visitors=visitors)
+    ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=proxy,
+                   meta_visitors=visitors, data_visitors=None)
 
 
 def vlass_run_single():
@@ -108,4 +108,5 @@ def vlass_run_single():
         vlass_name = VlassName(file_name=file_name)
     else:
         vlass_name = VlassName(obs_id=sys.argv[1])
-    ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors)
+    ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors,
+                  data_visitors=None)

@@ -104,10 +104,18 @@ obs_id_e = 'VLASS1.1.T29t05.J110448+763000'
 
 COLLECTION = 'VLASS'
 
+features = mc.Features()
+features.supports_catalog = False
+if features.supports_catalog:
+    test_obs = [[obs_id_a, a, b],
+                [obs_id_c, c, d],
+                [obs_id_e, e, f, g, h]]
+else:
+    test_obs = [[obs_id_a, a, b],
+                [obs_id_c, c, d]]
 
-@pytest.mark.parametrize('test_files', [[obs_id_a, a, b],
-                                        [obs_id_c, c, d],
-                                        [obs_id_e, e, f, g, h]])
+
+@pytest.mark.parametrize('test_files', test_obs)
 def test_main_app(test_files):
     obs_id = test_files[0]
     lineage = _get_lineage(obs_id, test_files)
@@ -160,8 +168,8 @@ def _get_local(test_files):
 def _get_lineage(obs_id, test_files):
     if obs_id_a is obs_id or obs_id_c is obs_id:
         product_id = '{}.quicklook.v1'.format(obs_id)
-        return ' '.join(
-        VlassName(obs_id, ii).get_lineage(product_id) for ii in test_files[1:])
+        return ' '.join(VlassName(obs_id, ii).get_lineage(product_id)
+                        for ii in test_files[1:])
     else:
         ql_pid = '{}.quicklook.v1'.format(obs_id)
         cat_pid = '{}.catalog.v1'.format(obs_id)
