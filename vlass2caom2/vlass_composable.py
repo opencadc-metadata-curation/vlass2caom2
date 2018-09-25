@@ -99,9 +99,9 @@ def vlass_run_single():
     if config.features.run_in_airflow:
         temp = tempfile.NamedTemporaryFile()
         mc.write_to_file(temp.name, sys.argv[2])
-        config.proxy = temp.name
+        config.proxy_fqn = temp.name
     else:
-        config.proxy = sys.argv[2]
+        config.proxy_fqn = sys.argv[2]
     config.stream = 'raw'
     file_name = sys.argv[1]
     if config.features.use_file_names:
