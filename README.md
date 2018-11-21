@@ -10,7 +10,7 @@ Documentation:
   - TAP: http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/doc/tap/
   - CLI for direct file download: http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/doc/data/
 
-CLI for accessing files directly (available now):
+CLI for accessing files directly:
   - Common command line tools such as curl and wget can be used to retrieve VLASS files.
   - Cutout operations as described on the documentation page are also supported for VLASS data.
   - A VLASS example: curl -O -L http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/data/pub/VLASS/VLASS1.1.ql.T03t30.J194539-313000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits
