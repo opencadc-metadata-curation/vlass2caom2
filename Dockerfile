@@ -10,7 +10,7 @@ RUN pip install pytest && pip install mock && pip install flake8 && \
 RUN pip install caom2repo && pip install PyYAML
 
 WORKDIR /usr/src/app
-RUN git clone https://github.com/SharonGoliath/caom2tools.git && \
+RUN git clone https://github.com/opencadc-metadata-curation/caom2tools.git && \
   cd caom2tools && git pull origin master && \
   pip install ./caom2utils && pip install ./caom2pipe && cd ..
 
