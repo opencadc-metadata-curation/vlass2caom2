@@ -237,25 +237,33 @@ def update(observation, **kwargs):
     :param **kwargs Everything else."""
     logging.debug('Begin update.')
 
-    mc.check_param(observation, Observation)
-    for plane in observation.planes:
-        for artifact in observation.planes[plane].artifacts:
-            for part in observation.planes[plane].artifacts[artifact].parts:
-                p = observation.planes[plane].artifacts[artifact].parts[part]
-                for chunk in p.chunks:
-                    if 'headers' in kwargs:
-                        headers = kwargs['headers']
-                        chunk.position.resolution = get_position_resolution(
-                            headers)
-                        if chunk.energy is not None:
-                            # A value of None per Chris, 2018-07-26
-                            # Set the value to None here, because the
-                            # blueprint is implemented to not set WCS
-                            # information to None
-                            chunk.energy.restfrq = None
+    try:
 
-    logging.debug('Done update.')
-    return True
+        mc.check_param(observation, Observation)
+        for plane in observation.planes:
+            for artifact in observation.planes[plane].artifacts:
+                for part in observation.planes[plane].artifacts[artifact].parts:
+                    p = observation.planes[plane].artifacts[artifact].parts[part]
+                    for chunk in p.chunks:
+                        if 'headers' in kwargs:
+                            headers = kwargs['headers']
+                            chunk.position.resolution = get_position_resolution(
+                                headers)
+                            if chunk.energy is not None:
+                                # A value of None per Chris, 2018-07-26
+                                # Set the value to None here, because the
+                                # blueprint is implemented to not set WCS
+                                # information to None
+                                chunk.energy.restfrq = None
+        logging.debug('Done update.')
+        return observation
+    except mc.CadcException as e:
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        logging.error(e)
+        logging.error(
+            'Terminating ingestion for {}'.format(observation.observation_id))
+        return None
 
 
 class VlassCardinality(object):
