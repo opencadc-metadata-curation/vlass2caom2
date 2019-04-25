@@ -74,6 +74,8 @@ from caom2 import TemporalWCS, CoordAxis1D, Axis
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 
+from vlass2caom2 import scrape
+
 
 def visit(observation, **kwargs):
     mc.check_param(observation, Observation)
@@ -94,9 +96,10 @@ def visit(observation, **kwargs):
             artifact = plane.artifacts[j]
             logging.debug('working on artifact {}'.format(artifact.uri))
             version, reference = _augment(observation.observation_id, artifact)
-            plane.provenance.version = version
-            plane.provenance.reference = reference
-            count += 1
+            if version is not None and reference is not None:
+                plane.provenance.version = version
+                plane.provenance.reference = reference
+                count += 1
     logging.info('Completed time bounds augmentation for {}'.format(
         observation.observation_id))
     return {'artifacts': count}
@@ -108,7 +111,7 @@ def _augment(obs_id, artifact):
     # structure, because so much about this is broken anyway
     #
     logging.debug('get content of all the VLASS observations from 2018-08-08')
-    csv_file = mc.read_csv_file('/usr/src/ArchiveQuery-2018-08-15.csv')
+    csv_file = mc.read_csv_file('/app/src/ArchiveQuery-2018-08-15.csv')
 
     logging.debug('build time bounds information from measurement set info')
     version, reference = _augment_artifact(obs_id, artifact, csv_file)
@@ -121,30 +124,57 @@ def _augment_artifact(obs_id, artifact, csv_file):
     exposure = None
     version = None
     reference = None
+    found = False
     for ii in csv_file:
         if obs_id in ii:
-            bounds, exposure = _build_time(ii)
+            bounds, exposure = _build_from_row(ii)
             version = ii[1].strip()
             reference = ii[2].strip()
+            found = True
             break
-    time_axis = CoordAxis1D(Axis('TIME', 'd'))
-    time_axis.bounds = bounds
-    chunk.time = TemporalWCS(time_axis)
-    chunk.time.exposure = exposure
-    return version, reference
+
+    if not found:
+        result = scrape.retrieve_obs_metadata(obs_id)
+        if result is not None:
+            bounds, exposure = _build_time(result['Observation Start'],
+                                           result['Observation End'],
+                                           result['On Source'])
+            version = result['Pipeline Version']
+            reference = result['reference']
+            found = True
+
+    if found:
+        time_axis = CoordAxis1D(Axis('TIME', 'd'))
+        time_axis.bounds = bounds
+        chunk.time = TemporalWCS(time_axis)
+        chunk.time.exposure = exposure
+        count = 0
+        for ii in [chunk.time_axis, chunk.position_axis_1,
+                   chunk.position_axis_2, chunk.energy_axis,
+                   chunk.polarization_axis, chunk.observable_axis]:
+            if ii is not None:
+                count += 1
+        chunk.time_axis = count + 1
+        chunk.naxis = count + 1
+        return version, reference
+    else:
+        return None, None
 
 
-def _build_time(row):
+def _build_from_row(row):
+    return _build_time(row[3].strip(), row[4].strip(), row[5].strip())
+
+
+def _build_time(start, end, tos):
     bounds = CoordBounds1D()
-    start_date = ac.get_datetime(row[3].strip())
-    end_date = ac.get_datetime(row[4].strip())
+    start_date = ac.get_datetime(start)
+    end_date = ac.get_datetime(end)
     start_date.format = 'mjd'
     end_date.format = 'mjd'
-    exposure = float(ac.get_timedelta_in_s(row[5].strip()))
+    exposure = float(ac.get_timedelta_in_s(tos))
     start_ref_coord = RefCoord(0.5, start_date.value)
     end_ref_coord = RefCoord(1.5, end_date.value)
     bounds.samples.append(CoordRange1D(start_ref_coord,
                                        end_ref_coord))
     return bounds, exposure
-
 

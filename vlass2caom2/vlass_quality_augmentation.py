@@ -73,6 +73,11 @@ from caom2 import Observation, Requirements, Status
 from caom2pipe import manage_composable as mc
 from caom2pipe import execute_composable as ec
 
+from vlass2caom2 import scrape
+
+FILE_NAME = '/app/src/rejected_file_names.csv'
+START_DATE = '2019-01-01'
+
 
 def visit(observation, **kwargs):
     mc.check_param(observation, Observation)
@@ -83,7 +88,12 @@ def visit(observation, **kwargs):
     # There's no header information, so get the list of QA rejected files
     # from here, and make a check against that static list
     #
-    # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/QA_REJECTED/
+    # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/QA_REJECTED/#
+    # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/#
+    # etc
+    uri = None
+    if 'uri' in kwargs:
+        uri = kwargs['uri']
 
     count = 0
     for i in observation.planes:
@@ -91,28 +101,38 @@ def visit(observation, **kwargs):
         for j in plane.artifacts:
             artifact = plane.artifacts[j]
             logging.debug('working on artifact {}'.format(artifact.uri))
-            count += _augment(observation, artifact)
+            count += _augment(observation, artifact, uri)
     logging.info('Completed quality augmentation for {}'.format(
         observation.observation_id))
     return {'observations': count}
 
 
-def _augment(observation, artifact):
+def _augment(observation, artifact, uri):
 
     # note the location of this file is hard-coded in the container
     # structure, because so much about this is broken anyway
     #
-    logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
-    csv_file = mc.read_csv_file('/usr/src/rejected_file_names-2018-09-05.csv')
-    file_name = ec.CaomName(artifact.uri).file_name
-    for row in csv_file:
-        for column in row:
-            if file_name in column:
-                logging.debug('Found QA Rejected file {}'.format(file_name))
-                _set_failed(observation)
-                return 1
+    if uri is not None:
+        if 'QA_REJECTED' in uri:
+            _set_failed(observation)
+            return 1
+    else:
+        logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
+        csv_file = mc.read_csv_file('/app/src/rejected_file_names-2018-09-05.csv')
+        file_name = ec.CaomName(artifact.uri).file_name
+        for row in csv_file:
+            for column in row:
+                if file_name in column:
+                    logging.debug('Found QA Rejected file {}'.format(file_name))
+                    _set_failed(observation)
+                    return 1
     return 0
 
 
 def _set_failed(observation):
     observation.requirements = Requirements(Status.FAIL)
+
+
+def update_static_list():
+    csv_content = mc.read_csv_file(FILE_NAME)
+    new_content = scrape.build_qa_rejected_todo(START_DATE)

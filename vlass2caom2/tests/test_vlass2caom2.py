@@ -69,7 +69,7 @@
 
 
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import main_app, VlassName
+from vlass2caom2 import vlass_main, VlassName
 from caom2.diff import get_differences
 
 import os
@@ -83,7 +83,7 @@ TEST_URI = 'ad:TEST_COLLECTION/test_file.fits'
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
-PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'vlass2caom2.py')
+PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 a = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
     'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
 b = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
@@ -98,9 +98,14 @@ f = 'VLASS1.1.ql.T29t05.J110448+763000.10.2048.' \
     'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
 g = 'VLASS1.1.cat.T29t05.J110448+763000.10.2048.v1.csv'
 h = 'VLASS1.1.cc.T29t05.J110448+763000.10.2048.v1.fits.header'
+i = 'VLASS1.2.ql.T07t14.J084202-123000.10.2048.' \
+    'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
+j = 'VLASS1.2.ql.T07t14.J084202-123000.10.2048.' \
+    'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
 obs_id_a = 'VLASS1.1.T01t01.J000228-363000'
 obs_id_c = 'VLASS1.1.T10t12.J075402-033000'
 obs_id_e = 'VLASS1.1.T29t05.J110448+763000'
+obs_id_f = 'VLASS1.2.T07t14.J084202-123000'
 
 COLLECTION = 'VLASS'
 
@@ -109,10 +114,12 @@ features.supports_catalog = False
 if features.supports_catalog:
     test_obs = [[obs_id_a, a, b],
                 [obs_id_c, c, d],
-                [obs_id_e, e, f, g, h]]
+                [obs_id_e, e, f, g, h],
+                [obs_id_f, i, j]]
 else:
     test_obs = [[obs_id_a, a, b],
-                [obs_id_c, c, d]]
+                [obs_id_c, c, d],
+                [obs_id_f, i, j]]
 
 
 @pytest.mark.parametrize('test_files', test_obs)
@@ -145,7 +152,7 @@ def test_main_app(test_files):
                 local, COLLECTION, obs_id, output_file, plugin, plugin,
                 lineage)).split()
         print(sys.argv)
-        main_app()
+        vlass_main()
         obs_path = os.path.join(TESTDATA_DIR, '{}.xml'.format(obs_id))
         expected = mc.read_obs_from_file(obs_path)
         actual = mc.read_obs_from_file(output_file)
@@ -166,7 +173,7 @@ def _get_local(test_files):
 
 
 def _get_lineage(obs_id, test_files):
-    if obs_id_a is obs_id or obs_id_c is obs_id:
+    if obs_id in [obs_id_a, obs_id_c, obs_id_f]:
         product_id = '{}.quicklook.v1'.format(obs_id)
         return ' '.join(VlassName(obs_id, ii).get_lineage(product_id)
                         for ii in test_files[1:])

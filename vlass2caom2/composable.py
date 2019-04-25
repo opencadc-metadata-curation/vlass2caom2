@@ -67,46 +67,34 @@
 # ***********************************************************************
 #
 
-import tempfile
-
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION, COLLECTION
 from vlass2caom2 import vlass_time_bounds_augmentation
-from vlass2caom2 import vlass_quality_augmentation
+from vlass2caom2 import vlass_quality_augmentation, scrape
 
 
 visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
 
 
-def vlass_run():
-    proxy = '/usr/src/app/cadcproxy.pem'
-    ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=proxy,
-                   meta_visitors=visitors, data_visitors=None)
-
-
-def vlass_run_single():
-    import sys
+def run():
     config = mc.Config()
     config.get_executors()
-    config.collection = COLLECTION
-    config.working_directory = '/usr/src/app'
-    config.use_local_files = False
-    config.logging_level = 'INFO'
-    config.log_to_file = False
-    config.task_types = [mc.TaskType.INGEST]
-    config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
-    if config.features.run_in_airflow:
-        temp = tempfile.NamedTemporaryFile()
-        mc.write_to_file(temp.name, sys.argv[2])
-        config.proxy_fqn = temp.name
-    else:
-        config.proxy_fqn = sys.argv[2]
-    config.stream = 'raw'
-    file_name = sys.argv[1]
-    if config.features.use_file_names:
-        vlass_name = VlassName(file_name=file_name)
-    else:
-        vlass_name = VlassName(obs_id=sys.argv[1])
-    ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors,
-                  data_visitors=None)
+    ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=config.proxy_fqn,
+                   meta_visitors=visitors, data_visitors=None,
+                   chooser=None, archive=COLLECTION)
+
+
+def run_state():
+    config = mc.Config()
+    config.get_executors()
+    state = mc.State(config.state_fqn)
+    todo_list = {}
+    count = 0
+    for k, v in todo_list.items():
+        vlass_name = VlassName(url=v)
+        ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors,
+                      data_visitors=None, chooser=None, archive=COLLECTION)
+        count += 1
+        if count % 10 == 0:
+            state.save_state('vlass_timestamp', k)

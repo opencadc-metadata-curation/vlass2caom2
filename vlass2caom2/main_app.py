@@ -78,10 +78,11 @@ from caom2 import Observation, ProductType
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import StorageName
 from caom2pipe import astro_composable as ac
+from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['main_app', 'update', 'VlassName', 'VlassCardinality', 'COLLECTION',
+__all__ = ['vlass_main', 'update', 'VlassName', 'VlassCardinality', 'COLLECTION',
            'APPLICATION']
 
 COLLECTION = 'VLASS'
@@ -95,9 +96,13 @@ class VlassName(StorageName):
 
     Isolate the zipped/unzipped nature of the file names.
     """
-    def __init__(self, obs_id=None, file_name=None):
+    def __init__(self, obs_id=None, file_name=None, fname_on_disk=None,
+                 url=None):
         if obs_id is None:
-            obs_id = VlassName.get_obs_id_from_file_name(file_name)
+            if file_name is not None:
+                obs_id = VlassName.get_obs_id_from_file_name(file_name)
+            elif fname_on_disk is not None:
+                obs_id = VlassName.get_obs_id_from_file_name(fname_on_disk)
         super(VlassName, self).__init__(
             obs_id, COLLECTION, COLLECTION_PATTERN)
         self.file_name = file_name
@@ -106,6 +111,10 @@ class VlassName(StorageName):
         else:
             self.file_id = file_name.replace('.header', '')
         self.obs_id = obs_id
+        if fname_on_disk is not None:
+            self.file_id = fname_on_disk.replace('.header', '')
+            self.fname_on_disk = fname_on_disk
+        self.url = url
 
     @property
     def file_uri(self):
@@ -127,6 +136,14 @@ class VlassName(StorageName):
     def product_id(self):
         return '{}.quicklook.v1'.format(self.obs_id)
 
+    @property
+    def url(self):
+        return self._url
+
+    @url.setter
+    def url(self, value):
+        self._url = value
+
     def _get_file_id(self):
         return self.file_id
 
@@ -141,6 +158,10 @@ class VlassName(StorageName):
         bits = file_name.split('.')
         obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
         return obs_id
+
+    @staticmethod
+    def remove_extensions(file_name):
+        return file_name.replace('.fits', '').replace('.header', '')
 
 
 def accumulate_wcs(bp):
@@ -163,7 +184,7 @@ def accumulate_wcs(bp):
     # From JJK - 27-08-18 - slack
     bp.set('Observation.proposal.title', 'VLA Sky Survey')
     bp.set('Observation.proposal.project', 'VLASS')
-    bp.set('Observation.proposal.id', 'VLASS1.1')
+    bp.set('Observation.proposal.id', 'get_proposal_id(uri)')
 
     # plane level
     bp.set('Plane.calibrationLevel', '2')
@@ -217,6 +238,12 @@ def get_product_type(uri):
         return ProductType.NOISE
     else:
         return ProductType.SCIENCE
+
+
+def get_proposal_id(uri):
+    caom_name = ec.CaomName(uri)
+    bits = caom_name.file_name.split('.')
+    return '{}.{}'.format(bits[0], bits[1])
 
 
 def get_time_refcoord_value(header):
@@ -295,7 +322,7 @@ class VlassCardinality(object):
         pass  # TODO
 
 
-def main_app():
+def vlass_main():
     args = get_gen_proc_arg_parser().parse_args()
     try:
         vlass = VlassCardinality()
