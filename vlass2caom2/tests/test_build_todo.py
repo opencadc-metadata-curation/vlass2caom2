@@ -72,13 +72,12 @@ import pytest
 import sys
 
 from datetime import datetime
-from mock import patch
+from mock import patch, Mock
 
 from caom2pipe import manage_composable as mc
 from caom2.diff import get_differences
 
-from vlass2caom2 import scrape, vlass_time_bounds_augmentation
-from vlass2caom2 import vlass_quality_augmentation
+from vlass2caom2 import scrape, vlass_time_bounds_augmentation, composable
 
 PY_VERSION = '3.6'
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -93,6 +92,7 @@ REJECT_INDEX = os.path.join(TEST_DATA_DIR, 'rejected_index.html')
 SPECIFIC_REJECTED = os.path.join(TEST_DATA_DIR, 'specific_rejected.html')
 TEST_START_TIME = datetime.strptime('04Apr2019 12:34',
                                     scrape.PAGE_TIME_FORMAT)
+STATE_FILE = os.path.join(TEST_DATA_DIR, 'state.yml')
 TEST_OBS_ID = 'VLASS1.2.T07t14.J084202-123000'
 
 
@@ -212,7 +212,9 @@ def test_retrieve_qa_rejected():
         assert test_result_list is not None, 'expected dict result'
         assert len(test_result_list) == 7, 'wrong size results'
         temp = test_result_list.popitem()
-        assert temp[1][0].startswith('VLASS1.2.ql.T'), 'wrong reference'
+        assert temp[1][0].startswith(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+            'QA_REJECTED/VLASS1.2.ql.T'), 'wrong reference'
         assert test_max_date is not None, 'expected date result'
         assert test_max_date == datetime(
             2019, 4, 17, 10, 6), 'wrong date result'
@@ -223,14 +225,15 @@ def test_retrieve_qa_rejected():
 def test_qa_rejected_bits():
     with open(REJECT_INDEX) as f:
         test_content = f.read()
-        test_result, test_max = scrape._parse_rejected_page(test_content,
-                                                            'VLASS1.2',
-                                                            TEST_START_TIME)
+        test_result, test_max = scrape._parse_rejected_page(
+            test_content, 'VLASS1.2', TEST_START_TIME,
+            '{}VLASS1.2/QA_REJECTED/'.format(scrape.QL_URL))
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 7, 'wrong number of results'
         temp = test_result.popitem()
         assert temp[1][0] == \
-            'VLASS1.2.ql.T18t04.J023954+283000.10.2048.v1/'
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+            'QA_REJECTED/VLASS1.2.ql.T18t04.J023954+283000.10.2048.v1/'
         assert test_max is not None, 'expected max result'
         assert test_max == datetime(
             2019, 4, 17, 10, 6), 'wrong date result'
@@ -278,13 +281,39 @@ def test_build_todo():
         assert len(test_result) == 16, 'wrong size results'
         assert test_max_date is not None, 'expected date result'
         assert test_max_date == datetime(
-            2019, 4, 17, 10, 6), 'wrong date result'
+            2019, 4, 9, 16, 57), 'wrong date result'
         temp = test_result.popitem()
-        import logging
-        logging.error(type(temp[1][0]))
         assert temp[1][0] == \
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-            'VLASS1.2.ql.T15t08.J052114+163000.10.2048.v2/', 'wrong result'
+            'QA_REJECTED/VLASS1.2.ql.T15t08.J052114+163000.10.2048.v2/', \
+            'wrong result'
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
+def test_run_state():
+    # preconditions
+    test_bookmark = {'bookmarks': { 'vlass_timestamp':
+                                        {'last_record': TEST_START_TIME}}}
+    mc.write_as_yaml(test_bookmark, STATE_FILE)
+    start_time = os.path.getmtime(STATE_FILE)
+
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=TEST_DATA_DIR)
+
+    try:
+        # execution
+        with patch(
+                'caom2pipe.manage_composable.query_endpoint') as \
+                query_endpoint_mock, \
+                patch('caom2pipe.execute_composable.run_single') as run_mock:
+            query_endpoint_mock.side_effect = _query_endpoint
+            composable.run_state()
+            assert run_mock.called, 'should have been called'
+        end_time = os.path.getmtime(STATE_FILE)
+        assert end_time > start_time, 'no execution'
+    finally:
+        os.getcwd = getcwd_orig
 
 
 def _query_endpoint(url):

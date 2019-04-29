@@ -67,6 +67,8 @@
 # ***********************************************************************
 #
 
+import logging
+
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION, COLLECTION
@@ -89,12 +91,28 @@ def run_state():
     config = mc.Config()
     config.get_executors()
     state = mc.State(config.state_fqn)
-    todo_list = {}
+    start_time = state.get_bookmark('vlass_timestamp')
+    logging.info('Starting at {}'.format(start_time))
+    todo_list, max_date = scrape.build_todo(start_time)
     count = 0
     for k, v in todo_list.items():
-        vlass_name = VlassName(url=v)
-        ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors,
-                      data_visitors=None, chooser=None, archive=COLLECTION)
-        count += 1
-        if count % 10 == 0:
-            state.save_state('vlass_timestamp', k)
+        for value in v:
+            # -2 because NRAO URLs always end in /
+            f_prefix = value.split('/')[-2]
+            f1 = '{}{}.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
+                value, f_prefix)
+            f2 = '{}{}.I.iter1.image.pbcor.tt0.subim.fits'.format(
+                value, f_prefix)
+            for url in [f1, f2]:
+                logging.info('{}: Process {}'.format(APPLICATION, url))
+                vlass_name = VlassName(url=url)
+                ec.run_single_from_state(config, vlass_name, APPLICATION,
+                                         meta_visitors=visitors,
+                                         data_visitors=None, chooser=None)
+                logging.debug('{}: Done process of {}'.format(APPLICATION, url))
+            count += 1
+            if count % 10 == 0:
+                state.save_state('vlass_timestamp', k)
+                logging.info('Saving timestamp {}'.format(k))
+
+    logging.info('Done {}'.format(APPLICATION))

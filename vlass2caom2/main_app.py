@@ -115,6 +115,10 @@ class VlassName(StorageName):
             self.file_id = fname_on_disk.replace('.header', '')
             self.fname_on_disk = fname_on_disk
         self.url = url
+        if url is not None:
+            self.file_name = VlassName.get_obs_id_from_file_name(
+                url.split('/')[-1])
+            self.file_id = VlassName.remove_extensions(self.file_name)
 
     @property
     def file_uri(self):

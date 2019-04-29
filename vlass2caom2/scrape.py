@@ -246,7 +246,7 @@ def retrieve_obs_metadata(obs_id):
     return metadata
 
 
-def _parse_rejected_page(html_string, epoch, start_date):
+def _parse_rejected_page(html_string, epoch, start_date, url):
     result = {}
     max_date = start_date
     soup = BeautifulSoup(html_string, features='lxml')
@@ -255,10 +255,11 @@ def _parse_rejected_page(html_string, epoch, start_date):
         temp = ii.next_element.next_element.string.replace('-', '').strip()
         dt = datetime.strptime(temp, PAGE_TIME_FORMAT)
         if dt >= start_date:
+            new_url = '{}{}'.format(url, ii.get_text())
             if dt.timestamp() in result:
-                result[dt.timestamp()].append(ii.get_text())
+                result[dt.timestamp()].append(new_url)
             else:
-                result[dt.timestamp()] = [ii.get_text()]
+                result[dt.timestamp()] = [new_url]
             max_date = max(max_date, dt)
     return result, max_date
 
@@ -286,7 +287,7 @@ def build_qa_rejected_todo(start_date):
 
         for epoch in epochs:
             epoch_name = epoch.split('/')[-2]
-            epoch_rejected_url = '{}/QA_REJECTED/'.format(epoch)
+            epoch_rejected_url = '{}QA_REJECTED/'.format(epoch)
             logging.info(
                 'Checking epoch {} on date {}'.format(
                     epoch_name, epochs[epoch]))
@@ -296,7 +297,7 @@ def build_qa_rejected_todo(start_date):
                     'Could not query epoch {}'.format(epoch_rejected_url))
             else:
                 temp, rejected_max = _parse_rejected_page(
-                    response.text, epoch_name, start_date)
+                    response.text, epoch_name, start_date, epoch_rejected_url)
                 max_date = max(start_date, rejected_max)
                 response.close()
     return temp, max_date
@@ -308,6 +309,10 @@ def build_todo(start_date):
     good, good_date = build_good_todo(start_date)
     rejected, rejected_date = build_qa_rejected_todo(start_date)
     result = collections.OrderedDict()
-    for k, v in sorted(good.items()) + sorted(rejected.items()):
-        result.setdefault(k, []).append(list(set(v)))
-    return result, max(good_date, rejected_date)
+    for k, v in sorted(sorted(good.items()) + sorted(rejected.items())):
+        temp = result.setdefault(k, [])
+        result[k] = temp + list(set(v))
+    # return the min of the two, because a date from the good list
+    # has not necessarily been encountered on the rejected list, and
+    # vice-versa
+    return result, min(good_date, rejected_date)
