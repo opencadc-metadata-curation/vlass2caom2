@@ -73,9 +73,6 @@ from caom2 import Observation, Requirements, Status
 from caom2pipe import manage_composable as mc
 from caom2pipe import execute_composable as ec
 
-from vlass2caom2 import scrape
-
-FILE_NAME = '/app/src/rejected_file_names.csv'
 START_DATE = '2019-01-01'
 
 
@@ -118,7 +115,7 @@ def _augment(observation, artifact, uri):
             return 1
     else:
         logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
-        csv_file = mc.read_csv_file('/app/src/rejected_file_names-2018-09-05.csv')
+        csv_file = mc.read_csv_file('/usr/src/rejected_file_names-2018-09-05.csv')
         file_name = ec.CaomName(artifact.uri).file_name
         for row in csv_file:
             for column in row:
@@ -131,8 +128,3 @@ def _augment(observation, artifact, uri):
 
 def _set_failed(observation):
     observation.requirements = Requirements(Status.FAIL)
-
-
-def update_static_list():
-    csv_content = mc.read_csv_file(FILE_NAME)
-    new_content = scrape.build_qa_rejected_todo(START_DATE)

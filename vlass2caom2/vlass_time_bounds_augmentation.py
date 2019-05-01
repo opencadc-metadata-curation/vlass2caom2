@@ -111,7 +111,7 @@ def _augment(obs_id, artifact):
     # structure, because so much about this is broken anyway
     #
     logging.debug('get content of all the VLASS observations from 2018-08-08')
-    csv_file = mc.read_csv_file('/app/src/ArchiveQuery-2018-08-15.csv')
+    csv_file = mc.read_csv_file('/usr/src/ArchiveQuery-2018-08-15.csv')
 
     logging.debug('build time bounds information from measurement set info')
     version, reference = _augment_artifact(obs_id, artifact, csv_file)

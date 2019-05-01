@@ -306,7 +306,8 @@ def test_run_state():
         with patch(
                 'caom2pipe.manage_composable.query_endpoint') as \
                 query_endpoint_mock, \
-                patch('caom2pipe.execute_composable.run_single') as run_mock:
+                patch('caom2pipe.execute_composable.run_single_from_state') \
+                        as run_mock:
             query_endpoint_mock.side_effect = _query_endpoint
             composable.run_state()
             assert run_mock.called, 'should have been called'
