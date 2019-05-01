@@ -68,6 +68,7 @@
 #
 
 import logging
+import tempfile
 
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
@@ -80,6 +81,7 @@ visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
 
 
 def run():
+    """uses a todo file with file names"""
     config = mc.Config()
     config.get_executors()
     ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=config.proxy_fqn,
@@ -87,7 +89,29 @@ def run():
                    chooser=None, archive=COLLECTION)
 
 
+def run_single():
+    """expects a single file name on the command line"""
+    import sys
+    config = mc.Config()
+    config.get_executors()
+    file_name = sys.argv[1]
+    if config.features.use_file_names:
+        vlass_name = VlassName(file_name=file_name)
+    else:
+        vlass_name = VlassName(obs_id=sys.argv[1])
+    if config.features.run_in_airflow:
+        temp = tempfile.NamedTemporaryFile()
+        mc.write_to_file(temp.name, sys.argv[2])
+        config.proxy_fqn = temp.name
+    else:
+        config.proxy_fqn = sys.argv[2]
+    ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors,
+                  data_visitors=None)
+
+
 def run_state():
+    """Uses a state file with a timestamp to control which quicklook
+    files will be retrieved from VLASS."""
     config = mc.Config()
     config.get_executors()
     state = mc.State(config.state_fqn)
@@ -95,6 +119,7 @@ def run_state():
     logging.info('Starting at {}'.format(start_time))
     todo_list, max_date = scrape.build_todo(start_time)
     count = 0
+    current_timestamp = None
     for k, v in todo_list.items():
         for value in v:
             # -2 because NRAO URLs always end in /
@@ -111,8 +136,10 @@ def run_state():
                                          data_visitors=None, chooser=None)
                 logging.debug('{}: Done process of {}'.format(APPLICATION, url))
             count += 1
+            current_timestamp = k
             if count % 10 == 0:
-                state.save_state('vlass_timestamp', k)
-                logging.info('Saving timestamp {}'.format(k))
+                state.save_state('vlass_timestamp', current_timestamp)
+                logging.info('Saving timestamp {}'.format(current_timestamp))
 
+    state.save_state('vlass_timestamp', current_timestamp)
     logging.info('Done {}'.format(APPLICATION))
