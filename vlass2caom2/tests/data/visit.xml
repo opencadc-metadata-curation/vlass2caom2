@@ -39,7 +39,7 @@
         <caom2:project>VLASS</caom2:project>
         <caom2:producer>NRAO</caom2:producer>
         <caom2:runID>v1</caom2:runID>
-        <caom2:reference>https://archive-new.nrao.edu/vlass/weblog/quicklook/VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.128/pipeline-20190311T231122/html/index.html</caom2:reference>
+        <caom2:reference>https://archive-new.nrao.edu/vlass/weblog/quicklook/VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.128/pipeline-20190422T202821/html/index.html</caom2:reference>
         <caom2:lastExecuted>2019-03-12T21:40:36.003</caom2:lastExecuted>
       </caom2:provenance>
       <caom2:artifacts>
@@ -125,17 +125,17 @@
                           <caom2:range>
                             <caom2:start>
                               <caom2:pix>0.5</caom2:pix>
-                              <caom2:val>58550.22988425926</caom2:val>
+                              <caom2:val>58585.00695601852</caom2:val>
                             </caom2:start>
                             <caom2:end>
                               <caom2:pix>1.5</caom2:pix>
-                              <caom2:val>58550.2584375</caom2:val>
+                              <caom2:val>58585.027291666665</caom2:val>
                             </caom2:end>
                           </caom2:range>
                         </caom2:samples>
                       </caom2:bounds>
                     </caom2:axis>
-                    <caom2:exposure>305.0</caom2:exposure>
+                    <caom2:exposure>234.0</caom2:exposure>
                   </caom2:time>
                   <caom2:polarization>
                     <caom2:axis>
@@ -239,17 +239,17 @@
                           <caom2:range>
                             <caom2:start>
                               <caom2:pix>0.5</caom2:pix>
-                              <caom2:val>58550.22988425926</caom2:val>
+                              <caom2:val>58585.00695601852</caom2:val>
                             </caom2:start>
                             <caom2:end>
                               <caom2:pix>1.5</caom2:pix>
-                              <caom2:val>58550.2584375</caom2:val>
+                              <caom2:val>58585.027291666665</caom2:val>
                             </caom2:end>
                           </caom2:range>
                         </caom2:samples>
                       </caom2:bounds>
                     </caom2:axis>
-                    <caom2:exposure>305.0</caom2:exposure>
+                    <caom2:exposure>234.0</caom2:exposure>
                   </caom2:time>
                   <caom2:polarization>
                     <caom2:axis>

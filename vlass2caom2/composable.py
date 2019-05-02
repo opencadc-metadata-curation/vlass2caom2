@@ -70,6 +70,8 @@
 import logging
 import tempfile
 
+from datetime import datetime
+
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION, COLLECTION
@@ -84,8 +86,11 @@ def run():
     """uses a todo file with file names"""
     config = mc.Config()
     config.get_executors()
+    # ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=config.proxy_fqn,
+    #                meta_visitors=visitors, data_visitors=None,
+    #                chooser=None, archive=COLLECTION)
     ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=config.proxy_fqn,
-                   meta_visitors=visitors, data_visitors=None,
+                   meta_visitors=None, data_visitors=None,
                    chooser=None, archive=COLLECTION)
 
 
@@ -116,10 +121,21 @@ def run_state():
     config.get_executors()
     state = mc.State(config.state_fqn)
     start_time = state.get_bookmark('vlass_timestamp')
+    if isinstance(start_time, str):
+        start_time = _make_time(start_time)
     logging.info('Starting at {}'.format(start_time))
+    logger = logging.getLogger()
+    logger.setLevel(config.logging_level)
     todo_list, max_date = scrape.build_todo(start_time)
+    if len(todo_list) == 0:
+        logging.info('No items to process after {}'.format(start_time))
+        return
+
+    logging.info('{} items to process. Max date will be {}'.format(
+        len(todo_list), max_date))
     count = 0
-    current_timestamp = None
+    current_timestamp = start_time
+    organizer = ec.OrganizeExecutes(config, chooser=None)
     for k, v in todo_list.items():
         for value in v:
             # -2 because NRAO URLs always end in /
@@ -131,15 +147,31 @@ def run_state():
             for url in [f1, f2]:
                 logging.info('{}: Process {}'.format(APPLICATION, url))
                 vlass_name = VlassName(url=url)
-                ec.run_single_from_state(config, vlass_name, APPLICATION,
-                                         meta_visitors=visitors,
-                                         data_visitors=None, chooser=None)
+                # TODO visitors is none
+                ec.run_single_from_state(organizer, config, vlass_name,
+                                         APPLICATION, meta_visitors=None,
+                                         data_visitors=None)
                 logging.debug('{}: Done process of {}'.format(APPLICATION, url))
-            count += 1
-            current_timestamp = k
-            if count % 10 == 0:
-                state.save_state('vlass_timestamp', current_timestamp)
-                logging.info('Saving timestamp {}'.format(current_timestamp))
+            # break
+        count += 1
+        current_timestamp = k
+        if count % 10 == 0:
+            state.save_state('vlass_timestamp',
+                             _make_time_str(current_timestamp))
+            logging.info('Saving timestamp {}'.format(current_timestamp))
+        # break
+    state.save_state('vlass_timestamp', _make_time_str(current_timestamp))
+    logging.info('Done {}, saved state is {}'.format(APPLICATION, current_timestamp))
 
-    state.save_state('vlass_timestamp', current_timestamp)
-    logging.info('Done {}'.format(APPLICATION))
+
+def _make_time(value):
+    # 01-May-2019 15:40 - support the format of what's visible on the
+    # web page, to make it easy to cut-and-paste
+    return datetime.strptime(value, '%d-%b-%Y %H:%M')
+
+
+def _make_time_str(value):
+    # 01-May-2019 15:40 - support the format of what's visible on the
+    # web page, to make it easy to cut-and-paste
+    temp = datetime.fromtimestamp(value)
+    return datetime.strftime(temp, '%d-%b-%Y %H:%M')

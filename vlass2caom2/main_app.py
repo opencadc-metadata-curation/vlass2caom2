@@ -123,7 +123,7 @@ class VlassName(StorageName):
     @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
-        return 'ad:{}/{}'.format(self.collection, self._get_file_id())
+        return 'ad:{}/{}'.format(self.collection, self.file_name)
 
     @property
     def file_name(self):

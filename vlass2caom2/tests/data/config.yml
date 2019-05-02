@@ -28,7 +28,7 @@ retry_count: 1
 stream: raw
 archive: VLASS
 collection: VLASS
-state_file_name: /usr/src/app/vlass2caom2/vlass2caom2/tests/data/state.yml
+state_file_name: /app/vlass2caom2/vlass2caom2/tests/data/state.yml
 # how to control the work that gets done
 # possible values are:
 # - scrape - read the headers, write out the xml - kind of a test mode

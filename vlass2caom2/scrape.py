@@ -85,37 +85,34 @@ PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
 QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
 QL_WEB_LOG_URL = 'https://archive-new.nrao.edu/vlass/weblog/quicklook/'
 
-# what page content looks like for the fields listing of an epoch and the
-# single field listing:
 
-# <tr>
-#   <td class="line-number" value="175"></td>
-#   <td class="line-content">
-#     <span class="html-tag">&lt;a
-#       <span class="html-attribute-name">href</span>="
-#       <a class="html-attribute-value html-external-link"
-#       target="_blank"
-#       href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T24t05/"
-#       rel="noreferrer noopener">T24t05/</a>"&gt;</span>T24t05/
-#       <span class="html-tag">&lt;/a&gt;
-#       </span>                 25-Mar-2019 08:06    -
-#   </td>
-# </tr>
-
-
-def _parse_id_page(html_string, start_date):
+def _parse_id_page(html_string, epoch, start_date):
     result = {}
     soup = BeautifulSoup(html_string, features='lxml')
-    line_content = soup.find_all('td', class_='line-content')
-    for ii in line_content:
-        hrefs = ii.find_all('a')
-        if len(hrefs) > 0:
-            y = hrefs[0].get('href')
-            if '/vlass/quicklook/' in y and y.endswith('/'):
-                z = ii.get_text().split('</a>')[1].replace('-', '').strip()
-                dt = datetime.strptime(z, PAGE_TIME_FORMAT)
-                if dt >= start_date:
-                    result[y] = dt
+    hrefs = soup.find_all('a')
+    for ii in hrefs:
+        y = ii.get('href')
+        if y.startswith(epoch):
+            z = ii.next_element.next_element.string.replace('-', '').strip()
+            dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+            if dt >= start_date:
+                logging.info('Adding ID Page: {}'.format(y))
+                result[y] = dt
+    return result
+
+
+def _parse_field_page(html_string, start_date):
+    result = {}
+    soup = BeautifulSoup(html_string, features='lxml')
+    hrefs = soup.find_all('a')
+    for ii in hrefs:
+        y = ii.get('href')
+        if y.startswith('T'):
+            z = ii.next_element.next_element.string.replace('-', '').strip()
+            dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+            if dt >= start_date:
+                logging.info('Adding Field Page: {}'.format(y))
+                result[y] = dt
     return result
 
 
@@ -125,12 +122,11 @@ def _parse_top_page(html_string, start_date):
     hrefs = soup.find_all('a')
     for ii in hrefs:
         y = ii.get('href')
-        if '/vlass/quicklook/' in y and y.endswith('/'):
-            if 'Pilot' in y or 'Test' in y:
-                continue
+        if y.startswith('VLASS') and y.endswith('/'):
             z = ii.next_element.next_element.string.replace('-', '').strip()
             dt = datetime.strptime(z, PAGE_TIME_FORMAT)
             if dt >= start_date:
+                logging.info('Adding epoch: {}'.format(y))
                 result[y] = dt
     return result
 
@@ -141,46 +137,56 @@ def build_good_todo(start_date):
     temp = {}
     max_date = start_date
 
-    # get the last modified date on the quicklook images listing
-    response = mc.query_endpoint(QL_URL)
-    if response is None:
-        logging.warning('Could not query {}'.format(QL_URL))
-    else:
-        epochs = _parse_top_page(response.text, start_date)
-        response.close()
+    response = None
 
-        for epoch in epochs:
-            logging.info(
-                'Checking epoch {} on date {}'.format(epoch, epochs[epoch]))
-            response = mc.query_endpoint(epoch)
-            if response is None:
-                logging.warning('Could not query epoch {}'.format(epoch))
-            else:
-                fields = _parse_id_page(response.text, start_date)
-                response.close()
+    try:
+        # get the last modified date on the quicklook images listing
+        response = mc.query_endpoint(QL_URL)
+        if response is None:
+            logging.warning('Could not query {}'.format(QL_URL))
+        else:
+            epochs = _parse_top_page(response.text, start_date)
+            response.close()
 
-                # get the list of fields
-                for field in fields:
-                    logging.info('Checking field {} on date {}'.format(
-                        field, fields[field]))
-                    response = mc.query_endpoint(field)
-                    if response is None:
-                        logging.warning('Could not query {}'.format(field))
-                    else:
-                        observations = _parse_id_page(
-                            response.text, start_date)
-                        response.close()
-                        max_date = max(max_date, fields[field])
+            for epoch in epochs:
+                epoch_url = '{}{}'.format(QL_URL, epoch)
+                logging.info(
+                    'Checking epoch {} on date {}'.format(epoch, epochs[epoch]))
+                response = mc.query_endpoint(epoch_url)
+                if response is None:
+                    logging.warning(
+                        'Could not query epoch {}'.format(epoch_url))
+                else:
+                    fields = _parse_field_page(response.text, start_date)
+                    response.close()
 
-                        # for each field, get the list of observations
-                        for observation in observations:
-                            max_date = max(
-                                max_date, observations[observation])
-                            dt_as_s = observations[observation].timestamp()
-                            if dt_as_s in temp:
-                                temp[dt_as_s].append(observation)
-                            else:
-                                temp[dt_as_s] = [observation]
+                    # get the list of fields
+                    for field in fields:
+                        logging.info('Checking field {} on date {}'.format(
+                            field, fields[field]))
+                        field_url = '{}{}'.format(epoch_url, field)
+                        response = mc.query_endpoint(field_url)
+                        if response is None:
+                            logging.warning(
+                                'Could not query {}'.format(field_url))
+                        else:
+                            observations = _parse_id_page(
+                                response.text, epoch.strip('/'), start_date)
+                            response.close()
+
+                            # for each field, get the list of observations
+                            for observation in observations:
+                                obs_url = '{}{}'.format(field_url, observation)
+                                dt_as_s = observations[observation].timestamp()
+                                max_date = max(
+                                    max_date, observations[observation])
+                                if dt_as_s in temp:
+                                    temp[dt_as_s].append(obs_url)
+                                else:
+                                    temp[dt_as_s] = [obs_url]
+    finally:
+        if response is not None:
+            response.close()
     return temp, max_date
 
 
@@ -196,7 +202,7 @@ def _parse_single_field(html_string):
         temp = soup.find(string=re.compile(ii)).next_element.next_element
         result[ii] = temp.get_text().strip()
 
-    trs = soup.find_all('tr')[-3]
+    trs = soup.find_all('tr')[-2]
     tds = trs.find_all('td')
     if len(tds) > 5:
         result['On Source'] = tds[5].string
@@ -211,38 +217,45 @@ def retrieve_obs_metadata(obs_id):
     metadata isn't in the database that astroquery.Nrao points to, so
     that day is not today."""
     metadata = {}
-    response = mc.query_endpoint(QL_WEB_LOG_URL)
-    if response is None:
-        logging.warning('Could not query {}'.format(QL_WEB_LOG_URL))
-    else:
-        obs_bit = _parse_for_reference(response.text, obs_id)
-        response.close()
-
-        if obs_bit is None:
-            logging.warning('Could not find link for {}'.format(obs_id))
+    response = None
+    try:
+        response = mc.query_endpoint(QL_WEB_LOG_URL)
+        if response is None:
+            logging.warning('Could not query {}'.format(QL_WEB_LOG_URL))
         else:
-            obs_url = '{}{}'.format(QL_WEB_LOG_URL, obs_bit)
-            response = mc.query_endpoint(obs_url)
-            if response is None:
-                logging.warning('Could not query {}'.format(obs_url))
-            else:
-                pipeline_bit = _parse_for_reference(response.text, 'pipeline-')
-                response.close()
+            obs_bit = _parse_for_reference(response.text, obs_id)
+            response.close()
 
-                if pipeline_bit is None:
-                    logging.warning(
-                        'Could not find pipeline link for {}'.format(
-                            pipeline_bit))
+            if obs_bit is None:
+                logging.warning('Could not find link for {}'.format(obs_id))
+            else:
+                obs_url = '{}{}'.format(QL_WEB_LOG_URL, obs_bit)
+                response = mc.query_endpoint(obs_url)
+                if response is None:
+                    logging.warning('Could not query {}'.format(obs_url))
                 else:
-                    pipeline_url = '{}{}html/index.html'.format(
-                        obs_url, pipeline_bit.strip())
-                    response = mc.query_endpoint(pipeline_url)
-                    if response is None:
+                    pipeline_bit = _parse_for_reference(
+                        response.text, 'pipeline-')
+                    response.close()
+
+                    if pipeline_bit is None:
                         logging.warning(
-                            'Could not query {}'.format(pipeline_url))
+                            'Could not find pipeline link for {}'.format(
+                                pipeline_bit))
                     else:
-                        metadata = _parse_single_field(response.text)
-                        metadata['reference'] = pipeline_url
+                        pipeline_url = '{}{}html/index.html'.format(
+                            obs_url, pipeline_bit.strip())
+                        response = mc.query_endpoint(pipeline_url)
+                        if response is None:
+                            logging.warning(
+                                'Could not query {}'.format(pipeline_url))
+                        else:
+                            metadata = _parse_single_field(response.text)
+                            metadata['reference'] = pipeline_url
+                        response.close()
+    finally:
+        if response is not None:
+            response.close()
     return metadata
 
 
@@ -277,37 +290,49 @@ def build_qa_rejected_todo(start_date):
     temp = {}
     max_date = start_date
 
-    # get the last modified date on the quicklook images listing
-    response = mc.query_endpoint(QL_URL)
-    if response is None:
-        logging.warning('Could not query {}'.format(QL_URL))
-    else:
-        epochs = _parse_top_page(response.text, start_date)
-        response.close()
+    response = None
+    try:
+        # get the last modified date on the quicklook images listing
+        response = mc.query_endpoint(QL_URL)
+        if response is None:
+            logging.warning('Could not query {}'.format(QL_URL))
+        else:
+            epochs = _parse_top_page(response.text, start_date)
+            response.close()
 
-        for epoch in epochs:
-            epoch_name = epoch.split('/')[-2]
-            epoch_rejected_url = '{}QA_REJECTED/'.format(epoch)
-            logging.info(
-                'Checking epoch {} on date {}'.format(
-                    epoch_name, epochs[epoch]))
-            response = mc.query_endpoint(epoch_rejected_url)
-            if response is None:
-                logging.warning(
-                    'Could not query epoch {}'.format(epoch_rejected_url))
-            else:
-                temp, rejected_max = _parse_rejected_page(
-                    response.text, epoch_name, start_date, epoch_rejected_url)
-                max_date = max(start_date, rejected_max)
-                response.close()
+            for epoch in epochs:
+                epoch_name = epoch.split('/')[-2]
+                epoch_rejected_url = '{}{}QA_REJECTED/'.format(QL_URL, epoch)
+                logging.info(
+                    'Checking epoch {} on date {}'.format(
+                        epoch_name, epochs[epoch]))
+                response = mc.query_endpoint(epoch_rejected_url)
+                if response is None:
+                    logging.warning(
+                        'Could not query epoch {}'.format(epoch_rejected_url))
+                else:
+                    temp, rejected_max = _parse_rejected_page(
+                        response.text, epoch_name, start_date,
+                        epoch_rejected_url)
+                    max_date = max(start_date, rejected_max)
+                    response.close()
+    finally:
+        if response is not None:
+            response.close()
     return temp, max_date
 
 
 def build_todo(start_date):
     """Take the list of good files, and the list of rejected files,
     and make them into one todo list."""
+    logging.debug('Being build_todo with date {}'.format(start_date))
+    # start_date_dt = datetime.strptime(start_date, PAGE_TIME_FORMAT)
     good, good_date = build_good_todo(start_date)
+    logging.info('{} good items to process.'.format(len(good)))
     rejected, rejected_date = build_qa_rejected_todo(start_date)
+    logging.info(
+        '{} rejected items to process, date will be {}'.format(
+            len(rejected), rejected_date))
     result = collections.OrderedDict()
     for k, v in sorted(sorted(good.items()) + sorted(rejected.items())):
         temp = result.setdefault(k, [])
@@ -315,4 +340,6 @@ def build_todo(start_date):
     # return the min of the two, because a date from the good list
     # has not necessarily been encountered on the rejected list, and
     # vice-versa
-    return result, min(good_date, rejected_date)
+    return_date = min(good_date, rejected_date)
+    logging.debug('End build_todo with date {}'.format(return_date))
+    return result, return_date
