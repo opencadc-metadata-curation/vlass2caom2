@@ -175,7 +175,8 @@ def _get_local(test_files):
 def _get_lineage(obs_id, test_files):
     if obs_id in [obs_id_a, obs_id_c, obs_id_f]:
         product_id = '{}.quicklook.v1'.format(obs_id)
-        return ' '.join(VlassName(obs_id, ii).get_lineage(product_id)
+        return ' '.join(VlassName(obs_id, fname_on_disk=ii).get_lineage(
+            product_id)
                         for ii in test_files[1:])
     else:
         ql_pid = '{}.quicklook.v1'.format(obs_id)

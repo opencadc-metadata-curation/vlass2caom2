@@ -82,8 +82,8 @@ from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['vlass_main', 'update', 'VlassName', 'VlassCardinality', 'COLLECTION',
-           'APPLICATION']
+__all__ = ['vlass_main', 'update', 'VlassName', 'VlassCardinality',
+           'COLLECTION', 'APPLICATION']
 
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
@@ -109,14 +109,16 @@ class VlassName(StorageName):
         if file_name is None:
             self.file_id = None
         else:
-            self.file_id = file_name.replace('.header', '')
+            self.file_id = VlassName.remove_extensions(file_name)
         self.obs_id = obs_id
         if fname_on_disk is not None:
-            self.file_id = fname_on_disk.replace('.header', '')
+            self.file_id = VlassName.remove_extensions(fname_on_disk)
             self.fname_on_disk = fname_on_disk
+            self.file_name = self.fname_on_disk.replace('.header', '')
         self.url = url
         if url is not None:
-            self.file_name = url.split('/')[-1]
+            self.file_name = url.strip('/').split('/')[-1]
+            self.fname_on_disk = self.file_name
             self.file_id = VlassName.remove_extensions(self.file_name)
             self.obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
 
@@ -166,6 +168,23 @@ class VlassName(StorageName):
     @staticmethod
     def remove_extensions(file_name):
         return file_name.replace('.fits', '').replace('.header', '')
+
+    @staticmethod
+    def make_url_from_file_name(file_name):
+        """
+        file name eg
+        https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/
+        url eg
+        https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/
+        VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits
+        """
+        bits = file_name.split('.')
+        epoch = '{}.{}'.format(bits[0], bits[1])
+        field = bits[3]
+        position = bits[:7]
+        url = 'https://archive-new.nrao.edu/vlass/quicklook/' \
+              '{}/{}/{}/{}'.format(epoch, field, position, file_name)
+        return url
 
 
 def accumulate_wcs(bp):
@@ -272,14 +291,15 @@ def update(observation, **kwargs):
 
         mc.check_param(observation, Observation)
         for plane in observation.planes:
-            for artifact in observation.planes[plane].artifacts:
-                for part in observation.planes[plane].artifacts[artifact].parts:
-                    p = observation.planes[plane].artifacts[artifact].parts[part]
+            for a in observation.planes[plane].artifacts:
+                artifact = observation.planes[plane].artifacts[a]
+                for part in artifact.parts:
+                    p = artifact.parts[part]
                     for chunk in p.chunks:
                         if 'headers' in kwargs:
                             headers = kwargs['headers']
-                            chunk.position.resolution = get_position_resolution(
-                                headers)
+                            chunk.position.resolution = \
+                                get_position_resolution(headers)
                             if chunk.energy is not None:
                                 # A value of None per Chris, 2018-07-26
                                 # Set the value to None here, because the

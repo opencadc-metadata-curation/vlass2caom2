@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2019.                            (c) 2019.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,111 +67,84 @@
 # ***********************************************************************
 #
 
+import io
 import logging
-import tempfile
 
 from datetime import datetime
+from urllib import parse as parse
 
-from caom2pipe import execute_composable as ec
+from astropy.io.votable import parse_single_table
+
+from cadcutils import net
+from cadctap import CadcTapClient
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import VlassName, APPLICATION, COLLECTION
-from vlass2caom2 import vlass_time_bounds_augmentation
-from vlass2caom2 import vlass_quality_augmentation, scrape
+
+from vlass2caom2 import APPLICATION, scrape, VlassName
+
+__all__ = ['validate']
 
 
-visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
+def read_file_list_from_archive(config):
+    ad_resource_id = 'ivo://cadc.nrc.ca/ad'
+    agent = '{}/{}'.format(APPLICATION, '1.0')
+    subject = net.Subject(certificate=config.proxy_fqn)
+    client = net.BaseWsClient(resource_id=ad_resource_id,
+                              subject=subject, agent=agent, retry=True)
+    query_meta = "SELECT fileName FROM archive_files WHERE " \
+                 "archiveName = '{}'".format(config.archive)
+    data = {'QUERY': query_meta, 'LANG': 'ADQL', 'FORMAT': 'csv'}
+    logging.debug('Query is {}'.format(query_meta))
+    try:
+        response = client.get('https://{}/ad/sync?{}'.format(
+            client.host, parse.urlencode(data)), cert=config.proxy_fqn)
+        if response.status_code == 200:
+            # ignore the column name as the first part of the response
+            artifact_files_list = response.text.split()[1:]
+            return artifact_files_list
+        else:
+            raise mc.CadcException('Query failure {!r}'.format(response))
+    except Exception as e:
+        raise mc.CadcException('Failed ad content query: {}'.format(e))
 
 
-def run():
-    """uses a todo file with file names"""
+def read_list_from_caom():
     config = mc.Config()
     config.get_executors()
-    ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=config.proxy_fqn,
-                   meta_visitors=visitors, data_visitors=None,
-                   chooser=None, archive=COLLECTION)
+    query = "SELECT A.uri FROM caom2.Observation AS O " \
+            "JOIN caom2.Plane AS P ON O.obsID = P.obsID " \
+            "JOIN caom2.Artifact AS A ON P.planeID = A.planeID " \
+            "WHERE O.collection='VLASS'"
+    subject = net.Subject(certificate=config.proxy_fqn)
+    tap_client = CadcTapClient(
+        subject, resource_id='ivo://cadc.nrc.ca/ams/cirada')
+    buffer = io.BytesIO()
+    tap_client.query(query, output_file=buffer)
+    temp = parse_single_table(buffer).to_table()
+    return [ii.decode().replace('ad:VLASS/', '') for ii in temp['uri']]
 
 
-def run_single():
-    """expects a single file name on the command line"""
-    import sys
-    config = mc.Config()
-    config.get_executors()
-    file_name = sys.argv[1]
-    if config.features.use_file_names:
-        vlass_name = VlassName(file_name=file_name)
+def read_list_from_nrao():
+    start_date = datetime.strptime('01Jan1990 00:00', scrape.PAGE_TIME_FORMAT)
+    vlass_list, vlass_date = scrape.build_file_url_list(start_date)
+    temp = [VlassName(url=ii).file_name for ii in vlass_list]
+    result = list(set(temp))
+    return result
+
+
+def _log_list(compare_this, to_this, message):
+    missing = [ii.strip() for ii in compare_this if ii not in to_this]
+    if len(missing) > 0:
+        logging.error('{} missing {}.'.format(len(missing), message))
+        logger = logging.getLogger()
+        if logger.level == logging.DEBUG:
+            logging.debug('\n'.join(ii for ii in missing))
     else:
-        vlass_name = VlassName(obs_id=sys.argv[1])
-    if config.features.run_in_airflow:
-        temp = tempfile.NamedTemporaryFile()
-        mc.write_to_file(temp.name, sys.argv[2])
-        config.proxy_fqn = temp.name
-    else:
-        config.proxy_fqn = sys.argv[2]
-    ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors,
-                  data_visitors=None)
+        logging.info('Found all {}.'.format(message))
 
 
-def run_state():
-    """Uses a state file with a timestamp to control which quicklook
-    files will be retrieved from VLASS."""
-    config = mc.Config()
-    config.get_executors()
-    state = mc.State(config.state_fqn)
-    start_time = state.get_bookmark('vlass_timestamp')
-    if isinstance(start_time, str):
-        start_time = _make_time(start_time)
-    logging.info('Starting at {}'.format(start_time))
-    logger = logging.getLogger()
-    logger.setLevel(config.logging_level)
-    todo_list, max_date = scrape.build_todo(start_time)
-    if len(todo_list) == 0:
-        logging.info('No items to process after {}'.format(start_time))
-        return
-
-    logging.info('{} items to process. Max date will be {}'.format(
-        len(todo_list), max_date))
-    count = 0
-    current_timestamp = start_time
-    organizer = ec.OrganizeExecutes(config, chooser=None)
-    organizer.complete_record_count = len(todo_list) * 2
-    for k, v in todo_list.items():
-        for value in v:
-            # -2 because NRAO URLs always end in /
-            f_prefix = value.split('/')[-2]
-            f1 = '{}{}.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
-                value, f_prefix)
-            f2 = '{}{}.I.iter1.image.pbcor.tt0.subim.fits'.format(
-                value, f_prefix)
-            for url in [f1, f2]:
-                logging.info('{}: Process {}'.format(APPLICATION, url))
-                vlass_name = VlassName(url=url)
-                # TODO visitors is none
-                ec.run_single_from_state(organizer, config, vlass_name,
-                                         APPLICATION, meta_visitors=None,
-                                         data_visitors=None)
-                logging.debug(
-                    '{}: Done process of {}'.format(APPLICATION, url))
-            # break
-        count += 1
-        current_timestamp = k
-        if count % 10 == 0:
-            state.save_state('vlass_timestamp',
-                             _make_time_str(current_timestamp))
-            logging.info('Saving timestamp {}'.format(current_timestamp))
-        # break
-    state.save_state('vlass_timestamp', _make_time_str(current_timestamp))
-    logging.info(
-        'Done {}, saved state is {}'.format(APPLICATION, current_timestamp))
-
-
-def _make_time(value):
-    # 01-May-2019 15:40 - support the format of what's visible on the
-    # web page, to make it easy to cut-and-paste
-    return datetime.strptime(value, '%d-%b-%Y %H:%M')
-
-
-def _make_time_str(value):
-    # 01-May-2019 15:40 - support the format of what's visible on the
-    # web page, to make it easy to cut-and-paste
-    temp = datetime.fromtimestamp(value)
-    return datetime.strftime(temp, '%d-%b-%Y %H:%M')
+def validate():
+    caom_list = read_list_from_caom()
+    vlass_list = read_list_from_nrao()
+    _log_list(caom_list, vlass_list, 'entries from CAOM collection at NRAO')
+    _log_list(vlass_list, caom_list, 'files from NRAO in VLASS archive')
+    return vlass_list, caom_list

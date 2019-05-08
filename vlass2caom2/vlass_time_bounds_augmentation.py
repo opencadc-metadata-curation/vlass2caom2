@@ -179,4 +179,3 @@ def _build_time(start, end, tos):
     bounds.samples.append(CoordRange1D(start_ref_coord,
                                        end_ref_coord))
     return bounds, exposure
-

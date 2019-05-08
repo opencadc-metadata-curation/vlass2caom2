@@ -72,17 +72,20 @@ import pytest
 import sys
 
 from datetime import datetime
+from datetime import timedelta
 from mock import patch, Mock
 
 from caom2pipe import manage_composable as mc
 from caom2.diff import get_differences
 
 from vlass2caom2 import scrape, vlass_time_bounds_augmentation, composable
+from vlass2caom2 import vlass_validator
 
 PY_VERSION = '3.6'
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 ALL_FIELDS = os.path.join(TEST_DATA_DIR, 'all_fields_list.html')
+CAOM_QUERY = os.path.join(TEST_DATA_DIR, 'caom_query.csv')
 SINGLE_FIELD = os.path.join(TEST_DATA_DIR, 'single_field_list.html')
 QL_INDEX = os.path.join(TEST_DATA_DIR, 'vlass_quicklook.html')
 WL_INDEX = os.path.join(TEST_DATA_DIR, 'weblog_quicklook.html')
@@ -93,7 +96,7 @@ SPECIFIC_REJECTED = os.path.join(TEST_DATA_DIR, 'specific_rejected.html')
 TEST_START_TIME_STR = '24Apr2019 12:34'
 TEST_START_TIME = datetime.strptime(TEST_START_TIME_STR,
                                     scrape.PAGE_TIME_FORMAT)
-STATE_FILE = os.path.join(TEST_DATA_DIR, 'state.yml')
+STATE_FILE = '/usr/src/app/state.yml'
 TEST_OBS_ID = 'VLASS1.2.T07t14.J084202-123000'
 
 
@@ -155,22 +158,6 @@ def test_build_todo_good():
 
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
-def test_retrieve_metadata():
-    with patch(
-            'caom2pipe.manage_composable.query_endpoint') as query_endpoint_mock:
-        query_endpoint_mock.side_effect = _query_endpoint
-        test_result = scrape.retrieve_obs_metadata(TEST_OBS_ID)
-        assert test_result is not None, 'expected dict result'
-        assert len(test_result) == 5, 'wrong size results'
-        assert test_result['reference'] == \
-               'https://archive-new.nrao.edu/vlass/weblog/quicklook/' \
-               'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.128/' \
-               'pipeline-20190422T202821/html/index.html', \
-            'wrong reference'
-
-
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_augment_bits():
     with open(PIPELINE_INDEX) as f:
         test_content = f.read()
@@ -185,28 +172,28 @@ def test_augment_bits():
                                                   TEST_OBS_ID)
         assert test_result is not None, 'expected a result'
         assert test_result == \
-               'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.128/', \
-            'wrong result'
+            'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_' \
+            '04.128/', 'wrong result'
 
     with open(SINGLE_FIELD_DETAIL) as f:
         test_content = f.read()
         test_result = scrape._parse_single_field(test_content)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 4, 'wrong number of fields'
-        assert test_result[
-                   'Pipeline Version'] == '42270 (Pipeline-CASA54-P2-B)', 'wrong pipline'
-        assert test_result[
-                   'Observation Start'] == '2019-04-12 00:10:01', 'wrong start'
-        assert test_result[
-                   'Observation End'] == '2019-04-12 00:39:18', 'wrong end'
+        assert test_result['Pipeline Version'] == \
+            '42270 (Pipeline-CASA54-P2-B)', 'wrong pipeline'
+        assert test_result['Observation Start'] == \
+            '2019-04-12 00:10:01', 'wrong start'
+        assert test_result['Observation End'] == \
+            '2019-04-12 00:39:18', 'wrong end'
         assert test_result['On Source'] == '0:03:54', 'wrong tos'
 
 
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
 def test_retrieve_qa_rejected():
-    with patch(
-            'caom2pipe.manage_composable.query_endpoint') as query_endpoint_mock:
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
         test_result_list, test_max_date = \
             scrape.build_qa_rejected_todo(TEST_START_TIME)
@@ -251,9 +238,13 @@ def test_qa_rejected_bits():
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
 def test_visit():
-    with patch(
-            'caom2pipe.manage_composable.query_endpoint') as query_endpoint_mock:
+    test_id = 'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.' \
+              '128/'
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
+        scrape.init_web_log_content('VLASS1.2', TEST_START_TIME)
+        scrape.web_log_content[test_id] = TEST_START_TIME - timedelta(hours=1)
         test_obs = mc.read_obs_from_file(
             '{}.xml'.format(os.path.join(TEST_DATA_DIR, TEST_OBS_ID)))
         test_result = vlass_time_bounds_augmentation.visit(test_obs)
@@ -272,8 +263,8 @@ def test_visit():
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
 def test_build_todo():
-    with patch(
-            'caom2pipe.manage_composable.query_endpoint') as query_endpoint_mock:
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
         test_result, test_max_date = scrape.build_todo(TEST_START_TIME)
         assert test_result is not None, 'expected dict result'
@@ -293,7 +284,7 @@ def test_build_todo():
 def test_run_state():
     # preconditions
     test_bookmark = {'bookmarks': {'vlass_timestamp':
-                                    {'last_record': TEST_START_TIME}}}
+                                   {'last_record': TEST_START_TIME}}}
     mc.write_as_yaml(test_bookmark, STATE_FILE)
     start_time = os.path.getmtime(STATE_FILE)
 
@@ -302,11 +293,10 @@ def test_run_state():
 
     try:
         # execution
-        with patch(
-                'caom2pipe.manage_composable.query_endpoint') as \
+        with patch('caom2pipe.manage_composable.query_endpoint') as \
                 query_endpoint_mock, \
                 patch('caom2pipe.execute_composable.run_single_from_state') \
-                        as run_mock:
+                as run_mock:
             query_endpoint_mock.side_effect = _query_endpoint
             composable.run_state()
             assert run_mock.called, 'should have been called'
@@ -314,6 +304,71 @@ def test_run_state():
         assert end_time > start_time, 'no execution'
     finally:
         os.getcwd = getcwd_orig
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
+def test_init_web_log_content():
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
+        query_endpoint_mock.side_effect = _query_endpoint
+        if scrape.web_log_content is not None:
+            scrape.web_log_content = None
+        scrape.init_web_log_content('VLASS1.2', TEST_START_TIME)
+        assert scrape.web_log_content is not None, 'should be initialized'
+        assert len(scrape.web_log_content) == 8, 'wrong record count'
+        test_subject = scrape.web_log_content.popitem()
+        assert isinstance(test_subject, tuple), \
+            'wrong return type {}'.format(type(test_subject))
+        assert test_subject[0] == \
+            'VLASS1.2_T07t13.J083828-133000_P42512v1_2019_04_26T16_18_18.' \
+            '714/', 'wrong first record'
+        assert test_subject[1] == datetime(2019, 4, 28, 17, 37), \
+            'wrong date result'
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
+def test_retrieve_metadata():
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
+        query_endpoint_mock.side_effect = _query_endpoint
+        test_result = scrape.retrieve_obs_metadata(
+            'VLASS1.2.T07t13.J083453-133000')
+        assert test_result is not None, 'expected dict result'
+        assert len(test_result) == 5, 'wrong size results'
+        assert test_result['reference'] == \
+            'https://archive-new.nrao.edu/vlass/weblog/quicklook/' \
+            'VLASS1.2_T07t13.J083453-133000_P42511v1_2019_04_26T16_17_56' \
+            '.882/pipeline-20190422T202821/html/index.html', \
+            'wrong reference'
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
+def test_validator():
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock, \
+            patch('vlass2caom2.vlass_validator.read_list_from_caom') as \
+            read_mock:
+        query_endpoint_mock.side_effect = _query_endpoint
+        read_mock.side_effect = _query_tap
+        getcwd_orig = os.getcwd
+        os.getcwd = Mock(return_value=TEST_DATA_DIR)
+        try:
+            test_nrao, test_caom = vlass_validator.validate()
+            assert test_nrao is not None, 'expected a nrao result'
+            assert test_caom is not None, 'expected a caom result'
+            assert len(test_nrao) == 116, 'wrong nrao result'
+            assert len(test_caom) == 2424, 'wrong caom result'
+        finally:
+            os.getcwd = getcwd_orig
+
+
+def _query_tap():
+    with open(CAOM_QUERY) as f:
+        temp = f.readlines()
+    return [ii for ii in temp]
 
 
 def _query_endpoint(url):
@@ -345,5 +400,5 @@ def _query_endpoint(url):
         with open(ALL_FIELDS) as f:
             result.text = f.read()
     else:
-        raise Exception('wut? {}'.format(url))
+        raise Exception('wut? {} {}'.format(url, len(url.split('/'))))
     return result

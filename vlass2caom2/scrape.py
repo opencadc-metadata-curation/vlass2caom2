@@ -77,8 +77,8 @@ from bs4 import BeautifulSoup
 
 from caom2pipe import manage_composable as mc
 
-__all__ = ['build_good_todo', 'retrieve_obs_metadata', 'build_qa_rejected_todo',
-           'PAGE_TIME_FORMAT']
+__all__ = ['build_good_todo', 'retrieve_obs_metadata',
+           'build_qa_rejected_todo', 'PAGE_TIME_FORMAT']
 
 
 PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
@@ -87,6 +87,9 @@ QL_WEB_LOG_URL = 'https://archive-new.nrao.edu/vlass/weblog/quicklook/'
 
 
 def _parse_id_page(html_string, epoch, start_date):
+    """
+    :return a dict, where keys are URLs, and values are timestamps
+    """
     result = {}
     soup = BeautifulSoup(html_string, features='lxml')
     hrefs = soup.find_all('a')
@@ -102,6 +105,9 @@ def _parse_id_page(html_string, epoch, start_date):
 
 
 def _parse_field_page(html_string, start_date):
+    """
+    :return a dict, where keys are URLs, and values are timestamps
+    """
     result = {}
     soup = BeautifulSoup(html_string, features='lxml')
     hrefs = soup.find_all('a')
@@ -117,6 +123,9 @@ def _parse_field_page(html_string, start_date):
 
 
 def _parse_top_page(html_string, start_date):
+    """
+    :return a dict, where keys are URLs, and values are timestamps
+    """
     result = {}
     soup = BeautifulSoup(html_string, features='lxml')
     hrefs = soup.find_all('a')
@@ -133,7 +142,11 @@ def _parse_top_page(html_string, start_date):
 
 def build_good_todo(start_date):
     """Create the list of work, based on timestamps from the NRAO
-    Quicklook page."""
+    Quicklook page.
+
+    :return a dict, where keys are timestamps, and values are lists
+       of URLs.
+    """
     temp = {}
     max_date = start_date
 
@@ -151,7 +164,8 @@ def build_good_todo(start_date):
             for epoch in epochs:
                 epoch_url = '{}{}'.format(QL_URL, epoch)
                 logging.info(
-                    'Checking epoch {} on date {}'.format(epoch, epochs[epoch]))
+                    'Checking epoch {} on date {}'.format(
+                        epoch, epochs[epoch]))
                 response = mc.query_endpoint(epoch_url)
                 if response is None:
                     logging.warning(
@@ -212,54 +226,11 @@ def _parse_single_field(html_string):
     return result
 
 
-def retrieve_obs_metadata(obs_id):
-    """Maybe someday this can be done with astroquery, but the VLASS
-    metadata isn't in the database that astroquery.Nrao points to, so
-    that day is not today."""
-    metadata = {}
-    response = None
-    try:
-        response = mc.query_endpoint(QL_WEB_LOG_URL)
-        if response is None:
-            logging.warning('Could not query {}'.format(QL_WEB_LOG_URL))
-        else:
-            obs_bit = _parse_for_reference(response.text, obs_id)
-            response.close()
-
-            if obs_bit is None:
-                logging.warning('Could not find link for {}'.format(obs_id))
-            else:
-                obs_url = '{}{}'.format(QL_WEB_LOG_URL, obs_bit)
-                response = mc.query_endpoint(obs_url)
-                if response is None:
-                    logging.warning('Could not query {}'.format(obs_url))
-                else:
-                    pipeline_bit = _parse_for_reference(
-                        response.text, 'pipeline-')
-                    response.close()
-
-                    if pipeline_bit is None:
-                        logging.warning(
-                            'Could not find pipeline link for {}'.format(
-                                pipeline_bit))
-                    else:
-                        pipeline_url = '{}{}html/index.html'.format(
-                            obs_url, pipeline_bit.strip())
-                        response = mc.query_endpoint(pipeline_url)
-                        if response is None:
-                            logging.warning(
-                                'Could not query {}'.format(pipeline_url))
-                        else:
-                            metadata = _parse_single_field(response.text)
-                            metadata['reference'] = pipeline_url
-                        response.close()
-    finally:
-        if response is not None:
-            response.close()
-    return metadata
-
-
 def _parse_rejected_page(html_string, epoch, start_date, url):
+    """
+    :return a dict, where keys are timestamps, and values are lists
+       of URLs.
+    """
     result = {}
     max_date = start_date
     soup = BeautifulSoup(html_string, features='lxml')
@@ -287,6 +258,10 @@ def _parse_specific_rejected_page(html_string):
 
 
 def build_qa_rejected_todo(start_date):
+    """
+    :return a dict, where keys are timestamps, and values are lists
+       of URLs.
+    """
     temp = {}
     max_date = start_date
 
@@ -324,9 +299,12 @@ def build_qa_rejected_todo(start_date):
 
 def build_todo(start_date):
     """Take the list of good files, and the list of rejected files,
-    and make them into one todo list."""
+    and make them into one todo list.
+
+    :return a dict, where keys are timestamps, and values are lists
+       of URLs.
+    """
     logging.debug('Being build_todo with date {}'.format(start_date))
-    # start_date_dt = datetime.strptime(start_date, PAGE_TIME_FORMAT)
     good, good_date = build_good_todo(start_date)
     logging.info('{} good items to process.'.format(len(good)))
     rejected, rejected_date = build_qa_rejected_todo(start_date)
@@ -343,3 +321,106 @@ def build_todo(start_date):
     return_date = min(good_date, rejected_date)
     logging.debug('End build_todo with date {}'.format(return_date))
     return result, return_date
+
+
+web_log_content = None
+
+
+def _parse_page_for_hrefs(html_string, reference, start_date):
+    """
+    :return a dict, where keys are URLs, and values are timestamps
+    """
+    result = {}
+    soup = BeautifulSoup(html_string, features='lxml')
+    hrefs = soup.find_all('a', string=re.compile(reference))
+    for ii in hrefs:
+        y = ii.get('href')
+        z = ii.next_element.next_element.string.replace('-', '').strip()
+        dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+        if dt > start_date:
+            logging.info('Adding {}'.format(y))
+            result[y] = dt
+    return result
+
+
+def init_web_log_content(epoch, start_date):
+    global web_log_content
+    if web_log_content is None:
+        response = None
+        try:
+            response = mc.query_endpoint(QL_WEB_LOG_URL)
+            if response is None:
+                raise mc.CadcException(
+                    'Need access to {}'.format(QL_WEB_LOG_URL))
+            web_log_content = _parse_page_for_hrefs(response.text, epoch,
+                                                    start_date)
+            response.close()
+        finally:
+            if response is not None:
+                response.close()
+
+
+def retrieve_obs_metadata(obs_id):
+    """Maybe someday this can be done with astroquery, but the VLASS
+    metadata isn't in the database that astroquery.Nrao points to, so
+    that day is not today."""
+    metadata = {}
+    mod_obs_id = obs_id.replace('.', '_', 2).replace('_', '.', 1)
+    global web_log_content
+    if web_log_content is None:
+        raise mc.CadcException('Must initialize weblog content.')
+    for key in web_log_content.keys():
+        if key.startswith(mod_obs_id):
+            obs_url = '{}{}'.format(QL_WEB_LOG_URL, key)
+            logging.error('Querying {}'.format(obs_url))
+            response = None
+            try:
+                response = mc.query_endpoint(obs_url)
+                if response is None:
+                    logging.error('Could not query {}'.format(obs_url))
+                else:
+                    pipeline_bit = _parse_for_reference(response.text,
+                                                        'pipeline-')
+                    response.close()
+                    if pipeline_bit is None:
+                        logging.error(
+                            'Did not find pipeline on {}'.format(obs_url))
+                    else:
+                        pipeline_url = '{}{}html/index.html'.format(
+                            obs_url, pipeline_bit.strip())
+                        response = mc.query_endpoint(pipeline_url)
+                        if response is None:
+                            logging.error(
+                                'Could not query {}'.format(pipeline_url))
+                        else:
+                            metadata = _parse_single_field(response.text)
+                            metadata['reference'] = pipeline_url
+                        response.close()
+            finally:
+                if response is not None:
+                    response.close()
+    return metadata
+
+
+def build_file_url_list(start_time):
+    """
+    :return a dict, where keys are URLs, and values are timestamps
+    """
+    result = {}
+    todo_list, max_date = build_todo(start_time)
+    if len(todo_list) == 0:
+        logging.info('No items to process after {}'.format(start_time))
+    else:
+        logging.info('{} items to process. Max date will be {}'.format(
+            len(todo_list), max_date))
+        for k, v in todo_list.items():
+            for value in v:
+                # -2 because NRAO URLs always end in /
+                f_prefix = value.split('/')[-2]
+                f1 = '{}{}.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
+                    value, f_prefix)
+                f2 = '{}{}.I.iter1.image.pbcor.tt0.subim.fits'.format(
+                    value, f_prefix)
+                for url in [f1, f2]:
+                    result[url] = k
+    return result, max_date

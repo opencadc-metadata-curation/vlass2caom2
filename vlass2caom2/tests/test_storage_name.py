@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2019.                            (c) 2019.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,66 +67,33 @@
 # ***********************************************************************
 #
 
-import logging
+import pytest
+import sys
 
-from caom2 import Observation, Requirements, Status
-from caom2pipe import manage_composable as mc
-from caom2pipe import execute_composable as ec
-
-START_DATE = '2019-01-01'
+from vlass2caom2 import main_app
 
 
-def visit(observation, **kwargs):
-    mc.check_param(observation, Observation)
-
-    # conversation with JJK, PD 2018-08-27 - use the observation-level
-    # data quality flag.
-    #
-    # There's no header information, so get the list of QA rejected files
-    # from here, and make a check against that static list
-    #
-    # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/QA_REJECTED/#
-    # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/#
-    # etc
-    uri = None
-    if 'uri' in kwargs:
-        uri = kwargs['uri']
-
-    count = 0
-    for i in observation.planes:
-        plane = observation.planes[i]
-        for j in plane.artifacts:
-            artifact = plane.artifacts[j]
-            logging.debug('working on artifact {}'.format(artifact.uri))
-            count += _augment(observation, artifact, uri)
-    logging.info('Completed quality augmentation for {}'.format(
-        observation.observation_id))
-    return {'observations': count}
-
-
-def _augment(observation, artifact, uri):
-
-    # note the location of this file is hard-coded in the container
-    # structure, because so much about this is broken anyway
-    #
-    if uri is not None:
-        if 'QA_REJECTED' in uri:
-            _set_failed(observation)
-            return 1
-    else:
-        logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
-        csv_file = mc.read_csv_file(
-            '/usr/src/rejected_file_names-2018-09-05.csv')
-        file_name = ec.CaomName(artifact.uri).file_name
-        for row in csv_file:
-            for column in row:
-                if file_name in column:
-                    logging.debug(
-                        'Found QA Rejected file {}'.format(file_name))
-                    _set_failed(observation)
-                    return 1
-    return 0
-
-
-def _set_failed(observation):
-    observation.requirements = Requirements(Status.FAIL)
+@pytest.mark.skipif(not sys.version.startswith('3.6'),
+                    reason='support 3.6 only')
+def test_storage_name():
+    test_bit = 'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.' \
+               'pbcor.tt0'
+    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+               'T23t09/VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/' \
+               '{}.subim.fits'.format(test_bit)
+    test_subject = main_app.VlassName(url=test_url)
+    assert test_subject.obs_id == 'VLASS1.2.T23t09.J083851+483000', \
+        'wrong obs id'
+    assert test_subject.fname_on_disk == '{}.subim.fits'.format(test_bit), \
+        'wrong fname on disk'
+    assert test_subject.file_name == '{}.subim.fits'.format(test_bit), \
+        'wrong fname'
+    assert test_subject.file_id == '{}.subim'.format(test_bit), 'wrong fid'
+    assert test_subject.file_uri == \
+        'ad:VLASS/{}.subim.fits'.format(test_bit), 'wrong uri'
+    assert test_subject.model_file_name == \
+        'VLASS1.2.T23t09.J083851+483000.fits.xml', 'wrong model name'
+    assert test_subject.log_file == 'VLASS1.2.T23t09.J083851+483000.log', \
+        'wrong log file'
+    assert main_app.VlassName.remove_extensions(test_subject.file_name) == \
+        '{}.subim'.format(test_bit), 'wrong extensions'
