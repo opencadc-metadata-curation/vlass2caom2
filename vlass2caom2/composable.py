@@ -86,6 +86,7 @@ def run():
     """uses a todo file with file names"""
     config = mc.Config()
     config.get_executors()
+    scrape.init_web_log_content('VLASS1.2', _make_time('01-Nov-2018 00:00'))
     ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=config.proxy_fqn,
                    meta_visitors=visitors, data_visitors=None,
                    chooser=None, archive=COLLECTION)
