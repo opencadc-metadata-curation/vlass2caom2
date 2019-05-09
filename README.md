@@ -30,9 +30,7 @@ Production services:
 
 # How To Run VLASS
 
-In an empty directory:
-
-1. This is the working directory, so it should have some space.
+In an empty directory (the 'working directory'):
 
 1. In the master branch of this repository, find the scripts directory, and copy the files docker-entrypoint.sh, config.yml, and vlass_run_visitor.sh to the working directory.
 
