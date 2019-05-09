@@ -34,11 +34,11 @@ RUN git clone https://github.com/opencadc-metadata-curation/caom2tools.git && \
 RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
   cp ./vlass2caom2/data/ArchiveQuery-2018-08-15.csv /usr/src/ && \
   cp ./vlass2caom2/data/rejected_file_names-2018-09-05.csv /usr/src/ && \
-  pip install ./vlass2caom2 && cd ..
+  pip install ./vlass2caom2
 
 RUN apk --no-cache del git
 
-COPY ./docker-entrypoint.sh ./
+COPY ./docker-entrypoint.sh /
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
