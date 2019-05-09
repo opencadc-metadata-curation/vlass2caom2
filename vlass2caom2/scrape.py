@@ -346,9 +346,10 @@ def _parse_page_for_hrefs(html_string, reference, start_date):
 def init_web_log_content(epoch, start_date):
     global web_log_content
     if web_log_content is None:
+        logging.info('Initializing weblog content from {}'.format(QL_WEB_LOG_URL))
         response = None
         try:
-            response = mc.query_endpoint(QL_WEB_LOG_URL)
+            response = mc.query_endpoint(QL_WEB_LOG_URL, timeout=360)
             if response is None:
                 raise mc.CadcException(
                     'Need access to {}'.format(QL_WEB_LOG_URL))
