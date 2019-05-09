@@ -36,7 +36,7 @@ In an empty directory (the 'working directory'):
 
 1. Make docker-entrypoint.sh executable.
 
-1. Copy a valid proxy certificate to the working directory (cadcproxy.pem).
+1. Copy a valid proxy certificate to the working directory (cadcproxy.pem). This certificate must be for a user with read and write permissions to /ams service for CIRADA/VLASS.
 
 1. To run the application:
 
