@@ -143,3 +143,24 @@ def test_aug_visit_quality_works():
     assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
 
     mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
+
+
+def test_aug_visit_quality_works_uri():
+    rejected_uri = 'https://archive-new.nrao.edu/QA_REJECTED'
+    test_file = os.path.join(
+        TESTDATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
+    test_obs = mc.read_obs_from_file(test_file)
+    assert test_obs is not None, 'unexpected None'
+
+    kwargs = {'uri': rejected_uri}
+    for plane in test_obs.planes:
+        for artifact in test_obs.planes[plane].artifacts:
+            test_obs.planes[plane].artifacts[artifact].uri = rejected_uri
+    test_result = vlass_quality_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'unexpected modification'
+    assert test_result is not None, 'should have a result status'
+    assert len(test_result) == 1, 'modified artifacts count'
+    assert test_result['observations'] == 2, 'observation count'
+    assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
+
+    mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))

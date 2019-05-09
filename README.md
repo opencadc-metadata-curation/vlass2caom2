@@ -20,3 +20,27 @@ Production services:
   - The URL of the TAP (Table access protocol) service is: http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap.
   - An example VLASS TAP synchronous query (note adding sync to the URL): curl http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/tap/sync -n -L -d "LANG=ADQL&FORMAT=TSV" --data-urlencode "QUERY=select count(*) as numObservations from caom2.Observation where collection='VLASS'"
   - One could also use the Topcat tool (http://www.star.bris.ac.uk/~mbt/topcat/) to query.
+
+
+# Development Notes
+
+- data available from https://archive-new.nrao.edu/vlass/quicklook/
+- metadata available from https://archive-new.nrao.edu/vlass/weblog/quicklook/
+
+
+# How To Run VLASS
+
+In an empty directory (the 'working directory'):
+
+1. In the master branch of this repository, find the scripts directory, and copy the files docker-entrypoint.sh, config.yml, and vlass_run_visitor.sh to the working directory.
+
+1. Make docker-entrypoint.sh executable.
+
+1. Copy a valid proxy certificate to the working directory (cadcproxy.pem). This certificate must be for a user with read and write permissions to /ams service for CIRADA/VLASS.
+
+1. To run the application:
+
+```
+./vlass_run_visitor.sh
+```
+

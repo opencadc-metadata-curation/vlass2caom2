@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2019.                            (c) 2019.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,46 +67,33 @@
 # ***********************************************************************
 #
 
-import tempfile
+import pytest
+import sys
 
-from caom2pipe import execute_composable as ec
-from caom2pipe import manage_composable as mc
-from vlass2caom2 import VlassName, APPLICATION, COLLECTION
-from vlass2caom2 import vlass_time_bounds_augmentation
-from vlass2caom2 import vlass_quality_augmentation
+from vlass2caom2 import main_app
 
 
-visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
-
-
-def vlass_run():
-    proxy = '/usr/src/app/cadcproxy.pem'
-    ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=proxy,
-                   meta_visitors=visitors, data_visitors=None)
-
-
-def vlass_run_single():
-    import sys
-    config = mc.Config()
-    config.get_executors()
-    config.collection = COLLECTION
-    config.working_directory = '/usr/src/app'
-    config.use_local_files = False
-    config.logging_level = 'INFO'
-    config.log_to_file = False
-    config.task_types = [mc.TaskType.INGEST]
-    config.resource_id = 'ivo://cadc.nrc.ca/sc2repo'
-    if config.features.run_in_airflow:
-        temp = tempfile.NamedTemporaryFile()
-        mc.write_to_file(temp.name, sys.argv[2])
-        config.proxy_fqn = temp.name
-    else:
-        config.proxy_fqn = sys.argv[2]
-    config.stream = 'raw'
-    file_name = sys.argv[1]
-    if config.features.use_file_names:
-        vlass_name = VlassName(file_name=file_name)
-    else:
-        vlass_name = VlassName(obs_id=sys.argv[1])
-    ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors,
-                  data_visitors=None)
+@pytest.mark.skipif(not sys.version.startswith('3.6'),
+                    reason='support 3.6 only')
+def test_storage_name():
+    test_bit = 'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.' \
+               'pbcor.tt0'
+    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+               'T23t09/VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/' \
+               '{}.subim.fits'.format(test_bit)
+    test_subject = main_app.VlassName(url=test_url)
+    assert test_subject.obs_id == 'VLASS1.2.T23t09.J083851+483000', \
+        'wrong obs id'
+    assert test_subject.fname_on_disk == '{}.subim.fits'.format(test_bit), \
+        'wrong fname on disk'
+    assert test_subject.file_name == '{}.subim.fits'.format(test_bit), \
+        'wrong fname'
+    assert test_subject.file_id == '{}.subim'.format(test_bit), 'wrong fid'
+    assert test_subject.file_uri == \
+        'ad:VLASS/{}.subim.fits'.format(test_bit), 'wrong uri'
+    assert test_subject.model_file_name == \
+        'VLASS1.2.T23t09.J083851+483000.fits.xml', 'wrong model name'
+    assert test_subject.log_file == 'VLASS1.2.T23t09.J083851+483000.log', \
+        'wrong log file'
+    assert main_app.VlassName.remove_extensions(test_subject.file_name) == \
+        '{}.subim'.format(test_bit), 'wrong extensions'
