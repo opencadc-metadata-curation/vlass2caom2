@@ -76,6 +76,8 @@ from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import scrape
 
+obs_metadata = None
+
 
 def visit(observation, **kwargs):
     mc.check_param(observation, Observation)
@@ -134,14 +136,21 @@ def _augment_artifact(obs_id, artifact, csv_file):
             break
 
     if not found:
-        result = scrape.retrieve_obs_metadata(obs_id)
-        if result is not None:
-            bounds, exposure = _build_time(result['Observation Start'],
-                                           result['Observation End'],
-                                           result['On Source'])
-            version = result['Pipeline Version']
-            reference = result['reference']
+        logging.debug(
+            'Fall back to scraping for time metadata for {}'.format(obs_id))
+        global obs_metadata
+        if obs_metadata is None:
+            obs_metadata = scrape.retrieve_obs_metadata(obs_id)
+        if obs_metadata is not None and len(obs_metadata) > 0:
+            bounds, exposure = _build_time(
+                mc.response_lookup(obs_metadata, 'Observation Start'),
+                mc.response_lookup(obs_metadata, 'Observation End'),
+                mc.response_lookup(obs_metadata, 'On Source'))
+            version = mc.response_lookup(obs_metadata, 'Pipeline Version')
+            reference = mc.response_lookup(obs_metadata, 'reference')
             found = True
+        else:
+            logging.warning('Found no time metadata for {}'.format(obs_id))
 
     if found:
         time_axis = CoordAxis1D(Axis('TIME', 'd'))
@@ -169,13 +178,16 @@ def _build_from_row(row):
 
 def _build_time(start, end, tos):
     bounds = CoordBounds1D()
-    start_date = ac.get_datetime(start)
-    end_date = ac.get_datetime(end)
-    start_date.format = 'mjd'
-    end_date.format = 'mjd'
-    exposure = float(ac.get_timedelta_in_s(tos))
-    start_ref_coord = RefCoord(0.5, start_date.value)
-    end_ref_coord = RefCoord(1.5, end_date.value)
-    bounds.samples.append(CoordRange1D(start_ref_coord,
-                                       end_ref_coord))
+    if start is not None and end is not None:
+        start_date = ac.get_datetime(start)
+        start_date.format = 'mjd'
+        end_date = ac.get_datetime(end)
+        end_date.format = 'mjd'
+        start_ref_coord = RefCoord(0.5, start_date.value)
+        end_ref_coord = RefCoord(1.5, end_date.value)
+        bounds.samples.append(CoordRange1D(start_ref_coord,
+                                           end_ref_coord))
+    exposure = None
+    if tos is not None:
+        exposure = float(ac.get_timedelta_in_s(tos))
     return bounds, exposure

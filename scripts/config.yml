@@ -39,3 +39,5 @@ state_file_name: state.yml
 # - pull - put a file retrieved from a URL
 task_types: 
   - visit
+features:
+  use_file_names: False

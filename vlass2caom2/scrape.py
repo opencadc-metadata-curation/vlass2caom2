@@ -85,6 +85,8 @@ PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
 QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
 QL_WEB_LOG_URL = 'https://archive-new.nrao.edu/vlass/weblog/quicklook/'
 
+web_log_content = {}
+
 
 def _parse_id_page(html_string, epoch, start_date):
     """
@@ -215,10 +217,12 @@ def _parse_single_field(html_string):
     for ii in ['Pipeline Version', 'Observation Start', 'Observation End']:
         temp = soup.find(string=re.compile(ii)).next_element.next_element
         result[ii] = temp.get_text().strip()
+        logging.debug('Setting {} to {}'.format(ii, result[ii]))
 
     trs = soup.find_all('tr')[-2]
     tds = trs.find_all('td')
     if len(tds) > 5:
+        logging.debug('Setting On Source to {}'.format(tds[5].string))
         result['On Source'] = tds[5].string
     # there must be a better way to do this
     result['Observation Start'] = result['Observation Start'].split('\xa0')[0]
@@ -323,9 +327,6 @@ def build_todo(start_date):
     return result, return_date
 
 
-web_log_content = None
-
-
 def _parse_page_for_hrefs(html_string, reference, start_date):
     """
     :return a dict, where keys are URLs, and values are timestamps
@@ -343,21 +344,27 @@ def _parse_page_for_hrefs(html_string, reference, start_date):
     return result
 
 
-def init_web_log_content(epoch, start_date):
-    global web_log_content
-    if web_log_content is None:
-        response = None
-        try:
-            response = mc.query_endpoint(QL_WEB_LOG_URL)
-            if response is None:
-                raise mc.CadcException(
-                    'Need access to {}'.format(QL_WEB_LOG_URL))
-            web_log_content = _parse_page_for_hrefs(response.text, epoch,
-                                                    start_date)
+def init_web_log_content(epochs):
+    """
+    :param epochs: A dict with key == epoch name (e.g. 'VLASS1.1') and
+        value = date after which entries are of interest
+    """
+    logging.info('Initializing weblog content.')
+    response = None
+    try:
+        response = mc.query_endpoint(QL_WEB_LOG_URL, timeout=360)
+        if response is None:
+            raise mc.CadcException(
+                'Need access to {}'.format(QL_WEB_LOG_URL))
+        global web_log_content
+        for ii in epochs:
+            temp_orig = web_log_content
+            temp = _parse_page_for_hrefs(response.text, ii, epochs[ii])
+            web_log_content = {**temp_orig, **temp}
+        response.close()
+    finally:
+        if response is not None:
             response.close()
-        finally:
-            if response is not None:
-                response.close()
 
 
 def retrieve_obs_metadata(obs_id):
@@ -367,12 +374,12 @@ def retrieve_obs_metadata(obs_id):
     metadata = {}
     mod_obs_id = obs_id.replace('.', '_', 2).replace('_', '.', 1)
     global web_log_content
-    if web_log_content is None:
+    if len(web_log_content) == 0:
         raise mc.CadcException('Must initialize weblog content.')
     for key in web_log_content.keys():
         if key.startswith(mod_obs_id):
             obs_url = '{}{}'.format(QL_WEB_LOG_URL, key)
-            logging.error('Querying {}'.format(obs_url))
+            logging.debug('Querying {}'.format(obs_url))
             response = None
             try:
                 response = mc.query_endpoint(obs_url)
@@ -388,6 +395,7 @@ def retrieve_obs_metadata(obs_id):
                     else:
                         pipeline_url = '{}{}html/index.html'.format(
                             obs_url, pipeline_bit.strip())
+                        logging.debug('Querying {}'.format(pipeline_url))
                         response = mc.query_endpoint(pipeline_url)
                         if response is None:
                             logging.error(
@@ -395,6 +403,8 @@ def retrieve_obs_metadata(obs_id):
                         else:
                             metadata = _parse_single_field(response.text)
                             metadata['reference'] = pipeline_url
+                            logging.debug(
+                                'Setting reference to {}'.format(pipeline_url))
                         response.close()
             finally:
                 if response is not None:

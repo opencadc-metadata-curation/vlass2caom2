@@ -243,7 +243,7 @@ def test_visit():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
-        scrape.init_web_log_content('VLASS1.2', TEST_START_TIME)
+        scrape.init_web_log_content({'VLASS1.2': TEST_START_TIME})
         scrape.web_log_content[test_id] = TEST_START_TIME - timedelta(hours=1)
         test_obs = mc.read_obs_from_file(
             '{}.xml'.format(os.path.join(TEST_DATA_DIR, TEST_OBS_ID)))
@@ -312,9 +312,9 @@ def test_init_web_log_content():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
-        if scrape.web_log_content is not None:
-            scrape.web_log_content = None
-        scrape.init_web_log_content('VLASS1.2', TEST_START_TIME)
+        if len(scrape.web_log_content) > 0:
+            scrape.web_log_content = {}
+        scrape.init_web_log_content({'VLASS1.2': TEST_START_TIME})
         assert scrape.web_log_content is not None, 'should be initialized'
         assert len(scrape.web_log_content) == 8, 'wrong record count'
         test_subject = scrape.web_log_content.popitem()
@@ -371,7 +371,7 @@ def _query_tap():
     return [ii for ii in temp]
 
 
-def _query_endpoint(url):
+def _query_endpoint(url, timeout=-1):
     result = Object()
     result.text = None
     if url == scrape.QL_WEB_LOG_URL:
