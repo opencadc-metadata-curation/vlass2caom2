@@ -69,6 +69,7 @@
 
 import io
 import logging
+import os
 
 from datetime import datetime
 from urllib import parse as parse
@@ -82,6 +83,9 @@ from caom2pipe import manage_composable as mc
 from vlass2caom2 import APPLICATION, scrape, VlassName
 
 __all__ = ['validate']
+
+NRAO_STATE = 'nrao_state.yml'
+VALIDATE_STATE = 'validate_state.yml'
 
 
 def read_file_list_from_archive(config):
@@ -107,44 +111,61 @@ def read_file_list_from_archive(config):
         raise mc.CadcException('Failed ad content query: {}'.format(e))
 
 
-def read_list_from_caom():
-    config = mc.Config()
-    config.get_executors()
+def read_list_from_caom(config):
     query = "SELECT A.uri FROM caom2.Observation AS O " \
             "JOIN caom2.Plane AS P ON O.obsID = P.obsID " \
             "JOIN caom2.Artifact AS A ON P.planeID = A.planeID " \
-            "WHERE O.collection='VLASS'"
+            "WHERE O.collection='{}'".format(config.archive)
     subject = net.Subject(certificate=config.proxy_fqn)
-    tap_client = CadcTapClient(
-        subject, resource_id='ivo://cadc.nrc.ca/ams/cirada')
+    tap_client = CadcTapClient(subject, resource_id=config.tap_id)
     buffer = io.BytesIO()
     tap_client.query(query, output_file=buffer)
     temp = parse_single_table(buffer).to_table()
-    return [ii.decode().replace('ad:VLASS/', '') for ii in temp['uri']]
+    return [ii.decode().replace('ad:{}/'.format(config.archive), '').strip()
+            for ii in temp['uri']]
 
 
-def read_list_from_nrao():
-    start_date = datetime.strptime('01Jan1990 00:00', scrape.PAGE_TIME_FORMAT)
-    vlass_list, vlass_date = scrape.build_file_url_list(start_date)
-    temp = [VlassName(url=ii).file_name for ii in vlass_list]
-    result = list(set(temp))
+def read_list_from_nrao(nrao_state_fqn):
+    if os.path.exists(nrao_state_fqn):
+        result = mc.read_as_yaml(nrao_state_fqn)
+    else:
+        start_date = datetime.strptime('01Jan1990 00:00', scrape.PAGE_TIME_FORMAT)
+        vlass_list, vlass_date = scrape.build_file_url_list(start_date)
+        temp = [VlassName(url=ii).file_name.strip() for ii in vlass_list]
+        result = list(set(temp))
     return result
 
 
-def _log_list(compare_this, to_this, message):
-    missing = [ii.strip() for ii in compare_this if ii not in to_this]
-    if len(missing) > 0:
-        logging.error('{} missing {}.'.format(len(missing), message))
-        logger = logging.getLogger()
-        if logger.level == logging.DEBUG:
-            logging.debug('\n'.join(ii for ii in missing))
-    else:
-        logging.info('Found all {}.'.format(message))
+def _find_missing(compare_this, to_this):
+    return [ii for ii in compare_this if ii not in to_this]
 
 
 def validate():
-    caom_list = read_list_from_caom()
-    vlass_list = read_list_from_nrao()
-    _log_list(caom_list, vlass_list, 'entries from CAOM collection at NRAO')
-    _log_list(vlass_list, caom_list, 'files from NRAO in VLASS archive')
+    config = mc.Config()
+    config.get_executors()
+    caom_list = read_list_from_caom(config)
+    nrao_state_fqn = os.path.join(config.working_directory, NRAO_STATE)
+    vlass_list = read_list_from_nrao(nrao_state_fqn)
+    mc.write_as_yaml(vlass_list, nrao_state_fqn)
+    caom = _find_missing(caom_list, vlass_list)
+    nrao = _find_missing(vlass_list, caom_list)
+    result = {'at_nrao': nrao,
+              'at_cadc': caom}
+    result_fqn = os.path.join(config.working_directory, VALIDATE_STATE)
+    mc.write_as_yaml(result, result_fqn)
+    logging.info('There are {} files at NRAO that are not represented '
+                 'at CADC, and {} CAOM entries at CADC that are not '
+                 'available from NRAO.'.format(len(nrao), len(caom)))
     return vlass_list, caom_list
+
+
+if __name__ == '__main__':
+    import sys
+    try:
+        logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
+        validate()
+        sys.exit(0)
+    except Exception as e:
+        logging.error(e)
+        sys.exit(-1)

@@ -245,6 +245,7 @@ def _parse_rejected_page(html_string, epoch, start_date, url):
         dt = datetime.strptime(temp, PAGE_TIME_FORMAT)
         if dt >= start_date:
             new_url = '{}{}'.format(url, ii.get_text())
+            logging.debug('Adding rejected {}'.format(new_url))
             if dt.timestamp() in result:
                 result[dt.timestamp()].append(new_url)
             else:
@@ -267,7 +268,7 @@ def build_qa_rejected_todo(start_date):
     :return a dict, where keys are timestamps, and values are lists
        of URLs.
     """
-    temp = {}
+    rejected = {}
     max_date = start_date
 
     response = None
@@ -296,10 +297,12 @@ def build_qa_rejected_todo(start_date):
                         epoch_rejected_url)
                     max_date = max(start_date, rejected_max)
                     response.close()
+                    temp_rejected = rejected
+                    rejected = {**temp, **temp_rejected}
     finally:
         if response is not None:
             response.close()
-    return temp, max_date
+    return rejected, max_date
 
 
 def build_todo(start_date):
@@ -324,7 +327,8 @@ def build_todo(start_date):
     # has not necessarily been encountered on the rejected list, and
     # vice-versa
     return_date = min(good_date, rejected_date)
-    logging.debug('End build_todo with date {}'.format(return_date))
+    logging.debug('End build_todo with {} records, date {}'.format(
+        len(result), return_date))
     return result, return_date
 
 
