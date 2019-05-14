@@ -32,7 +32,7 @@ Production services:
 
 In an empty directory (the 'working directory'), on a machine with Docker installed:
 
-1. In the master branch of this repository, find the scripts directory, and copy the files docker-entrypoint.sh, config.yml, and vlass_run_visitor.sh to the working directory. e.g.:
+1. In the master branch of this repository, find the scripts directory, and copy the files docker-entrypoint.sh, config.yml, visitor_query.sh, and vlass_run_visitor.sh to the working directory. e.g.:
 
 ```
 wget https://raw.github.com/opencadc-metadata-curation/vlass2caom2/master/scripts/vlass_run_visitor.sh
