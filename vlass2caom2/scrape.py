@@ -219,11 +219,12 @@ def _parse_single_field(html_string):
         result[ii] = temp.get_text().strip()
         logging.debug('Setting {} to {}'.format(ii, result[ii]))
 
-    trs = soup.find_all('tr')[-2]
-    tds = trs.find_all('td')
-    if len(tds) > 5:
-        logging.debug('Setting On Source to {}'.format(tds[5].string))
-        result['On Source'] = tds[5].string
+    sums = soup.find_all(summary=re.compile('Measurement Set Summaries'))
+    if len(sums) == 1:
+        tds = sums[0].find_all('td')
+        if len(tds) > 7:
+            logging.debug('Setting On Source to {}'.format(tds[7].string))
+            result['On Source'] = tds[7].string
     # there must be a better way to do this
     result['Observation Start'] = result['Observation Start'].split('\xa0')[0]
     result['Observation End'] = result['Observation End'].split('\xa0')[0]
