@@ -88,9 +88,9 @@ def visit(observation, **kwargs):
     # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/QA_REJECTED/#
     # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/#
     # etc
-    uri = None
-    if 'uri' in kwargs:
-        uri = kwargs['uri']
+    url = None
+    if 'url' in kwargs:
+        url = kwargs['url']
 
     count = 0
     for i in observation.planes:
@@ -98,19 +98,19 @@ def visit(observation, **kwargs):
         for j in plane.artifacts:
             artifact = plane.artifacts[j]
             logging.debug('working on artifact {}'.format(artifact.uri))
-            count += _augment(observation, artifact, uri)
+            count += _augment(observation, artifact, url)
     logging.info('Completed quality augmentation for {}'.format(
         observation.observation_id))
     return {'observations': count}
 
 
-def _augment(observation, artifact, uri):
+def _augment(observation, artifact, url):
 
     # note the location of this file is hard-coded in the container
     # structure, because so much about this is broken anyway
     #
-    if uri is not None:
-        if 'QA_REJECTED' in uri:
+    if url is not None:
+        if 'QA_REJECTED' in url:
             _set_failed(observation)
             return 1
     else:
