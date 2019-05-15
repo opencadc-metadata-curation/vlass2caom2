@@ -100,6 +100,10 @@ STATE_FILE = '/usr/src/app/state.yml'
 TEST_OBS_ID = 'VLASS1.2.T07t14.J084202-123000'
 
 
+class MyExitError(Exception):
+    pass
+
+
 # Response mock
 class Object(object):
     pass
@@ -281,6 +285,7 @@ def test_build_todo():
 
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
+@patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state():
     # preconditions
     test_bookmark = {'bookmarks': {'vlass_timestamp':

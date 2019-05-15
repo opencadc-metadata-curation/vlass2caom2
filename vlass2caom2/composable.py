@@ -89,6 +89,7 @@ def _init_web_log():
               'VLASS1.2': _make_time('01-Nov-2018 00:00')}
     scrape.init_web_log_content(epochs)
 
+
 def run():
     """uses a todo file with file names"""
     config = mc.Config()
@@ -138,8 +139,6 @@ def _run_state():
 
     logging.info('{} items to process. Max date will be {}'.format(
         len(todo_list), max_date))
-    return
-
     _init_web_log()
     count = 0
     current_timestamp = start_time
@@ -157,7 +156,6 @@ def _run_state():
             state.save_state('vlass_timestamp',
                              _make_time_str(current_timestamp))
             logging.info('Saving timestamp {}'.format(current_timestamp))
-        break
     state.save_state('vlass_timestamp', _make_time_str(current_timestamp))
     logging.info(
         'Done {}, saved state is {}'.format(APPLICATION, current_timestamp))
