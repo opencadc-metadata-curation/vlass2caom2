@@ -68,7 +68,9 @@
 #
 
 import logging
+import sys
 import tempfile
+import traceback
 
 from datetime import datetime
 
@@ -82,13 +84,16 @@ from vlass2caom2 import vlass_quality_augmentation, scrape
 visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
 
 
+def _init_web_log():
+    epochs = {'VLASS1.1': _make_time('01-Jan-2018 00:00'),
+              'VLASS1.2': _make_time('01-Nov-2018 00:00')}
+    scrape.init_web_log_content(epochs)
+
 def run():
     """uses a todo file with file names"""
     config = mc.Config()
     config.get_executors()
-    epochs = {'VLASS1.1': _make_time('01-Jan-2018 00:00'),
-              'VLASS1.2': _make_time('01-Nov-2018 00:00')}
-    scrape.init_web_log_content(epochs)
+    _init_web_log()
     ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=config.proxy_fqn,
                    meta_visitors=visitors, data_visitors=None,
                    chooser=None, archive=COLLECTION)
@@ -114,7 +119,7 @@ def run_single():
                   data_visitors=None)
 
 
-def run_state():
+def _run_state():
     """Uses a state file with a timestamp to control which quicklook
     files will be retrieved from VLASS."""
     config = mc.Config()
@@ -126,45 +131,44 @@ def run_state():
     logging.info('Starting at {}'.format(start_time))
     logger = logging.getLogger()
     logger.setLevel(config.logging_level)
-    todo_list, max_date = scrape.build_todo(start_time)
+    todo_list, max_date = scrape.build_file_url_list(start_time)
     if len(todo_list) == 0:
         logging.info('No items to process after {}'.format(start_time))
         return
 
     logging.info('{} items to process. Max date will be {}'.format(
         len(todo_list), max_date))
+    _init_web_log()
     count = 0
     current_timestamp = start_time
     organizer = ec.OrganizeExecutes(config, chooser=None)
-    organizer.complete_record_count = len(todo_list) * 2
-    for k, v in todo_list.items():
-        for value in v:
-            # -2 because NRAO URLs always end in /
-            f_prefix = value.split('/')[-2]
-            f1 = '{}{}.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
-                value, f_prefix)
-            f2 = '{}{}.I.iter1.image.pbcor.tt0.subim.fits'.format(
-                value, f_prefix)
-            for url in [f1, f2]:
-                logging.info('{}: Process {}'.format(APPLICATION, url))
-                vlass_name = VlassName(url=url)
-                # TODO visitors is none
-                ec.run_single_from_state(organizer, config, vlass_name,
-                                         APPLICATION, meta_visitors=None,
-                                         data_visitors=None)
-                logging.debug(
-                    '{}: Done process of {}'.format(APPLICATION, url))
-            # break
+    organizer.complete_record_count = len(todo_list)
+    for url, timestamp in todo_list:
+        logging.info('{}: Process {}'.format(APPLICATION, url))
+        vlass_name = VlassName(url=url)
+        ec.run_single_from_state(organizer, config, vlass_name,
+                                 APPLICATION, meta_visitors=visitors,
+                                 data_visitors=None)
         count += 1
-        current_timestamp = k
+        current_timestamp = timestamp
         if count % 10 == 0:
             state.save_state('vlass_timestamp',
                              _make_time_str(current_timestamp))
             logging.info('Saving timestamp {}'.format(current_timestamp))
-        # break
     state.save_state('vlass_timestamp', _make_time_str(current_timestamp))
     logging.info(
         'Done {}, saved state is {}'.format(APPLICATION, current_timestamp))
+
+
+def run_state():
+    try:
+        _run_state()
+        sys.exit(0)
+    except Exception as e:
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)
 
 
 def _make_time(value):
@@ -176,6 +180,6 @@ def _make_time(value):
 def _make_time_str(value):
     # 01-May-2019 15:40 - support the format of what's visible on the
     # web page, to make it easy to cut-and-paste
-    # go from a float to a string
+    # go from a float, return a string
     temp = datetime.fromtimestamp(value)
     return datetime.strftime(temp, '%d-%b-%Y %H:%M')
