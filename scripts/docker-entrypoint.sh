@@ -10,7 +10,7 @@ then
   yesterday=$(date -d yesterday "+%d-%b-%Y %H:%M")
   echo "bookmarks:
   vlass_timestamp:
-    last_record: ${yesterday}
+    last_record: $yesterday
 " > ${PWD}/state.yml
 fi
 
