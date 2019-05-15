@@ -40,6 +40,7 @@ state_file_name: state.yml
 # - modify - create a footprint and previews for an existing CAOM model record
 # - pull - put a file retrieved from a URL
 task_types:
-  - visit
+  - pull
+  - ingest
 features:
   use_file_names: False
