@@ -138,12 +138,14 @@ def _run_state():
 
     logging.info('{} items to process. Max date will be {}'.format(
         len(todo_list), max_date))
+    return
+
     _init_web_log()
     count = 0
     current_timestamp = start_time
     organizer = ec.OrganizeExecutes(config, chooser=None)
     organizer.complete_record_count = len(todo_list)
-    for url, timestamp in todo_list:
+    for url, timestamp in todo_list.items():
         logging.info('{}: Process {}'.format(APPLICATION, url))
         vlass_name = VlassName(url=url)
         ec.run_single_from_state(organizer, config, vlass_name,
@@ -155,6 +157,7 @@ def _run_state():
             state.save_state('vlass_timestamp',
                              _make_time_str(current_timestamp))
             logging.info('Saving timestamp {}'.format(current_timestamp))
+        break
     state.save_state('vlass_timestamp', _make_time_str(current_timestamp))
     logging.info(
         'Done {}, saved state is {}'.format(APPLICATION, current_timestamp))

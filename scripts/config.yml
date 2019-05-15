@@ -1,6 +1,8 @@
 working_directory: /usr/src/app/
 # test value is ivo://cadc.nrc.ca/sc2repo
 resource_id: ivo://cadc.nrc.ca/ams
+# test value is ivo://cadc.nrc.ca/sc2tap
+tap_id: ivo://cadc.nrc.ca/ams/cirada
 proxy_file_name: /usr/src/app/cadcproxy.pem
 todo_file_name: todo.txt
 # values True False
@@ -37,7 +39,7 @@ state_file_name: state.yml
 # - ingest - read the headers, write the xml to the endpoint found by resource_id
 # - modify - create a footprint and previews for an existing CAOM model record
 # - pull - put a file retrieved from a URL
-task_types: 
+task_types:
   - visit
 features:
   use_file_names: False
