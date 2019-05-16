@@ -6,9 +6,9 @@ RUN apk --no-cache add \
         gcc \
         git \
         g++ \
+        libffi-dev \
         libxml2-dev \
         libxslt-dev \
-        libffi-dev \
         make \
         musl-dev \
         openssl-dev
