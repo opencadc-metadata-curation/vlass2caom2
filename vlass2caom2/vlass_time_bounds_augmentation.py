@@ -157,16 +157,7 @@ def _augment_artifact(obs_id, artifact, csv_file):
         time_axis.bounds = bounds
         chunk.time = TemporalWCS(time_axis)
         chunk.time.exposure = exposure
-        count = 0
-        for ii in [chunk.position, chunk.energy, chunk.polarization,
-                   chunk.observable]:
-            if ii is not None:
-                if ii is chunk.position:
-                    count += 2
-                else:
-                    count += 1
-        chunk.time_axis = count + 1
-        chunk.naxis = count + 1
+        chunk.time_axis = 5
         return version, reference
     else:
         return None, None
