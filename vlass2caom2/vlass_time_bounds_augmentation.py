@@ -158,6 +158,7 @@ def _augment_artifact(obs_id, artifact, csv_file):
         chunk.time = TemporalWCS(time_axis)
         chunk.time.exposure = exposure
         chunk.time_axis = 5
+        chunk.naxis = 4
         return version, reference
     else:
         return None, None
