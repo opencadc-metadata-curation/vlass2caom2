@@ -143,11 +143,11 @@ def _augment_artifact(obs_id, artifact, csv_file):
             obs_metadata = scrape.retrieve_obs_metadata(obs_id)
         if obs_metadata is not None and len(obs_metadata) > 0:
             bounds, exposure = _build_time(
-                mc.response_lookup(obs_metadata, 'Observation Start'),
-                mc.response_lookup(obs_metadata, 'Observation End'),
-                mc.response_lookup(obs_metadata, 'On Source'))
-            version = mc.response_lookup(obs_metadata, 'Pipeline Version')
-            reference = mc.response_lookup(obs_metadata, 'reference')
+                obs_metadata.get('Observation Start'),
+                obs_metadata.get('Observation End'),
+                obs_metadata.get('On Source'))
+            version = obs_metadata.get('Pipeline Version')
+            reference = obs_metadata.get('reference')
             found = True
         else:
             logging.warning('Found no time metadata for {}'.format(obs_id))

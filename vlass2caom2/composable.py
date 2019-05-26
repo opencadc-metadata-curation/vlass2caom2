@@ -89,6 +89,7 @@ def _init_web_log():
               'VLASS1.2': _make_time('01-Nov-2018 00:00')}
     scrape.init_web_log_content(epochs)
 
+
 def run():
     """uses a todo file with file names"""
     config = mc.Config()
@@ -143,7 +144,7 @@ def _run_state():
     current_timestamp = start_time
     organizer = ec.OrganizeExecutes(config, chooser=None)
     organizer.complete_record_count = len(todo_list)
-    for url, timestamp in todo_list:
+    for url, timestamp in todo_list.items():
         logging.info('{}: Process {}'.format(APPLICATION, url))
         vlass_name = VlassName(url=url)
         ec.run_single_from_state(organizer, config, vlass_name,
