@@ -178,7 +178,7 @@ def build_good_todo(start_date):
 
                     # get the list of fields
                     for field in fields:
-                        logging.info('Checking field {} on date {}'.format(
+                        logging.info('Checking field {} with date {}'.format(
                             field, fields[field]))
                         field_url = '{}{}'.format(epoch_url, field)
                         response = mc.query_endpoint(field_url)
@@ -314,19 +314,23 @@ def build_todo(start_date):
     """
     logging.debug('Being build_todo with date {}'.format(start_date))
     good, good_date = build_good_todo(start_date)
-    logging.info('{} good items to process.'.format(len(good)))
+    logging.info('{} good timestamps to process.'.format(len(good)))
     rejected, rejected_date = build_qa_rejected_todo(start_date)
     logging.info(
-        '{} rejected items to process, date will be {}'.format(
+        '{} rejected timestamps to process, date will be {}'.format(
             len(rejected), rejected_date))
     result = collections.OrderedDict()
     for k, v in sorted(sorted(good.items()) + sorted(rejected.items())):
         temp = result.setdefault(k, [])
         result[k] = temp + list(set(v))
-    # return the min of the two, because a date from the good list
-    # has not necessarily been encountered on the rejected list, and
-    # vice-versa
-    return_date = min(good_date, rejected_date)
+
+    if good_date != start_date and rejected_date != start_date:
+        # return the min of the two, because a date from the good list
+        # has not necessarily been encountered on the rejected list, and
+        # vice-versa
+        return_date = min(good_date, rejected_date)
+    else:
+        return_date = max(good_date, rejected_date)
     logging.debug('End build_todo with {} records, date {}'.format(
         len(result), return_date))
     return result, return_date
@@ -343,7 +347,7 @@ def _parse_page_for_hrefs(html_string, reference, start_date):
         y = ii.get('href')
         z = ii.next_element.next_element.string.replace('-', '').strip()
         dt = datetime.strptime(z, PAGE_TIME_FORMAT)
-        if dt > start_date:
+        if dt >= start_date:
             logging.info('Adding {}'.format(y))
             result[y] = dt
     return result
@@ -423,11 +427,7 @@ def build_file_url_list(start_time):
     """
     result = {}
     todo_list, max_date = build_todo(start_time)
-    if len(todo_list) == 0:
-        logging.info('No items to process after {}'.format(start_time))
-    else:
-        logging.info('{} items to process. Max date will be {}'.format(
-            len(todo_list), max_date))
+    if len(todo_list) > 0:
         for k, v in todo_list.items():
             for value in v:
                 # -2 because NRAO URLs always end in /

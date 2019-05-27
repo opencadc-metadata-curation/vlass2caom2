@@ -32,23 +32,23 @@ Production services:
 
 In an empty directory (the 'working directory'), on a machine with Docker installed:
 
-1. In the master branch of this repository, find the scripts directory, and copy the files docker-entrypoint.sh, config.yml, visitor_query.sh, and vlass_run_visitor.sh to the working directory. e.g.:
+1. In the master branch of this repository, find the scripts directory, and copy the file vlass_run_state.sh to the working directory. e.g.:
+
+  ```
+  wget https://raw.github.com/opencadc-metadata-curation/vlass2caom2/master/scripts/vlass_run_state.sh
+  ```
+
+2. Ensure the script is executable:
 
 ```
-wget https://raw.github.com/opencadc-metadata-curation/vlass2caom2/master/scripts/vlass_run_visitor.sh
+chmod +x vlass_run_state.sh
 ```
 
-1. Make docker-entrypoint.sh executable.
+3. Copy a valid proxy certificate to the working directory (cadcproxy.pem). This certificate must be for a user with read and write permissions to /ams service for CIRADA/VLASS.
+
+4. To run the application:
 
 ```
-chmod +x docker-entrypoint.sh
-```
-
-1. Copy a valid proxy certificate to the working directory (cadcproxy.pem). This certificate must be for a user with read and write permissions to /ams service for CIRADA/VLASS.
-
-1. To run the application:
-
-```
-./vlass_run_visitor.sh
+./vlass_run_state.sh
 ```
 

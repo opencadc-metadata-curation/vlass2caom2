@@ -2,26 +2,27 @@ FROM python:3.6-alpine
 
 RUN apk --no-cache add \
         bash \
+        coreutils \
         gcc \
         git \
         g++ \
+        libffi-dev \
         libxml2-dev \
         libxslt-dev \
-        libffi-dev \
         make \
         musl-dev \
         openssl-dev
 
-RUN pip install astropy && \
-    pip install aenum && \
-	pip install cadcdata && \
-	pip install caom2repo && \
+RUN pip install aenum && \
+    pip install astropy && \
+    pip install cadcdata && \
+    pip install caom2repo && \
     pip install funcsigs && \
- 	pip install future && \
-	pip install numpy && \
-	pip install PyYAML && \
+    pip install future && \
+    pip install numpy && \
+    pip install PyYAML && \
     pip install spherical-geometry && \
-	pip install xml-compare
+    pip install xml-compare
 
 WORKDIR /usr/src/app
 
@@ -35,11 +36,10 @@ RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
   cp ./vlass2caom2/data/ArchiveQuery-2018-08-15.csv /usr/src/ && \
   cp ./vlass2caom2/data/rejected_file_names-2018-09-05.csv /usr/src/ && \
   cp ./vlass2caom2/scripts/config.yml / && \
+  cp ./vlass2caom2/scripts/docker-entrypoint.sh / && \
   pip install ./vlass2caom2
 
 RUN apk --no-cache del git
-
-COPY ./docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
