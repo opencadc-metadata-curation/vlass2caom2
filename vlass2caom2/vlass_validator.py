@@ -163,7 +163,7 @@ if __name__ == '__main__':
     import sys
     try:
         logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
         validate()
         sys.exit(0)
     except Exception as e:
