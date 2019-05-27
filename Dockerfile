@@ -26,7 +26,8 @@ RUN pip install aenum && \
 
 WORKDIR /usr/src/app
 
-RUN pip install bs4
+RUN pip install bs4 && \
+    pip install cadctap
 
 RUN git clone https://github.com/opencadc-metadata-curation/caom2tools.git && \
   cd caom2tools && git pull origin master && \
