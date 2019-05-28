@@ -70,6 +70,7 @@
 import io
 import logging
 import os
+import traceback
 
 from datetime import datetime
 from urllib import parse as parse
@@ -84,8 +85,9 @@ from vlass2caom2 import APPLICATION, scrape, VlassName
 
 __all__ = ['validate']
 
-NRAO_STATE = 'nrao_state.yml'
+NRAO_STATE = 'nrao_state.csv'
 VALIDATE_STATE = 'validate_state.yml'
+ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 
 def read_file_list_from_archive(config):
@@ -127,12 +129,24 @@ def read_list_from_caom(config):
 
 def read_list_from_nrao(nrao_state_fqn):
     if os.path.exists(nrao_state_fqn):
-        result = mc.read_as_yaml(nrao_state_fqn)
+        temp = []
+        with open(nrao_state_fqn, 'r') as f:
+            for line in f:
+                value = line.split(',')[1].split('/')[-1]
+                temp.append(value.strip())
     else:
-        start_date = datetime.strptime('01Jan1990 00:00', scrape.PAGE_TIME_FORMAT)
+        start_date = datetime.strptime('01Jan1990 00:00',
+                                       scrape.PAGE_TIME_FORMAT)
         vlass_list, vlass_date = scrape.build_file_url_list(start_date)
-        temp = [VlassName(url=ii).file_name.strip() for ii in vlass_list]
-        result = list(set(temp))
+        temp = []
+        with open(nrao_state_fqn, 'w') as f:
+            for timestamp, urls in vlass_list.items():
+                ts_date = datetime.fromtimestamp(timestamp)
+                for url in urls:
+                    f.write('{}, {}\n'.format(
+                        ts_date.isoformat(), url.strip()))
+                    temp.append(url.strip())
+    result = list(set(temp))
     return result
 
 
@@ -146,7 +160,6 @@ def validate():
     caom_list = read_list_from_caom(config)
     nrao_state_fqn = os.path.join(config.working_directory, NRAO_STATE)
     vlass_list = read_list_from_nrao(nrao_state_fqn)
-    mc.write_as_yaml(vlass_list, nrao_state_fqn)
     caom = _find_missing(caom_list, vlass_list)
     nrao = _find_missing(vlass_list, caom_list)
     result = {'at_nrao': nrao,
@@ -168,4 +181,5 @@ if __name__ == '__main__':
         sys.exit(0)
     except Exception as e:
         logging.error(e)
+        logging.debug(traceback.format_exc())
         sys.exit(-1)

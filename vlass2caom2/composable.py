@@ -144,18 +144,19 @@ def _run_state():
     current_timestamp = start_time
     organizer = ec.OrganizeExecutes(config, chooser=None)
     organizer.complete_record_count = len(todo_list)
-    for url, timestamp in todo_list.items():
-        logging.info('{}: Process {}'.format(APPLICATION, url))
-        vlass_name = VlassName(url=url)
-        ec.run_single_from_state(organizer, config, vlass_name,
-                                 APPLICATION, meta_visitors=visitors,
-                                 data_visitors=None)
-        count += 1
-        current_timestamp = timestamp
-        if count % 10 == 0:
-            state.save_state('vlass_timestamp',
-                             _make_time_str(current_timestamp))
-            logging.info('Saving timestamp {}'.format(current_timestamp))
+    for timestamp, urls in todo_list.items():
+        for url in urls:
+            logging.info('{}: Process {}'.format(APPLICATION, url))
+            vlass_name = VlassName(url=url)
+            ec.run_single_from_state(organizer, config, vlass_name,
+                                     APPLICATION, meta_visitors=visitors,
+                                     data_visitors=None)
+            count += 1
+            current_timestamp = timestamp
+            if count % 10 == 0:
+                state.save_state('vlass_timestamp',
+                                 _make_time_str(current_timestamp))
+                logging.info('Saving timestamp {}'.format(current_timestamp))
     state.save_state('vlass_timestamp', _make_time_str(current_timestamp))
     logging.info(
         'Done {}, saved state is {}'.format(APPLICATION, current_timestamp))

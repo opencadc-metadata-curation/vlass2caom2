@@ -429,6 +429,7 @@ def build_file_url_list(start_time):
     todo_list, max_date = build_todo(start_time)
     if len(todo_list) > 0:
         for k, v in todo_list.items():
+            result[k] = []
             for value in v:
                 # -2 because NRAO URLs always end in /
                 f_prefix = value.split('/')[-2]
@@ -436,6 +437,6 @@ def build_file_url_list(start_time):
                     value, f_prefix)
                 f2 = '{}{}.I.iter1.image.pbcor.tt0.subim.fits'.format(
                     value, f_prefix)
-                for url in [f1, f2]:
-                    result[url] = k
+                result[k].append(f1)
+                result[k].append(f2)
     return result, max_date

@@ -285,6 +285,27 @@ def test_build_todo():
 
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
+def test_build_file_url_list():
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
+        query_endpoint_mock.side_effect = _query_endpoint
+        test_result, test_max_date = scrape.build_file_url_list(TEST_START_TIME)
+        assert test_result is not None, 'expected dict result'
+        assert len(test_result) == 10, 'wrong size results'
+        assert test_max_date is not None, 'expected date result'
+        assert test_max_date == datetime(
+            2019, 4, 29, 8, 2), 'wrong date result'
+        temp = test_result.popitem()
+        assert temp[1][0] == \
+               'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+               'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/' \
+               'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.' \
+               'pbcor.tt0.rms.subim.fits', \
+            'wrong result'
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
 @patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state():
     # preconditions
