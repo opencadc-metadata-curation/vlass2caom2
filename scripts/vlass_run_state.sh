@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "Get a proxy certificate"
+cp $HOME/.ssl/cadcproxy.pem ./ || exit $?
+
 echo "Get the container"
 docker pull bucket.canfar.net/vlass2caom2 || exit $?
 
