@@ -52,3 +52,27 @@ chmod +x vlass_run_state.sh
 ./vlass_run_state.sh
 ```
 
+# How To Run VLASS Reconciliation
+
+In an empty directory (the 'working directory'), on a machine with Docker installed:
+
+1. In the master branch of this repository, find the scripts directory, and copy the file reconcile_list_vlass.sh to the working directory. e.g.:
+
+  ```
+  wget https://raw.github.com/opencadc-metadata-curation/vlass2caom2/master/scripts/reconcile_list_vlass.sh
+  ```
+
+2. Ensure the script is executable:
+
+```
+chmod +x reconcile_list_vlass.sh
+```
+
+3. To run the application:
+
+```
+./reconcile_list_vlass.sh
+```
+
+The reconciliation output will be printed to the screen. Details will be captured in the file validate_state.yml.
+
