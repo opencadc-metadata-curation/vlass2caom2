@@ -373,11 +373,11 @@ def test_retrieve_metadata():
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
 def test_validator():
-    with patch('vlass2caom2.vlass_validator.read_list_from_nrao') as \
-            nrao_read_mock, \
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+        query_endpoint_mock, \
             patch('vlass2caom2.vlass_validator.read_list_from_caom') as \
             read_mock:
-        nrao_read_mock.side_effect = _nrao_read_mock
+        query_endpoint_mock.side_effect = _query_endpoint
         read_mock.side_effect = _query_tap
         getcwd_orig = os.getcwd
         os.getcwd = Mock(return_value=TEST_DATA_DIR)
@@ -385,21 +385,33 @@ def test_validator():
             test_nrao, test_caom = vlass_validator.validate()
             assert test_nrao is not None, 'expected a nrao result'
             assert test_caom is not None, 'expected a caom result'
-            assert len(test_nrao) == 1, 'wrong nrao result'
-            assert len(test_caom) == 2424, 'wrong caom result'
+            assert len(test_nrao) == 109, 'wrong nrao result'
+            assert len(test_caom) == 2417, 'wrong caom result'
+            assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
+            assert test_caom[0] == \
+                'VLASS1.1.ql.T24t19.J181027+553000.10.2048.v1.I.iter1.' \
+                'image.pbcor.tt0.subim.fits', 'wrong caom value'
         finally:
             os.getcwd = getcwd_orig
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
+def test_read_list_from_nrao():
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
+        query_endpoint_mock.side_effect = _query_endpoint
+        test_nrao = vlass_validator.read_list_from_nrao(
+            os.path.join(TEST_DATA_DIR, 'nrao_state.csv'))
+        assert test_nrao is not None, 'expected a nrao result'
+        assert len(test_nrao) == 62, 'wrong nrao result'
+        assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
 
 
 def _query_tap(ignore):
     with open(CAOM_QUERY) as f:
         temp = f.readlines()
-    return [ii for ii in temp]
-
-
-def _nrao_read_mock(ignore):
-    return ['VLASS1.2.ql.T08t20.J131022-093000.10.2048.v1.I.iter1.'
-            'image.pbcor.tt0.subim.fits']
+    return [ii.strip() for ii in temp]
 
 
 def _query_endpoint(url, timeout=-1):

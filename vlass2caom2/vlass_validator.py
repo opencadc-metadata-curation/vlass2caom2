@@ -145,7 +145,8 @@ def read_list_from_nrao(nrao_state_fqn):
                 for url in urls:
                     f.write('{}, {}\n'.format(
                         ts_date.isoformat(), url.strip()))
-                    temp.append(url.strip())
+                    value = url.split('/')[-1]
+                    temp.append(value.strip())
     result = list(set(temp))
     return result
 
@@ -169,7 +170,7 @@ def validate():
     logging.info('There are {} files at NRAO that are not represented '
                  'at CADC, and {} CAOM entries at CADC that are not '
                  'available from NRAO.'.format(len(nrao), len(caom)))
-    return vlass_list, caom_list
+    return nrao, caom
 
 
 if __name__ == '__main__':
