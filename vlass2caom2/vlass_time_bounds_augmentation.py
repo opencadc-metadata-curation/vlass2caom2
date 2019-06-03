@@ -92,18 +92,19 @@ def visit(observation, **kwargs):
     # with observation ID, start time, end time, and exposure time.
 
     count = 0
-    for i in observation.planes:
-        plane = observation.planes[i]
-        for j in plane.artifacts:
-            artifact = plane.artifacts[j]
+    for plane in observation.planes.values():
+        for artifact in plane.artifacts.values():
             logging.debug('working on artifact {}'.format(artifact.uri))
             version, reference = _augment(observation.observation_id, artifact)
-            if version is not None and reference is not None:
+            if version is not None:
                 plane.provenance.version = version
+            if reference is not None:
                 plane.provenance.reference = reference
                 count += 1
     logging.info('Completed time bounds augmentation for {}'.format(
         observation.observation_id))
+    global obs_metadata
+    obs_metadata = None
     return {'artifacts': count}
 
 
