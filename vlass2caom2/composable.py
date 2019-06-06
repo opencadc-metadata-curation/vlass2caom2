@@ -165,6 +165,7 @@ def _run_state():
     """
     config = mc.Config()
     config.get_executors()
+    config.features.use_urls = True
     state = mc.State(config.state_fqn)
     start_time = utils.get_bookmark(state)
     logging.info('Starting at {}'.format(start_time))
