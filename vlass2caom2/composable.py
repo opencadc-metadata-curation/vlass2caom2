@@ -128,6 +128,8 @@ def _run_single():
     file_name = sys.argv[1]
     if config.features.use_file_names:
         vlass_name = VlassName(file_name=file_name)
+    elif config.features.use_urls:
+        vlass_name = VlassName(url=file_name)
     else:
         vlass_name = VlassName(obs_id=sys.argv[1])
     if config.features.run_in_airflow:
@@ -136,15 +138,17 @@ def _run_single():
         config.proxy_fqn = temp.name
     else:
         config.proxy_fqn = sys.argv[2]
-    ec.run_single(config, vlass_name, APPLICATION, meta_visitors=visitors,
-                  data_visitors=None)
+    logging.error(config.features)
+    return ec.run_single(config, vlass_name, APPLICATION,
+                         meta_visitors=visitors,
+                         data_visitors=None)
 
 
 def run_single():
     """Wraps _run_single in exception handling."""
     try:
-        _run_single()
-        sys.exit(0)
+        result = _run_single()
+        sys.exit(result)
     except Exception as e:
         logging.error(e)
         tb = traceback.format_exc()

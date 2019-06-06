@@ -107,6 +107,9 @@ class VlassName(StorageName):
                 obs_id = VlassName.get_obs_id_from_file_name(file_name)
             elif fname_on_disk is not None:
                 obs_id = VlassName.get_obs_id_from_file_name(fname_on_disk)
+            elif url is not None:
+                obs_id = VlassName.get_obs_id_from_file_name(
+                    url.split('/')[-1])
         super(VlassName, self).__init__(
             obs_id, COLLECTION, COLLECTION_PATTERN)
         self.file_name = file_name
@@ -125,7 +128,7 @@ class VlassName(StorageName):
             self.fname_on_disk = self.file_name
             self.file_id = VlassName.remove_extensions(self.file_name)
             self.obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
-            self.url = url
+            self._url = url
 
     @property
     def file_uri(self):
