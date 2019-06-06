@@ -165,9 +165,7 @@ def _find_missing(compare_this, to_this):
 def generate_reconciliation_todo():
     config = mc.Config()
     config.get_executors()
-    logging.error('working dir is {}'.format(config.working_directory))
     result_fqn = os.path.join(config.working_directory, VALIDATE_STATE)
-    logging.error('result fqn is {}'.format(result_fqn))
     if os.access(result_fqn, os.R_OK):
         logging.info('Read the validation list from {}'.format(result_fqn))
         validation = mc.read_as_yaml(result_fqn)
@@ -184,15 +182,13 @@ def generate_reconciliation_todo():
             with open(nrao_state_fqn, 'r') as f:
                 for line in f:
                     url = line.split(',')[1]
-                    f_name = url.split('/')[-1]
+                    f_name = url.split('/')[-1].strip()
                     urls_dict[f_name] = url
-                    logging.error('url {} fname {}'.format(url, f_name))
 
             logging.info('Build a todo.txt file.')
             with open(config.work_fqn, 'w') as f:
                 for f_name in nrao_file_list:
-                    logging.error('urls_dict {}'.format(urls_dict.get(f_name)))
-                    f.write('{}\n'.format(urls_dict.get(f_name)))
+                    f.write('{}\n'.format(urls_dict.get(f_name).strip()))
         else:
             logging.info('No NRAO files to retrieve.')
     else:
