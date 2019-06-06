@@ -79,7 +79,7 @@ from caom2pipe import manage_composable as mc
 from caom2.diff import get_differences
 
 from vlass2caom2 import scrape, vlass_time_bounds_augmentation, composable
-from vlass2caom2 import vlass_validator
+from vlass2caom2 import vlass_validator, VlassName
 
 PY_VERSION = '3.6'
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -307,11 +307,9 @@ def test_build_file_url_list():
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
 @patch('sys.exit', Mock(return_value=MyExitError))
-def test_run_state():
+def test_run_state_file_modify():
     # preconditions
-    test_bookmark = {'bookmarks': {'vlass_timestamp':
-                                   {'last_record': TEST_START_TIME}}}
-    mc.write_as_yaml(test_bookmark, STATE_FILE)
+    _write_state(TEST_START_TIME_STR)
     start_time = os.path.getmtime(STATE_FILE)
 
     getcwd_orig = os.getcwd
@@ -373,6 +371,7 @@ def test_retrieve_metadata():
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
 def test_validator():
+    _write_state('23Apr2019 10:30')
     with patch('caom2pipe.manage_composable.query_endpoint') as \
         query_endpoint_mock, \
             patch('vlass2caom2.vlass_validator.read_list_from_caom') as \
@@ -385,7 +384,7 @@ def test_validator():
             test_nrao, test_caom = vlass_validator.validate()
             assert test_nrao is not None, 'expected a nrao result'
             assert test_caom is not None, 'expected a caom result'
-            assert len(test_nrao) == 109, 'wrong nrao result'
+            assert len(test_nrao) == 19, 'wrong nrao result'
             assert len(test_caom) == 2417, 'wrong caom result'
             assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
             assert test_caom[0] == \
@@ -393,19 +392,100 @@ def test_validator():
                 'image.pbcor.tt0.subim.fits', 'wrong caom value'
         finally:
             os.getcwd = getcwd_orig
+            nrao_fqn = os.path.join('/usr/src/app', 'nrao_state.csv')
+            if os.path.exists(nrao_fqn):
+                os.unlink(nrao_fqn)
 
 
 @pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
                     reason='support single version')
 def test_read_list_from_nrao():
+    nrao_file = os.path.join(TEST_DATA_DIR, 'nrao_state.csv')
+    if os.path.exists(nrao_file):
+        os.unlink(nrao_file)
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
         test_nrao = vlass_validator.read_list_from_nrao(
-            os.path.join(TEST_DATA_DIR, 'nrao_state.csv'))
+            nrao_file, os.path.join(TEST_DATA_DIR, 'state.yml'))
         assert test_nrao is not None, 'expected a nrao result'
-        assert len(test_nrao) == 62, 'wrong nrao result'
+        assert len(test_nrao) == 26, 'wrong nrao result'
         assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
+@patch('sys.exit', Mock(return_value=MyExitError))
+def test_run_state():
+    _write_state('23Apr2019 10:30')
+    test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.' \
+                 'v1.I.iter1.image.pbcor.tt0.subim.fits'
+    # execution
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock, \
+            patch('caom2pipe.execute_composable._do_one') as run_mock:
+        query_endpoint_mock.side_effect = _query_endpoint
+        getcwd_orig = os.getcwd
+        os.getcwd = Mock(return_value=TEST_DATA_DIR)
+        try:
+            composable.run_state()
+            assert run_mock.called, 'should have been called'
+            args, kwargs = run_mock.call_args
+            assert args[3] == 'vlass2caom2', 'wrong command'
+            test_storage = args[2]
+            assert isinstance(test_storage, VlassName), type(test_storage)
+            assert test_storage.url == \
+                'https://archive-new.nrao.edu/vlass/quicklook/' \
+                'VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.' \
+                '10.2048.v1/{}'.format(test_fname), 'wrong url'
+            assert test_storage.obs_id == 'VLASS1.2.T21t15.J141833+413000', \
+                'wrong obs id'
+            assert test_storage.file_name == test_fname, 'wrong file name'
+            assert test_storage.fname_on_disk == test_fname, \
+                'wrong fname on disk'
+        finally:
+            os.getcwd = getcwd_orig
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
+@patch('sys.exit', Mock(return_value=MyExitError))
+def test_run_by_file():
+    test_fname = 'VLASS1.2.ql.T08t20.J130619-093000.10.2048.' \
+                 'v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
+    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+               'QA_REJECTED/VLASS1.2.ql.T08t20.J130619-093000.10.2048.v1/' \
+               '{}'.format(test_fname)
+
+    # execution
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock, \
+            patch('caom2pipe.execute_composable._do_one') as run_mock:
+        query_endpoint_mock.side_effect = _query_endpoint
+        getcwd_orig = os.getcwd
+        os.getcwd = Mock(return_value=TEST_DATA_DIR)
+        try:
+            config = mc.Config()
+            config.get_executors()
+            with open(config.work_fqn, 'w') as f:
+                f.write('{}\n'.format(test_url))
+
+            composable.run_by_file()
+            assert run_mock.called, 'should have been called'
+            args, kwargs = run_mock.call_args
+            assert args[3] == 'vlass2caom2', 'wrong command'
+            test_storage = args[2]
+            assert isinstance(test_storage, VlassName), type(test_storage)
+            assert test_storage.url == test_url, test_storage.url
+            assert test_storage.obs_id == 'VLASS1.2.T08t20.J130619-093000', \
+                'wrong obs id'
+            assert test_storage.file_name == test_fname, 'wrong file name'
+            assert test_storage.fname_on_disk == test_fname, \
+                'wrong fname on disk'
+        finally:
+            os.getcwd = getcwd_orig
+            if os.path.exists(config.work_fqn):
+                os.unlink(config.work_fqn)
 
 
 def _query_tap(ignore):
@@ -445,3 +525,10 @@ def _query_endpoint(url, timeout=-1):
     else:
         raise Exception('wut? {} {}'.format(url, len(url.split('/'))))
     return result
+
+
+def _write_state(start_time_str):
+    test_time = datetime.strptime(start_time_str, scrape.PAGE_TIME_FORMAT)
+    test_bookmark = {'bookmarks': {'vlass_timestamp':
+                                        {'last_record': test_time}}}
+    mc.write_as_yaml(test_bookmark, STATE_FILE)

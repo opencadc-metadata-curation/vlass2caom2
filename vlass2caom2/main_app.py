@@ -95,6 +95,10 @@ class VlassName(StorageName):
     file names.
 
     Isolate the zipped/unzipped nature of the file names.
+
+    While tempting, it's not possible to recreate URLs from file names,
+    because some of the URLs are from the QA_REJECTED directories, hence
+    the absence of that functionality in this class.
     """
     def __init__(self, obs_id=None, file_name=None, fname_on_disk=None,
                  url=None):
@@ -110,17 +114,18 @@ class VlassName(StorageName):
             self.file_id = None
         else:
             self.file_id = VlassName.remove_extensions(file_name)
+            self.fname_on_disk = file_name
         self.obs_id = obs_id
         if fname_on_disk is not None:
             self.file_id = VlassName.remove_extensions(fname_on_disk)
             self.fname_on_disk = fname_on_disk
             self.file_name = self.fname_on_disk.replace('.header', '')
-        self.url = url
         if url is not None:
             self.file_name = url.strip('/').split('/')[-1]
             self.fname_on_disk = self.file_name
             self.file_id = VlassName.remove_extensions(self.file_name)
             self.obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
+            self.url = url
 
     @property
     def file_uri(self):
@@ -169,23 +174,6 @@ class VlassName(StorageName):
     def remove_extensions(file_name):
         return file_name.replace('.fits', '').replace('.header', '')
 
-    @staticmethod
-    def make_url_from_file_name(file_name):
-        """
-        file name eg
-        https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/
-        url eg
-        https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/
-        VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits
-        """
-        bits = file_name.split('.')
-        epoch = '{}.{}'.format(bits[0], bits[1])
-        field = bits[3]
-        position = bits[:7]
-        url = 'https://archive-new.nrao.edu/vlass/quicklook/' \
-              '{}/{}/{}/{}'.format(epoch, field, position, file_name)
-        return url
-
 
 def accumulate_wcs(bp):
     """Configure the VLASS-specific ObsBlueprint for the CAOM model
@@ -197,6 +185,10 @@ def accumulate_wcs(bp):
 
     # obervation level
     bp.set('Observation.type', 'OBJECT')
+
+    # over-ride use of value from default keyword 'DATE'
+    bp.clear('Observation.metaRelease')
+    bp.add_fits_attribute('Observation.metaRelease', 'DATE-OBS')
 
     bp.clear('Observation.target.name')
     bp.add_fits_attribute('Observation.target.name', 'FILNAM04')

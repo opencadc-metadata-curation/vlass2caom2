@@ -76,31 +76,51 @@ from datetime import datetime
 
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import VlassName, APPLICATION, COLLECTION
+from vlass2caom2 import VlassName, APPLICATION
 from vlass2caom2 import vlass_time_bounds_augmentation
-from vlass2caom2 import vlass_quality_augmentation, scrape
+from vlass2caom2 import vlass_quality_augmentation, scrape, utils
 
 
 visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
 
 
 def _init_web_log():
-    epochs = {'VLASS1.1': _make_time('01-Jan-2018 00:00'),
-              'VLASS1.2': _make_time('01-Nov-2018 00:00')}
+    """Cache content of https:archive-new.nrao.edu/vlass/weblog, because
+    it's large and takes a long time to read. This cached information
+    is how time and provenance metadata is found for the individual
+    observations.
+    """
+    epochs = {'VLASS1.1': utils.make_time('01-Jan-2018 00:00'),
+              'VLASS1.2': utils.make_time('01-Nov-2018 00:00')}
     scrape.init_web_log_content(epochs)
 
 
-def run():
-    """uses a todo file with file names"""
+def _run_by_file():
+    """uses a todo file with URLs, which is the only way to find
+    context information about QA_REJECTED.
+    """
+    _init_web_log()
     config = mc.Config()
     config.get_executors()
-    _init_web_log()
-    ec.run_by_file(VlassName, APPLICATION, COLLECTION, proxy=config.proxy_fqn,
-                   meta_visitors=visitors, data_visitors=None,
-                   chooser=None, archive=COLLECTION)
+    config.features.use_urls = True
+    result = ec.run_by_file_prime(config, VlassName, APPLICATION, visitors,
+                                  data_visitors=None, chooser=None)
+    return result
 
 
-def run_single():
+def run_by_file():
+    """Wraps _run_by_file in exception handling."""
+    try:
+        result = _run_by_file()
+        sys.exit(result)
+    except Exception as e:
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)
+
+
+def _run_single():
     """expects a single file name on the command line"""
     import sys
     config = mc.Config()
@@ -120,15 +140,30 @@ def run_single():
                   data_visitors=None)
 
 
+def run_single():
+    """Wraps _run_single in exception handling."""
+    try:
+        _run_single()
+        sys.exit(0)
+    except Exception as e:
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)
+
+
 def _run_state():
     """Uses a state file with a timestamp to control which quicklook
-    files will be retrieved from VLASS."""
+    files will be retrieved from VLASS.
+
+    Ingestion is based on URLs, because a URL that contains the phrase
+    'QA_REJECTED' is the only way to tell if the attribute 'requirements'
+    should be set to 'fail', or not.
+    """
     config = mc.Config()
     config.get_executors()
     state = mc.State(config.state_fqn)
-    start_time = state.get_bookmark('vlass_timestamp')
-    if isinstance(start_time, str):
-        start_time = _make_time(start_time)
+    start_time = utils.get_bookmark(state)
     logging.info('Starting at {}'.format(start_time))
     logger = logging.getLogger()
     logger.setLevel(config.logging_level)
@@ -163,6 +198,7 @@ def _run_state():
 
 
 def run_state():
+    """Wraps _run_state in exception handling."""
     try:
         _run_state()
         sys.exit(0)
@@ -171,12 +207,6 @@ def run_state():
         tb = traceback.format_exc()
         logging.debug(tb)
         sys.exit(-1)
-
-
-def _make_time(value):
-    # 01-May-2019 15:40 - support the format of what's visible on the
-    # web page, to make it easy to cut-and-paste
-    return datetime.strptime(value, '%d-%b-%Y %H:%M')
 
 
 def _make_time_str(value):

@@ -1,0 +1,11 @@
+at_cadc:
+- VLASS1.1.ql.T10t28.J182201-033000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits
+- VLASS1.1.ql.T06t24.J155522-163000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits
+- VLASS1.1.ql.T06t24.J155522-163000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits
+- VLASS1.1.ql.T06t24.J154253-163000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits
+- VLASS1.1.ql.T06t24.J154253-163000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits
+- VLASS1.1.ql.T06t24.J153433-163000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits
+- VLASS1.1.ql.T06t24.J153433-163000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits
+at_nrao:
+- VLASS1.2.ql.T14t22.J142634+123000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits
+- VLASS1.2.ql.T13t21.J134220+103000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits

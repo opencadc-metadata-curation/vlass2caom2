@@ -67,33 +67,19 @@
 # ***********************************************************************
 #
 
-import pytest
-import sys
+from datetime import datetime
 
-from vlass2caom2 import main_app
+__all__ = ['get_bookmark']
 
 
-@pytest.mark.skipif(not sys.version.startswith('3.6'),
-                    reason='support 3.6 only')
-def test_storage_name():
-    test_bit = 'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.' \
-               'pbcor.tt0'
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'T23t09/VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/' \
-               '{}.subim.fits'.format(test_bit)
-    ts1 = main_app.VlassName(url=test_url)
-    ts2 = main_app.VlassName(file_name='{}.subim.fits'.format(test_bit))
-    for ts in [ts1, ts2]:
-        assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
-        assert ts.fname_on_disk == '{}.subim.fits'.format(test_bit), \
-            'wrong fname on disk'
-        assert ts.file_name == '{}.subim.fits'.format(test_bit), 'wrong fname'
-        assert ts.file_id == '{}.subim'.format(test_bit), 'wrong fid'
-        assert ts.file_uri == \
-            'ad:VLASS/{}.subim.fits'.format(test_bit), 'wrong uri'
-        assert ts.model_file_name == \
-            'VLASS1.2.T23t09.J083851+483000.fits.xml', 'wrong model name'
-        assert ts.log_file == 'VLASS1.2.T23t09.J083851+483000.log', \
-            'wrong log file'
-        assert main_app.VlassName.remove_extensions(ts.file_name) == \
-            '{}.subim'.format(test_bit), 'wrong extensions'
+def get_bookmark(from_state):
+    result = from_state.get_bookmark('vlass_timestamp')
+    if isinstance(result, str):
+        result = make_time(result)
+    return result
+
+
+def make_time(value):
+    # 01-May-2019 15:40 - support the format of what's visible on the
+    # web page, to make it easy to cut-and-paste
+    return datetime.strptime(value, '%d-%b-%Y %H:%M')

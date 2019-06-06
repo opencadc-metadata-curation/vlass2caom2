@@ -81,9 +81,9 @@ from cadcutils import net
 from cadctap import CadcTapClient
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import APPLICATION, scrape, VlassName
+from vlass2caom2 import APPLICATION, scrape, utils
 
-__all__ = ['validate']
+__all__ = ['validate', 'generate_reconciliation_todo']
 
 NRAO_STATE = 'nrao_state.csv'
 VALIDATE_STATE = 'validate_state.yml'
@@ -127,26 +127,33 @@ def read_list_from_caom(config):
             for ii in temp['uri']]
 
 
-def read_list_from_nrao(nrao_state_fqn):
+def read_list_from_nrao(nrao_state_fqn, config_state_fqn):
     if os.path.exists(nrao_state_fqn):
+        logging.error('file exists')
         temp = []
         with open(nrao_state_fqn, 'r') as f:
             for line in f:
                 value = line.split(',')[1].split('/')[-1]
                 temp.append(value.strip())
     else:
+        logging.error('file does not exist {}'.format(nrao_state_fqn))
         start_date = datetime.strptime('01Jan1990 00:00',
                                        scrape.PAGE_TIME_FORMAT)
+        state = mc.State(config_state_fqn)
+        end_date = utils.get_bookmark(state)
+        logging.error(
+            'end_date is {} from {}'.format(end_date, config_state_fqn))
         vlass_list, vlass_date = scrape.build_file_url_list(start_date)
         temp = []
         with open(nrao_state_fqn, 'w') as f:
             for timestamp, urls in vlass_list.items():
                 ts_date = datetime.fromtimestamp(timestamp)
-                for url in urls:
-                    f.write('{}, {}\n'.format(
-                        ts_date.isoformat(), url.strip()))
-                    value = url.split('/')[-1]
-                    temp.append(value.strip())
+                if ts_date <= end_date:
+                    for url in urls:
+                        f.write('{}, {}\n'.format(
+                            ts_date.isoformat(), url.strip()))
+                        value = url.split('/')[-1]
+                        temp.append(value.strip())
     result = list(set(temp))
     return result
 
@@ -155,12 +162,49 @@ def _find_missing(compare_this, to_this):
     return [ii for ii in compare_this if ii not in to_this]
 
 
+def generate_reconciliation_todo():
+    config = mc.Config()
+    config.get_executors()
+    logging.error('working dir is {}'.format(config.working_directory))
+    result_fqn = os.path.join(config.working_directory, VALIDATE_STATE)
+    logging.error('result fqn is {}'.format(result_fqn))
+    if os.access(result_fqn, os.R_OK):
+        logging.info('Read the validation list from {}'.format(result_fqn))
+        validation = mc.read_as_yaml(result_fqn)
+        nrao_file_list = validation.get('at_nrao')
+        if len(nrao_file_list) > 0:
+            logging.info(
+                'There are {} NRAO files that are missing from CADC.'.format(
+                    len(nrao_file_list)))
+            nrao_state_fqn = os.path.join(config.working_directory,
+                                          NRAO_STATE)
+            logging.info(
+                'Look up the URLs for those files in {}'.format(nrao_state_fqn))
+            urls_dict = {}
+            with open(nrao_state_fqn, 'r') as f:
+                for line in f:
+                    url = line.split(',')[1]
+                    f_name = url.split('/')[-1]
+                    urls_dict[f_name] = url
+                    logging.error('url {} fname {}'.format(url, f_name))
+
+            logging.info('Build a todo.txt file.')
+            with open(config.work_fqn, 'w') as f:
+                for f_name in nrao_file_list:
+                    logging.error('urls_dict {}'.format(urls_dict.get(f_name)))
+                    f.write('{}\n'.format(urls_dict.get(f_name)))
+        else:
+            logging.info('No NRAO files to retrieve.')
+    else:
+        logging.error('Need to run validate first, to provide input.')
+
+
 def validate():
     config = mc.Config()
     config.get_executors()
     caom_list = read_list_from_caom(config)
     nrao_state_fqn = os.path.join(config.working_directory, NRAO_STATE)
-    vlass_list = read_list_from_nrao(nrao_state_fqn)
+    vlass_list = read_list_from_nrao(nrao_state_fqn, config.state_fqn)
     caom = _find_missing(caom_list, vlass_list)
     nrao = _find_missing(vlass_list, caom_list)
     result = {'at_nrao': nrao,

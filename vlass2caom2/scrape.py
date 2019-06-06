@@ -78,7 +78,7 @@ from bs4 import BeautifulSoup
 from caom2pipe import manage_composable as mc
 
 __all__ = ['build_good_todo', 'retrieve_obs_metadata',
-           'build_qa_rejected_todo', 'PAGE_TIME_FORMAT']
+           'build_qa_rejected_todo', 'PAGE_TIME_FORMAT', 'query_top_page']
 
 
 PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
@@ -440,3 +440,24 @@ def build_file_url_list(start_time):
                 result[k].append(f1)
                 result[k].append(f2)
     return result, max_date
+
+
+def query_top_page():
+    """Query the timestamp from the top page, for reporting.
+    """
+    start_date = datetime.strptime('01Jan2017 12:00', PAGE_TIME_FORMAT)
+    response = None
+
+    try:
+        # get the last modified date on the quicklook images listing
+        response = mc.query_endpoint(QL_URL)
+        if response is None:
+            logging.warning('Could not query {}'.format(QL_URL))
+        else:
+            epochs = _parse_top_page(response.text, start_date)
+            for key, value in epochs.items():
+                logging.error('{} {}'.format(
+                    key, datetime.strftime(value, PAGE_TIME_FORMAT)))
+    finally:
+        if response is not None:
+            response.close()

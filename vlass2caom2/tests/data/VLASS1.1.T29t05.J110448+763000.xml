@@ -2,7 +2,7 @@
 <caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-8cc0-dfe476bb3b15">
   <caom2:collection>VLASS</caom2:collection>
   <caom2:observationID>VLASS1.1.T29t05.J110448+763000</caom2:observationID>
-  <caom2:metaRelease>2018-06-04T15:43:56.612</caom2:metaRelease>
+  <caom2:metaRelease>2017-09-15T21:31:33.825</caom2:metaRelease>
   <caom2:algorithm>
     <caom2:name>exposure</caom2:name>
   </caom2:algorithm>

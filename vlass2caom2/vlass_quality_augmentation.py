@@ -109,22 +109,22 @@ def _augment(observation, artifact, url):
     # note the location of this file is hard-coded in the container
     # structure, because so much about this is broken anyway
     #
+    logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
+    csv_file = mc.read_csv_file(
+        '/usr/src/rejected_file_names-2018-09-05.csv')
+    file_name = ec.CaomName(artifact.uri).file_name
+    for row in csv_file:
+        for column in row:
+            if file_name in column:
+                logging.debug(
+                    'Found QA Rejected file {}'.format(file_name))
+                _set_failed(observation)
+                return 1
+
     if url is not None:
         if 'QA_REJECTED' in url:
             _set_failed(observation)
             return 1
-    else:
-        logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
-        csv_file = mc.read_csv_file(
-            '/usr/src/rejected_file_names-2018-09-05.csv')
-        file_name = ec.CaomName(artifact.uri).file_name
-        for row in csv_file:
-            for column in row:
-                if file_name in column:
-                    logging.debug(
-                        'Found QA Rejected file {}'.format(file_name))
-                    _set_failed(observation)
-                    return 1
     return 0
 
 
