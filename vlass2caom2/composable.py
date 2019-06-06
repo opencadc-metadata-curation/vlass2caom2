@@ -138,7 +138,6 @@ def _run_single():
         config.proxy_fqn = temp.name
     else:
         config.proxy_fqn = sys.argv[2]
-    logging.error(config.features)
     return ec.run_single(config, vlass_name, APPLICATION,
                          meta_visitors=visitors,
                          data_visitors=None)
