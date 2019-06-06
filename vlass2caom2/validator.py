@@ -129,20 +129,16 @@ def read_list_from_caom(config):
 
 def read_list_from_nrao(nrao_state_fqn, config_state_fqn):
     if os.path.exists(nrao_state_fqn):
-        logging.error('file exists')
         temp = []
         with open(nrao_state_fqn, 'r') as f:
             for line in f:
                 value = line.split(',')[1].split('/')[-1]
                 temp.append(value.strip())
     else:
-        logging.error('file does not exist {}'.format(nrao_state_fqn))
         start_date = datetime.strptime('01Jan1990 00:00',
                                        scrape.PAGE_TIME_FORMAT)
         state = mc.State(config_state_fqn)
         end_date = utils.get_bookmark(state)
-        logging.error(
-            'end_date is {} from {}'.format(end_date, config_state_fqn))
         vlass_list, vlass_date = scrape.build_file_url_list(start_date)
         temp = []
         with open(nrao_state_fqn, 'w') as f:

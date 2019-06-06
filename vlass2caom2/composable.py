@@ -77,11 +77,11 @@ from datetime import datetime
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION
-from vlass2caom2 import vlass_time_bounds_augmentation
-from vlass2caom2 import vlass_quality_augmentation, scrape, utils
+from vlass2caom2 import time_bounds_augmentation, quality_augmentation
+from vlass2caom2 import scrape, utils
 
 
-visitors = [vlass_time_bounds_augmentation, vlass_quality_augmentation]
+visitors = [time_bounds_augmentation, quality_augmentation]
 
 
 def _init_web_log():
