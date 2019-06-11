@@ -78,7 +78,8 @@ from bs4 import BeautifulSoup
 from caom2pipe import manage_composable as mc
 
 __all__ = ['build_good_todo', 'retrieve_obs_metadata',
-           'build_qa_rejected_todo', 'PAGE_TIME_FORMAT', 'query_top_page']
+           'build_qa_rejected_todo', 'PAGE_TIME_FORMAT', 'query_top_page',
+           'list_files_on_page']
 
 
 PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
@@ -314,10 +315,10 @@ def build_todo(start_date):
     """
     logging.debug('Being build_todo with date {}'.format(start_date))
     good, good_date = build_good_todo(start_date)
-    logging.info('{} good timestamps to process.'.format(len(good)))
+    logging.info('{} good records to process.'.format(len(good)))
     rejected, rejected_date = build_qa_rejected_todo(start_date)
     logging.info(
-        '{} rejected timestamps to process, date will be {}'.format(
+        '{} rejected records to process, date will be {}'.format(
             len(rejected), rejected_date))
     result = collections.OrderedDict()
     for k, v in sorted(sorted(good.items()) + sorted(rejected.items())):
@@ -351,6 +352,38 @@ def _parse_page_for_hrefs(html_string, reference, start_date):
             logging.info('Adding {}'.format(y))
             result[y] = dt
     return result
+
+
+def _parse_specific_file_list_page(html_string):
+    """
+    :return: list, where entries are file names found on the page
+        that lists them for a specific field
+    """
+    result = []
+    soup = BeautifulSoup(html_string, features='lxml')
+    fits_files = soup.find_all('a', string=re.compile('\\.fits'))
+    for ii in fits_files:
+        logging.debug('fits file is {}'.format(ii.get('href')))
+        result.append(ii.get('href'))
+    return result
+
+
+def list_files_on_page(url):
+    """:return a list of URLS for .fits files on a page, from
+    a specific page listing at NRAO."""
+    response = None
+    try:
+        logging.debug('Querying {}'.format(url))
+        response = mc.query_endpoint(url)
+        if response is None:
+            raise mc.CadcException('Could not query {}'.format(url))
+        else:
+            result = _parse_specific_file_list_page(response.text)
+            response.close()
+            return result
+    finally:
+        if response is not None:
+            response.close()
 
 
 def init_web_log_content(epochs):
@@ -428,17 +461,17 @@ def build_file_url_list(start_time):
     result = {}
     todo_list, max_date = build_todo(start_time)
     if len(todo_list) > 0:
-        for k, v in todo_list.items():
-            result[k] = []
-            for value in v:
+        for timestamp, urls in todo_list.items():
+            result[timestamp] = []
+            for url in urls:
                 # -2 because NRAO URLs always end in /
-                f_prefix = value.split('/')[-2]
+                f_prefix = url.split('/')[-2]
                 f1 = '{}{}.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
-                    value, f_prefix)
+                        url, f_prefix)
                 f2 = '{}{}.I.iter1.image.pbcor.tt0.subim.fits'.format(
-                    value, f_prefix)
-                result[k].append(f1)
-                result[k].append(f2)
+                        url, f_prefix)
+                result[timestamp].append(f1)
+                result[timestamp].append(f2)
     return result, max_date
 
 
