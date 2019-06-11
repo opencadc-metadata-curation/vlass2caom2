@@ -78,7 +78,8 @@ from bs4 import BeautifulSoup
 from caom2pipe import manage_composable as mc
 
 __all__ = ['build_good_todo', 'retrieve_obs_metadata',
-           'build_qa_rejected_todo', 'PAGE_TIME_FORMAT', 'query_top_page']
+           'build_qa_rejected_todo', 'PAGE_TIME_FORMAT', 'query_top_page',
+           'list_files_on_page']
 
 
 PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
@@ -314,10 +315,10 @@ def build_todo(start_date):
     """
     logging.debug('Being build_todo with date {}'.format(start_date))
     good, good_date = build_good_todo(start_date)
-    logging.info('{} good timestamps to process.'.format(len(good)))
+    logging.info('{} good records to process.'.format(len(good)))
     rejected, rejected_date = build_qa_rejected_todo(start_date)
     logging.info(
-        '{} rejected timestamps to process, date will be {}'.format(
+        '{} rejected records to process, date will be {}'.format(
             len(rejected), rejected_date))
     result = collections.OrderedDict()
     for k, v in sorted(sorted(good.items()) + sorted(rejected.items())):
@@ -365,6 +366,24 @@ def _parse_specific_file_list_page(html_string):
         logging.debug('fits file is {}'.format(ii.get('href')))
         result.append(ii.get('href'))
     return result
+
+
+def list_files_on_page(url):
+    """:return a list of URLS for .fits files on a page, from
+    a specific page listing at NRAO."""
+    response = None
+    try:
+        logging.debug('Querying {}'.format(url))
+        response = mc.query_endpoint(url)
+        if response is None:
+            raise mc.CadcException('Could not query {}'.format(url))
+        else:
+            result = _parse_specific_file_list_page(response.text)
+            response.close()
+            return result
+    finally:
+        if response is not None:
+            response.close()
 
 
 def init_web_log_content(epochs):
@@ -446,16 +465,13 @@ def build_file_url_list(start_time):
             result[timestamp] = []
             for url in urls:
                 # -2 because NRAO URLs always end in /
-                response = mc.query_endpoint(url)
-                if response is None:
-                    logging.error('Could not query {}'.format(url))
-                else:
-                    # this has the effect of ignoring pages with no
-                    # files listed
-                    file_urls = _parse_specific_file_list_page(response.text)
-                    for file_url in file_urls:
-                        result[timestamp].append('{}{}'.format(url, file_url))
-                    response.close()
+                f_prefix = url.split('/')[-2]
+                f1 = '{}{}.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
+                        url, f_prefix)
+                f2 = '{}{}.I.iter1.image.pbcor.tt0.subim.fits'.format(
+                        url, f_prefix)
+                result[timestamp].append(f1)
+                result[timestamp].append(f2)
     return result, max_date
 
 

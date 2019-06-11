@@ -175,16 +175,31 @@ def generate_reconciliation_todo():
             logging.info(
                 'Look up the URLs for those files in {}'.format(nrao_state_fqn))
             urls_dict = {}
+            # build a map so it's possible to look up file names, and get
+            # URLs
             with open(nrao_state_fqn, 'r') as f:
                 for line in f:
                     url = line.split(',')[1]
                     f_name = url.split('/')[-1].strip()
                     urls_dict[f_name] = url
 
+            logging.info('Check for empty directories at NRAO.')
+            empty_dir_list = []
+            for f_name in nrao_file_list:
+                url = '/'.join(
+                    ii for ii in urls_dict.get(f_name).strip().split('/')[:-1])
+                result = scrape.list_files_on_page(url)
+                if len(result) == 0:
+                    empty_dir_list.append(f_name)
+
             logging.info('Build a todo.txt file.')
             with open(config.work_fqn, 'w') as f:
                 for f_name in nrao_file_list:
-                    f.write('{}\n'.format(urls_dict.get(f_name).strip()))
+                    if f_name in empty_dir_list:
+                        logging.info('{} is empty at NRAO.'.format(f_name))
+                        continue
+                    else:
+                        f.write('{}\n'.format(urls_dict.get(f_name.strip())))
         else:
             logging.info('No NRAO files to retrieve.')
     else:

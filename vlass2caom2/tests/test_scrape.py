@@ -73,13 +73,13 @@ import sys
 
 from datetime import datetime
 from datetime import timedelta
-from mock import patch, Mock
+from mock import patch, Mock, ANY
 
 from caom2pipe import manage_composable as mc
 from caom2.diff import get_differences
 
 from vlass2caom2 import scrape, time_bounds_augmentation, composable
-from vlass2caom2 import validator, VlassName
+from vlass2caom2 import validator, VlassName, quality_augmentation
 
 PY_VERSION = '3.6'
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -303,7 +303,7 @@ def test_build_file_url_list():
         assert temp[1][0] == \
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
             'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/' \
-            'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.' \
+            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.' \
             'pbcor.tt0.rms.subim.fits', \
             temp[1][0]
 
@@ -312,9 +312,10 @@ def test_build_file_url_list():
                     reason='support single version')
 @patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state_file_modify():
+    test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.' \
+                 'image.pbcor.tt0.subim.fits'
     # preconditions
     _write_state(TEST_START_TIME_STR)
-    start_time = os.path.getmtime(STATE_FILE)
 
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=TEST_DATA_DIR)
@@ -327,9 +328,21 @@ def test_run_state_file_modify():
                 as run_mock:
             query_endpoint_mock.side_effect = _query_endpoint
             composable.run_state()
-            assert run_mock.called, 'should have been called'
-        end_time = os.path.getmtime(STATE_FILE)
-        assert end_time > start_time, 'no execution'
+            assert run_mock.assert_called, 'should have been called'
+            args, kwargs = run_mock.call_args
+            assert args[3] == 'vlass2caom2', 'wrong command'
+            test_storage = args[2]
+            assert isinstance(test_storage, VlassName), type(test_storage)
+            assert test_storage.url == \
+                   'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+                   'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.' \
+                   'v1/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.' \
+                   'image.pbcor.tt0.subim.fits', test_storage.url
+            assert test_storage.obs_id == 'VLASS1.2.T21t15.J141833+413000', \
+                'wrong obs id'
+            assert test_storage.file_name == test_fname, 'wrong file name'
+            assert test_storage.fname_on_disk == test_fname, \
+                'wrong fname on disk'
     finally:
         os.getcwd = getcwd_orig
 
@@ -389,7 +402,7 @@ def test_validator():
             assert test_nrao is not None, 'expected a nrao result'
             assert test_caom is not None, 'expected a caom result'
             assert len(test_nrao) == 2, 'wrong nrao result'
-            assert len(test_caom) == 2424, 'wrong caom result'
+            assert len(test_caom) == 2420, 'wrong caom result'
             assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
             assert test_caom[0] == \
                 'VLASS1.1.ql.T24t19.J181027+553000.10.2048.v1.I.iter1.' \
@@ -413,7 +426,7 @@ def test_read_list_from_nrao():
         test_nrao = validator.read_list_from_nrao(
             nrao_file, os.path.join(TEST_DATA_DIR, 'state.yml'))
         assert test_nrao is not None, 'expected a nrao result'
-        assert len(test_nrao) == 2, 'wrong nrao result'
+        assert len(test_nrao) == 6, 'wrong nrao result'
         assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
 
 
@@ -422,8 +435,8 @@ def test_read_list_from_nrao():
 @patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state():
     _write_state('23Apr2019 10:30')
-    test_fname = 'VLASS1.2.ql.T08t19.J123816-103000.10.2048.' \
-                 'v2.I.iter1.image.pbcor.tt0.subim.fits'
+    test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.' \
+                 'v1.I.iter1.image.pbcor.tt0.subim.fits'
     # execution
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock, \
@@ -439,10 +452,11 @@ def test_run_state():
             test_storage = args[2]
             assert isinstance(test_storage, VlassName), type(test_storage)
             assert test_storage.url == \
-                'https://archive-new.nrao.edu/vlass/quicklook/' \
-                'VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.' \
-                '10.2048.v1/{}'.format(test_fname), 'wrong url'
-            assert test_storage.obs_id == 'VLASS1.2.T08t19.J123816-103000', \
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+                'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/' \
+                'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.' \
+                'pbcor.tt0.subim.fits', test_storage.url
+            assert test_storage.obs_id == 'VLASS1.2.T21t15.J141833+413000', \
                 'wrong obs id'
             assert test_storage.file_name == test_fname, 'wrong file name'
             assert test_storage.fname_on_disk == test_fname, \

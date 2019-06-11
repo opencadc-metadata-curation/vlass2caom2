@@ -99,12 +99,18 @@ def _run_by_file():
     """uses a todo file with URLs, which is the only way to find
     context information about QA_REJECTED.
     """
-    _init_web_log()
     config = mc.Config()
     config.get_executors()
     config.features.use_urls = True
-    result = ec.run_by_file_prime(config, VlassName, APPLICATION, visitors,
-                                  data_visitors=None, chooser=None)
+    with open(config.work_fqn) as f:
+        todo_list_length = sum(1 for _ in f)
+    if todo_list_length > 0:
+        _init_web_log()
+        result = ec.run_by_file_prime(config, VlassName, APPLICATION, visitors,
+                                      data_visitors=None, chooser=None)
+    else:
+        logging.info('No records to process.')
+        result = 0
     return result
 
 
