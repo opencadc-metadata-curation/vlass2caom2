@@ -16,6 +16,7 @@ RUN apk --no-cache add \
 RUN pip install aenum && \
     pip install astropy && \
     pip install cadcdata && \
+    pip install cadctap && \
     pip install caom2repo && \
     pip install funcsigs && \
     pip install future && \
@@ -26,8 +27,7 @@ RUN pip install aenum && \
 
 WORKDIR /usr/src/app
 
-RUN pip install bs4 && \
-    pip install cadctap
+RUN pip install bs4
 
 RUN git clone https://github.com/opencadc-metadata-curation/caom2tools.git && \
   cd caom2tools && git pull origin master && \
