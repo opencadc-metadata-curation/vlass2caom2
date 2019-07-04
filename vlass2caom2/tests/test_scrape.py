@@ -324,25 +324,21 @@ def test_run_state_file_modify():
         # execution
         with patch('caom2pipe.manage_composable.query_endpoint') as \
                 query_endpoint_mock, \
-                patch('caom2pipe.execute_composable.run_single_from_state') \
+                patch('caom2pipe.execute_composable.run_from_state') \
                 as run_mock:
             query_endpoint_mock.side_effect = _query_endpoint
             composable.run_state()
             assert run_mock.assert_called, 'should have been called'
             args, kwargs = run_mock.call_args
-            assert args[3] == 'vlass2caom2', 'wrong command'
-            test_storage = args[2]
-            assert isinstance(test_storage, VlassName), type(test_storage)
-            assert test_storage.url == \
-                   'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-                   'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.' \
-                   'v1/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.' \
-                   'image.pbcor.tt0.subim.fits', test_storage.url
-            assert test_storage.obs_id == 'VLASS1.2.T21t15.J141833+413000', \
-                'wrong obs id'
-            assert test_storage.file_name == test_fname, 'wrong file name'
-            assert test_storage.fname_on_disk == test_fname, \
-                'wrong fname on disk'
+            import logging
+            logging.error(args)
+            assert args[2] == 'vlass2caom2', 'wrong command'
+            test_config = args[0]
+            assert isinstance(test_config, mc.Config), type(test_config)
+            assert test_config.work_fqn == '/usr/src/app/todo.txt', \
+                'wrong todo file'
+            assert test_config.state_fqn == '/usr/src/app/state.yml', \
+                'wrong state file'
     finally:
         os.getcwd = getcwd_orig
 
@@ -435,8 +431,6 @@ def test_read_list_from_nrao():
 @patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state():
     _write_state('23Apr2019 10:30')
-    test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.' \
-                 'v1.I.iter1.image.pbcor.tt0.subim.fits'
     # execution
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock, \
@@ -451,15 +445,11 @@ def test_run_state():
             assert args[3] == 'vlass2caom2', 'wrong command'
             test_storage = args[2]
             assert isinstance(test_storage, VlassName), type(test_storage)
-            assert test_storage.url == \
-                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-                'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/' \
-                'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.' \
-                'pbcor.tt0.subim.fits', test_storage.url
-            assert test_storage.obs_id == 'VLASS1.2.T21t15.J141833+413000', \
-                'wrong obs id'
-            assert test_storage.file_name == test_fname, 'wrong file name'
-            assert test_storage.fname_on_disk == test_fname, \
+            assert test_storage.url.startswith(
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
+                test_storage.url
+            assert test_storage.url.endswith('.fits'), test_storage.url
+            assert test_storage.file_name == test_storage.fname_on_disk, \
                 'wrong fname on disk'
         finally:
             os.getcwd = getcwd_orig
@@ -504,6 +494,37 @@ def test_run_by_file():
             os.getcwd = getcwd_orig
             if os.path.exists(config.work_fqn):
                 os.unlink(config.work_fqn)
+
+
+@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
+                    reason='support single version')
+@patch('sys.exit', Mock(return_value=MyExitError))
+def test_run_state_with_work():
+    _write_state('23Apr2019 10:30')
+    test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.' \
+                 'v1.I.iter1.image.pbcor.tt0.subim.fits'
+    # execution
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock, \
+            patch('caom2pipe.execute_composable._do_one') as run_mock:
+        query_endpoint_mock.side_effect = _query_endpoint
+        getcwd_orig = os.getcwd
+        os.getcwd = Mock(return_value=TEST_DATA_DIR)
+        try:
+            composable.run_state()
+            assert run_mock.called, 'should have been called'
+            args, kwargs = run_mock.call_args
+            assert args[3] == 'vlass2caom2', 'wrong command'
+            test_storage = args[2]
+            assert isinstance(test_storage, VlassName), type(test_storage)
+            assert test_storage.url.startswith(
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
+                test_storage.url
+            assert test_storage.url.endswith('.fits'), test_storage.url
+            assert test_storage.file_name == test_storage.fname_on_disk, \
+                'wrong fname'
+        finally:
+            os.getcwd = getcwd_orig
 
 
 def _query_tap(ignore):

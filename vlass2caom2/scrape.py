@@ -109,6 +109,8 @@ def _parse_id_page(html_string, epoch, start_date):
 
 def _parse_field_page(html_string, start_date):
     """
+    Parse the page which lists the fields viewed during an epoch.
+
     :return a dict, where keys are URLs, and values are timestamps
     """
     result = {}
@@ -127,6 +129,8 @@ def _parse_field_page(html_string, start_date):
 
 def _parse_top_page(html_string, start_date):
     """
+    Parse the page which lists the epochs.
+
     :return a dict, where keys are URLs, and values are timestamps
     """
     result = {}
@@ -388,25 +392,31 @@ def list_files_on_page(url):
 
 def init_web_log_content(epochs):
     """
+    Cache the listing of weblog processing, because it's really long, and
+    takes a long time to read.
+
     :param epochs: A dict with key == epoch name (e.g. 'VLASS1.1') and
         value = date after which entries are of interest
     """
-    logging.info('Initializing weblog content.')
-    response = None
-    try:
-        response = mc.query_endpoint(QL_WEB_LOG_URL, timeout=360)
-        if response is None:
-            raise mc.CadcException(
-                'Need access to {}'.format(QL_WEB_LOG_URL))
-        global web_log_content
-        for ii in epochs:
-            temp_orig = web_log_content
-            temp = _parse_page_for_hrefs(response.text, ii, epochs[ii])
-            web_log_content = {**temp_orig, **temp}
-        response.close()
-    finally:
-        if response is not None:
+    global web_log_content
+    if len(web_log_content) == 0:
+        logging.info('Initializing weblog content.')
+        response = None
+        try:
+            response = mc.query_endpoint(QL_WEB_LOG_URL, timeout=360)
+            if response is None:
+                raise mc.CadcException(
+                    'Need access to {}'.format(QL_WEB_LOG_URL))
+            for ii in epochs:
+                temp_orig = web_log_content
+                temp = _parse_page_for_hrefs(response.text, ii, epochs[ii])
+                web_log_content = {**temp_orig, **temp}
             response.close()
+        finally:
+            if response is not None:
+                response.close()
+    else:
+        logging.debug('weblog listing already cached.')
 
 
 def retrieve_obs_metadata(obs_id):
@@ -478,6 +488,7 @@ def build_file_url_list(start_time):
 def query_top_page():
     """Query the timestamp from the top page, for reporting.
     """
+    max_date = datetime.utcnow()
     start_date = datetime.strptime('01Jan2017 12:00', PAGE_TIME_FORMAT)
     response = None
 
@@ -491,6 +502,9 @@ def query_top_page():
             for key, value in epochs.items():
                 logging.error('{} {}'.format(
                     key, datetime.strftime(value, PAGE_TIME_FORMAT)))
+                max_date = min(max_date, value)
     finally:
         if response is not None:
             response.close()
+
+    return max_date

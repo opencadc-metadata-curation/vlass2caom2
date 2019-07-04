@@ -78,21 +78,15 @@ from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
-from vlass2caom2 import scrape, utils
+from vlass2caom2 import position_bounds_augmentation
+from vlass2caom2 import scrape, utils, work
 
 
-visitors = [time_bounds_augmentation, quality_augmentation]
+VLASS_BOOKMARK = 'vlass_timestamp'
 
-
-def _init_web_log():
-    """Cache content of https:archive-new.nrao.edu/vlass/weblog, because
-    it's large and takes a long time to read. This cached information
-    is how time and provenance metadata is found for the individual
-    observations.
-    """
-    epochs = {'VLASS1.1': utils.make_time('01-Jan-2018 00:00'),
-              'VLASS1.2': utils.make_time('01-Nov-2018 00:00')}
-    scrape.init_web_log_content(epochs)
+meta_visitors = [time_bounds_augmentation, quality_augmentation,
+                 position_bounds_augmentation]
+data_visitors = []
 
 
 def _run_by_file():
@@ -105,9 +99,11 @@ def _run_by_file():
     with open(config.work_fqn) as f:
         todo_list_length = sum(1 for _ in f)
     if todo_list_length > 0:
-        _init_web_log()
-        result = ec.run_by_file_prime(config, VlassName, APPLICATION, visitors,
-                                      data_visitors=None, chooser=None)
+        work.init_web_log()
+        result = ec.run_by_file_prime(config, VlassName, APPLICATION,
+                                      meta_visitors,
+                                      data_visitors=data_visitors,
+                                      chooser=None)
     else:
         logging.info('No records to process.')
         result = 0
@@ -145,8 +141,8 @@ def _run_single():
     else:
         config.proxy_fqn = sys.argv[2]
     return ec.run_single(config, vlass_name, APPLICATION,
-                         meta_visitors=visitors,
-                         data_visitors=None)
+                         meta_visitors=meta_visitors,
+                         data_visitors=data_visitors)
 
 
 def run_single():
@@ -159,6 +155,21 @@ def run_single():
         tb = traceback.format_exc()
         logging.debug(tb)
         sys.exit(-1)
+
+
+def _run_state_2():
+    """Uses a state file with a timestamp to control which quicklook
+    files will be retrieved from VLASS.
+
+    Ingestion is based on URLs, because a URL that contains the phrase
+    'QA_REJECTED' is the only way to tell if the attribute 'requirements'
+    should be set to 'fail', or not.
+    """
+    config = mc.Config()
+    config.get_executors()
+    return ec.run_from_state(config, VlassName, APPLICATION, meta_visitors,
+                             data_visitors, VLASS_BOOKMARK,
+                             work.NraoPageScrape())
 
 
 def _run_state():
@@ -184,7 +195,7 @@ def _run_state():
 
     logging.info('{} items to process. Max date will be {}'.format(
         len(todo_list), max_date))
-    _init_web_log()
+    work.init_web_log()
     count = 0
     current_timestamp = start_time
     organizer = ec.OrganizeExecutes(config, chooser=None)
@@ -194,8 +205,8 @@ def _run_state():
             logging.info('{}: Process {}'.format(APPLICATION, url))
             vlass_name = VlassName(url=url)
             ec.run_single_from_state(organizer, config, vlass_name,
-                                     APPLICATION, meta_visitors=visitors,
-                                     data_visitors=None)
+                                     APPLICATION, meta_visitors=meta_visitors,
+                                     data_visitors=data_visitors)
             count += 1
             current_timestamp = timestamp
             if count % 10 == 0:
@@ -210,7 +221,7 @@ def _run_state():
 def run_state():
     """Wraps _run_state in exception handling."""
     try:
-        _run_state()
+        _run_state_2()
         sys.exit(0)
     except Exception as e:
         logging.error(e)

@@ -74,9 +74,10 @@ from caom2 import Status
 from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
+from vlass2caom2 import position_bounds_augmentation
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
+TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 TEST_URI = 'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.' \
            'image.pbcor.tt0.rms.subim.fits'
 
@@ -90,7 +91,7 @@ def test_aug_visit():
 
 def test_aug_visit_works():
     test_file = os.path.join(
-        TESTDATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
+        TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
@@ -111,14 +112,14 @@ def test_aug_visit_works():
         'wrong amount of bounds info'
     assert chunk.time.exposure == 401.0, \
         'wrong exposure value'
-    mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
+    mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
 
 
 def test_aug_visit_quality_works():
     rejected_uri = 'ad:VLASS/VLASS1.1.ql.T10t12.J075402-033000.10.2048.v1' \
                    '.I.iter1.image.pbcor.tt0.subim.fits'
     test_file = os.path.join(
-        TESTDATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
+        TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
@@ -141,13 +142,13 @@ def test_aug_visit_quality_works():
     assert test_result['observations'] == 2, 'observation count'
     assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
 
-    mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
+    mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
 
 
 def test_aug_visit_quality_works_uri():
     rejected_uri = 'https://archive-new.nrao.edu/QA_REJECTED'
     test_file = os.path.join(
-        TESTDATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
+        TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
@@ -162,4 +163,21 @@ def test_aug_visit_quality_works_uri():
     assert test_result['observations'] == 2, 'observation count'
     assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
 
-    mc.write_obs_to_file(test_obs, os.path.join(TESTDATA_DIR, 'x.xml'))
+    mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
+
+
+def test_aug_visit_position_bounds():
+    test_file_id = 'VLASS1.2.ql.T24t07.J065836+563000.10.2048.v1.I.' \
+                   'iter1.image.pbcor.tt0.subim'
+    test_file = os.path.join(TEST_DATA_DIR, 'fpf_start_obs.xml')
+    test_obs = mc.read_obs_from_file(test_file)
+    kwargs = {'working_directory': TEST_DATA_DIR,
+              'science_file': '{}.fits'.format(test_file_id),
+              'log_file_directory': os.path.join(TEST_DATA_DIR, 'logs')}
+    test_result = position_bounds_augmentation.visit(test_obs, **kwargs)
+    assert test_result is not None, 'should have a result status'
+    assert len(test_result) == 1, 'modified chunks count'
+    assert test_result['chunks'] == 2, 'chunk count'
+    return_file = os.path.join(
+        THIS_DIR, '{}__footprint.txt'.format(test_file_id))
+    assert not os.path.exists(return_file), 'bad cleanup'

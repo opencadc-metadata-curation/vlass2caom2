@@ -16,18 +16,39 @@ RUN apk --no-cache add \
 RUN pip install aenum && \
     pip install astropy && \
     pip install cadcdata && \
+    pip install cadctap && \
     pip install caom2repo && \
     pip install funcsigs && \
     pip install future && \
     pip install numpy && \
     pip install PyYAML && \
     pip install spherical-geometry && \
+    pip install vos && \
     pip install xml-compare
+
+RUN apk --no-cache add \
+    build-base \
+    freetype-dev \
+    libpng-dev \
+    gfortran \
+    openblas-dev \
+    py-numpy \
+    py-pip \
+    python \
+    python-dev \
+    wget
+
+RUN pip install matplotlib
+
+RUN oldpath=`pwd` && cd /tmp && \
+    wget http://www.eso.org/~fstoehr/footprintfinder.py && \
+    cp footprintfinder.py /usr/local/lib/python3.6/site-packages/footprintfinder.py && \
+    chmod 755 /usr/local/lib/python3.6/site-packages/footprintfinder.py && \
+    oldpath
 
 WORKDIR /usr/src/app
 
-RUN pip install bs4 && \
-    pip install cadctap
+RUN pip install bs4
 
 RUN git clone https://github.com/opencadc-metadata-curation/caom2tools.git && \
   cd caom2tools && git pull origin master && \
