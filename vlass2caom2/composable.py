@@ -84,9 +84,8 @@ from vlass2caom2 import scrape, utils, work
 
 VLASS_BOOKMARK = 'vlass_timestamp'
 
-meta_visitors = [time_bounds_augmentation, quality_augmentation,
-                 position_bounds_augmentation]
-data_visitors = []
+meta_visitors = [time_bounds_augmentation, quality_augmentation]
+data_visitors = [position_bounds_augmentation]
 
 
 def _run_by_file():
