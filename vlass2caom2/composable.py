@@ -99,10 +99,8 @@ def _run_by_file():
         todo_list_length = sum(1 for _ in f)
     if todo_list_length > 0:
         work.init_web_log()
-        result = ec.run_by_file_prime(config, VlassName, APPLICATION,
-                                      meta_visitors,
-                                      data_visitors=data_visitors,
-                                      chooser=None)
+        result = ec.run_by_file(config, VlassName, APPLICATION, meta_visitors,
+                                data_visitors, chooser=None)
     else:
         logging.info('No records to process.')
         result = 0
