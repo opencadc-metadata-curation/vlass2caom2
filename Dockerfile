@@ -44,7 +44,7 @@ RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
     cp footprintfinder.py /usr/local/lib/python3.6/site-packages/footprintfinder.py && \
     chmod 755 /usr/local/lib/python3.6/site-packages/footprintfinder.py && \
-    oldpath
+    cd $oldpath
 
 WORKDIR /usr/src/app
 
