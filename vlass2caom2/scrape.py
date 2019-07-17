@@ -488,9 +488,9 @@ def build_file_url_list(start_time):
 def query_top_page():
     """Query the timestamp from the top page, for reporting.
     """
-    max_date = datetime.utcnow()
     start_date = datetime.strptime('01Jan2017 12:00', PAGE_TIME_FORMAT)
     response = None
+    max_date = None
 
     try:
         # get the last modified date on the quicklook images listing
@@ -502,7 +502,10 @@ def query_top_page():
             for key, value in epochs.items():
                 logging.error('{} {}'.format(
                     key, datetime.strftime(value, PAGE_TIME_FORMAT)))
-                max_date = min(max_date, value)
+                if max_date is None:
+                    max_date = value
+                else:
+                    max_date = max(max_date, value)
     finally:
         if response is not None:
             response.close()
