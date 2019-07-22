@@ -81,7 +81,6 @@ from caom2.diff import get_differences
 from vlass2caom2 import scrape, time_bounds_augmentation, composable
 from vlass2caom2 import validator, VlassName, quality_augmentation
 
-PY_VERSION = '3.6'
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 ALL_FIELDS = os.path.join(TEST_DATA_DIR, 'all_fields_list.html')
@@ -113,8 +112,6 @@ class Object(object):
         pass
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_build_bits():
     with open(ALL_FIELDS) as f:
         test_content = f.read()
@@ -141,8 +138,6 @@ def test_build_bits():
         assert first_answer[1] == datetime(2019, 4, 26, 15, 19)
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_build_todo_good():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
@@ -163,8 +158,6 @@ def test_build_todo_good():
             2019, 4, 28, 15, 18), 'wrong date result'
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_augment_bits():
     with open(PIPELINE_INDEX) as f:
         test_content = f.read()
@@ -196,8 +189,6 @@ def test_augment_bits():
         assert test_result['On Source'] == '0:03:54', 'wrong tos'
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_retrieve_qa_rejected():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
@@ -215,8 +206,6 @@ def test_retrieve_qa_rejected():
             2019, 5, 1, 10, 30), 'wrong date result'
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_qa_rejected_bits():
     with open(REJECT_INDEX) as f:
         test_content = f.read()
@@ -242,8 +231,6 @@ def test_qa_rejected_bits():
                'pbcor.tt0.rms.subim.fits' in test_result, 'wrong content'
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_visit():
     test_id = 'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.' \
               '128/'
@@ -267,8 +254,6 @@ def test_visit():
             raise AssertionError(msg)
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_build_todo():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
@@ -286,8 +271,6 @@ def test_build_todo():
             'wrong result'
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_build_file_url_list():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
@@ -308,8 +291,6 @@ def test_build_file_url_list():
             temp[1][0]
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 @patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state_file_modify():
     test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.' \
@@ -343,8 +324,6 @@ def test_run_state_file_modify():
         os.getcwd = getcwd_orig
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_init_web_log_content():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
@@ -364,8 +343,6 @@ def test_init_web_log_content():
             'wrong date result'
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_retrieve_metadata():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
@@ -381,8 +358,6 @@ def test_retrieve_metadata():
             'wrong reference'
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_validator():
     _write_state('23Apr2019 10:30')
     with patch('caom2pipe.manage_composable.query_endpoint') as \
@@ -410,8 +385,6 @@ def test_validator():
                 os.unlink(nrao_fqn)
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 def test_read_list_from_nrao():
     nrao_file = os.path.join(TEST_DATA_DIR, 'nrao_state.csv')
     if os.path.exists(nrao_file):
@@ -426,8 +399,6 @@ def test_read_list_from_nrao():
         assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 @patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state():
     _write_state('23Apr2019 10:30')
@@ -442,6 +413,8 @@ def test_run_state():
             composable.run_state()
             assert run_mock.called, 'should have been called'
             args, kwargs = run_mock.call_args
+            import logging
+            logging.error(type(run_mock.mock_calls))
             assert args[3] == 'vlass2caom2', 'wrong command'
             test_storage = args[2]
             assert isinstance(test_storage, VlassName), type(test_storage)
@@ -451,12 +424,11 @@ def test_run_state():
             assert test_storage.url.endswith('.fits'), test_storage.url
             assert test_storage.file_name == test_storage.fname_on_disk, \
                 'wrong fname on disk'
+            assert run_mock.call_count == 42, 'wrong call count'
         finally:
             os.getcwd = getcwd_orig
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 @patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_by_file():
     test_fname = 'VLASS1.2.ql.T08t20.J130619-093000.10.2048.' \
@@ -496,13 +468,9 @@ def test_run_by_file():
                 os.unlink(config.work_fqn)
 
 
-@pytest.mark.skipif(not sys.version.startswith(PY_VERSION),
-                    reason='support single version')
 @patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state_with_work():
     _write_state('23Apr2019 10:30')
-    test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.' \
-                 'v1.I.iter1.image.pbcor.tt0.subim.fits'
     # execution
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock, \
@@ -513,6 +481,7 @@ def test_run_state_with_work():
         try:
             composable.run_state()
             assert run_mock.called, 'should have been called'
+            assert run_mock.call_count == 42, 'wrong call count'
             args, kwargs = run_mock.call_args
             assert args[3] == 'vlass2caom2', 'wrong command'
             test_storage = args[2]

@@ -113,3 +113,10 @@ class NraoPageScrape(mc.Work):
             temp += url_list
         urls = list(set(temp))
         return urls
+
+    def get_interval(self):
+        """Calculate the interval to control the number of times
+        through the loop for the execute_composable.run_with_state"""
+        now_s = datetime.utcnow().timestamp()
+        interval = (now_s - self.max_ts_s) / 60
+        return interval

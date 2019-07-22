@@ -154,21 +154,6 @@ def run_single():
         sys.exit(-1)
 
 
-def _run_state_2():
-    """Uses a state file with a timestamp to control which quicklook
-    files will be retrieved from VLASS.
-
-    Ingestion is based on URLs, because a URL that contains the phrase
-    'QA_REJECTED' is the only way to tell if the attribute 'requirements'
-    should be set to 'fail', or not.
-    """
-    config = mc.Config()
-    config.get_executors()
-    return ec.run_from_state(config, VlassName, APPLICATION, meta_visitors,
-                             data_visitors, VLASS_BOOKMARK,
-                             work.NraoPageScrape())
-
-
 def _run_state():
     """Uses a state file with a timestamp to control which quicklook
     files will be retrieved from VLASS.
@@ -179,57 +164,19 @@ def _run_state():
     """
     config = mc.Config()
     config.get_executors()
-    config.features.use_urls = True
-    state = mc.State(config.state_fqn)
-    start_time = utils.get_bookmark(state)
-    logging.info('Starting at {}'.format(start_time))
-    logger = logging.getLogger()
-    logger.setLevel(config.logging_level)
-    todo_list, max_date = scrape.build_file_url_list(start_time)
-    if len(todo_list) == 0:
-        logging.info('No items to process after {}'.format(start_time))
-        return
-
-    logging.info('{} items to process. Max date will be {}'.format(
-        len(todo_list), max_date))
-    work.init_web_log()
-    count = 0
-    current_timestamp = start_time
-    organizer = ec.OrganizeExecutes(config, chooser=None)
-    organizer.complete_record_count = len(todo_list)
-    for timestamp, urls in todo_list.items():
-        for url in urls:
-            logging.info('{}: Process {}'.format(APPLICATION, url))
-            vlass_name = VlassName(url=url)
-            ec.run_single_from_state(organizer, config, vlass_name,
-                                     APPLICATION, meta_visitors=meta_visitors,
-                                     data_visitors=data_visitors)
-            count += 1
-            current_timestamp = timestamp
-            if count % 10 == 0:
-                state.save_state('vlass_timestamp',
-                                 _make_time_str(current_timestamp))
-                logging.info('Saving timestamp {}'.format(current_timestamp))
-    state.save_state('vlass_timestamp', _make_time_str(current_timestamp))
-    logging.info(
-        'Done {}, saved state is {}'.format(APPLICATION, current_timestamp))
+    state_work = work.NraoPageScrape()
+    config.interval = state_work.get_interval()
+    return ec.run_from_state(config, VlassName, APPLICATION, meta_visitors,
+                             data_visitors, VLASS_BOOKMARK, state_work)
 
 
 def run_state():
     """Wraps _run_state in exception handling."""
     try:
-        _run_state_2()
+        _run_state()
         sys.exit(0)
     except Exception as e:
         logging.error(e)
         tb = traceback.format_exc()
         logging.debug(tb)
         sys.exit(-1)
-
-
-def _make_time_str(value):
-    # 01-May-2019 15:40 - support the format of what's visible on the
-    # web page, to make it easy to cut-and-paste
-    # go from a float, return a string
-    temp = datetime.fromtimestamp(value)
-    return datetime.strftime(temp, '%d-%b-%Y %H:%M')
