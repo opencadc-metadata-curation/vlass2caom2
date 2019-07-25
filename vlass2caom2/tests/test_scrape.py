@@ -399,7 +399,6 @@ def test_read_list_from_nrao():
         assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
 
 
-@patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state():
     _write_state('23Apr2019 10:30')
     # execution
@@ -410,11 +409,10 @@ def test_run_state():
         getcwd_orig = os.getcwd
         os.getcwd = Mock(return_value=TEST_DATA_DIR)
         try:
-            composable.run_state()
+            sys.argv = ['test_command']
+            composable._run_state()
             assert run_mock.called, 'should have been called'
             args, kwargs = run_mock.call_args
-            import logging
-            logging.error(type(run_mock.mock_calls))
             assert args[3] == 'vlass2caom2', 'wrong command'
             test_storage = args[2]
             assert isinstance(test_storage, VlassName), type(test_storage)
@@ -429,7 +427,6 @@ def test_run_state():
             os.getcwd = getcwd_orig
 
 
-@patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_by_file():
     test_fname = 'VLASS1.2.ql.T08t20.J130619-093000.10.2048.' \
                  'v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
@@ -445,12 +442,13 @@ def test_run_by_file():
         getcwd_orig = os.getcwd
         os.getcwd = Mock(return_value=TEST_DATA_DIR)
         try:
+            sys.argv = ['test_command']
             config = mc.Config()
             config.get_executors()
             with open(config.work_fqn, 'w') as f:
                 f.write('{}\n'.format(test_url))
 
-            composable.run_by_file()
+            composable._run_by_file()
             assert run_mock.called, 'should have been called'
             args, kwargs = run_mock.call_args
             assert args[3] == 'vlass2caom2', 'wrong command'
@@ -468,10 +466,11 @@ def test_run_by_file():
                 os.unlink(config.work_fqn)
 
 
-@patch('sys.exit', Mock(return_value=MyExitError))
 def test_run_state_with_work():
     _write_state('23Apr2019 10:30')
     # execution
+    def _run_mock_return(ignore1, ignore2, ignore3, ignore4, ignore5, ignore6):
+        return 0
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock, \
             patch('caom2pipe.execute_composable._do_one') as run_mock:
@@ -479,7 +478,11 @@ def test_run_state_with_work():
         getcwd_orig = os.getcwd
         os.getcwd = Mock(return_value=TEST_DATA_DIR)
         try:
-            composable.run_state()
+            sys.argv = ['test_command']
+            run_mock.side_effect = _run_mock_return
+            test_result = composable._run_state()
+            assert test_result is not None, 'expect a result'
+            assert test_result == 0, 'wrong result'
             assert run_mock.called, 'should have been called'
             assert run_mock.call_count == 42, 'wrong call count'
             args, kwargs = run_mock.call_args
@@ -492,6 +495,16 @@ def test_run_state_with_work():
             assert test_storage.url.endswith('.fits'), test_storage.url
             assert test_storage.file_name == test_storage.fname_on_disk, \
                 'wrong fname'
+
+            # now do it a second time - make sure there's no more work
+            # to be done
+            run_mock.reset_mock()
+            assert not run_mock.called, 'reset worked'
+            test_result = composable._run_state()
+            assert test_result is not None, 'expect a result'
+            assert test_result == 0, 'wrong test result'
+            assert not run_mock.called, 'should not have been called'
+
         finally:
             os.getcwd = getcwd_orig
 

@@ -317,7 +317,7 @@ def build_todo(start_date):
     :return a dict, where keys are timestamps, and values are lists
        of URLs.
     """
-    logging.debug('Being build_todo with date {}'.format(start_date))
+    logging.debug('Begin build_todo with date {}'.format(start_date))
     good, good_date = build_good_todo(start_date)
     logging.info('{} good records to process.'.format(len(good)))
     rejected, rejected_date = build_qa_rejected_todo(start_date)
@@ -500,7 +500,7 @@ def query_top_page():
         else:
             epochs = _parse_top_page(response.text, start_date)
             for key, value in epochs.items():
-                logging.error('{} {}'.format(
+                logging.info('{} {}'.format(
                     key, datetime.strftime(value, PAGE_TIME_FORMAT)))
                 if max_date is None:
                     max_date = value

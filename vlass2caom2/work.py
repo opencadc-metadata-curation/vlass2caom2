@@ -99,24 +99,28 @@ class NraoPageScrape(mc.Work):
     CAOM record creation.
     """
 
-    def __init__(self):
-        max_date = scrape.query_top_page()
+    def __init__(self, from_time):
+        # make a string into a datetime value
+        temp = mc.increment_time(from_time, 0)
+        self.todo_list, max_date = scrape.build_file_url_list(temp)
         super(NraoPageScrape, self).__init__(max_date.timestamp())
 
     def initialize(self):
         init_web_log()
 
     def todo(self, prev_exec_date, exec_date):
-        todo_list, max_date = scrape.build_file_url_list(prev_exec_date)
+        """Time-boxing is done as part of the scraping of the NRAO site."""
         temp = []
-        for url_list in todo_list.values():
+        for url_list in self.todo_list.values():
             temp += url_list
         urls = list(set(temp))
         return urls
 
     def get_interval(self):
         """Calculate the interval to control the number of times
-        through the loop for the execute_composable.run_with_state"""
+        through the loop for the execute_composable.run_with_state. Make
+        it large, because the rate of URL update at NRAO isn't currently
+        high."""
         now_s = datetime.utcnow().timestamp()
         interval = (now_s - self.max_ts_s) / 60
         return interval

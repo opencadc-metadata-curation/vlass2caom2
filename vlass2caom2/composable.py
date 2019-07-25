@@ -72,14 +72,12 @@ import sys
 import tempfile
 import traceback
 
-from datetime import datetime
-
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import VlassName, APPLICATION
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation
-from vlass2caom2 import scrape, utils, work
+from vlass2caom2 import work
 
 
 VLASS_BOOKMARK = 'vlass_timestamp'
@@ -164,7 +162,9 @@ def _run_state():
     """
     config = mc.Config()
     config.get_executors()
-    state_work = work.NraoPageScrape()
+    state = mc.State(config.state_fqn)
+    start_time = state.get_bookmark(VLASS_BOOKMARK)
+    state_work = work.NraoPageScrape(start_time)
     config.interval = state_work.get_interval()
     return ec.run_from_state(config, VlassName, APPLICATION, meta_visitors,
                              data_visitors, VLASS_BOOKMARK, state_work)
