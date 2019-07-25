@@ -469,8 +469,10 @@ def test_run_by_file():
 def test_run_state_with_work():
     _write_state('23Apr2019 10:30')
     # execution
+
     def _run_mock_return(ignore1, ignore2, ignore3, ignore4, ignore5, ignore6):
         return 0
+
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock, \
             patch('caom2pipe.execute_composable._do_one') as run_mock:
@@ -478,6 +480,9 @@ def test_run_state_with_work():
         getcwd_orig = os.getcwd
         os.getcwd = Mock(return_value=TEST_DATA_DIR)
         try:
+            # the first time through, the build_todo method will
+            # use the MINIMUM of the good_date and the rejected_date,
+            # because of the start times
             sys.argv = ['test_command']
             run_mock.side_effect = _run_mock_return
             test_result = composable._run_state()
@@ -496,14 +501,20 @@ def test_run_state_with_work():
             assert test_storage.file_name == test_storage.fname_on_disk, \
                 'wrong fname'
 
-            # now do it a second time - make sure there's no more work
-            # to be done
+            # the second time through, the build_todo method will
+            # use the MAXIMUM of the good_date and the rejected_date,
+            # because of the start times
             run_mock.reset_mock()
             assert not run_mock.called, 'reset worked'
             test_result = composable._run_state()
             assert test_result is not None, 'expect a result'
             assert test_result == 0, 'wrong test result'
-            assert not run_mock.called, 'should not have been called'
+            assert run_mock.called, 'run_mock not called'
+            assert run_mock.call_count == 8, 'wrong number of calls'
+
+            # and yes, this combination of start dates and comparison dates
+            # will result in some records being processed more than once,
+            # which is better than some records being missed
 
         finally:
             os.getcwd = getcwd_orig
