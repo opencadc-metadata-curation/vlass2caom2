@@ -109,18 +109,11 @@ class NraoPageScrape(mc.Work):
         init_web_log()
 
     def todo(self, prev_exec_date, exec_date):
-        """Time-boxing is done as part of the scraping of the NRAO site."""
+        """Time-boxing the file url list returned from the site scrape."""
         temp = []
-        for url_list in self.todo_list.values():
-            temp += url_list
-        urls = list(set(temp))
-        return urls
-
-    def get_interval(self):
-        """Calculate the interval to control the number of times
-        through the loop for the execute_composable.run_with_state. Make
-        it large, because the rate of URL update at NRAO isn't currently
-        high."""
-        now_s = datetime.utcnow().timestamp()
-        interval = (now_s - self.max_ts_s) / 60
-        return interval
+        prev_ts = prev_exec_date.timestamp()
+        exec_ts = exec_date.timestamp()
+        for timestamp in self.todo_list.keys():
+            if timestamp > prev_ts and timestamp <= exec_ts:
+                temp += self.todo_list[timestamp]
+        return list(set(temp))

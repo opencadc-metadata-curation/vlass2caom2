@@ -32,6 +32,7 @@ stream: default
 archive: VLASS
 collection: VLASS
 state_file_name: state.yml
+interval: 600
 # how to control the work that gets done
 # possible values are:
 # - scrape - read the headers, write out the xml - kind of a test mode

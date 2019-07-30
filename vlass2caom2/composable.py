@@ -165,7 +165,6 @@ def _run_state():
     state = mc.State(config.state_fqn)
     start_time = state.get_bookmark(VLASS_BOOKMARK)
     state_work = work.NraoPageScrape(start_time)
-    config.interval = state_work.get_interval()
     return ec.run_from_state(config, VlassName, APPLICATION, meta_visitors,
                              data_visitors, VLASS_BOOKMARK, state_work)
 

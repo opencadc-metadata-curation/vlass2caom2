@@ -68,7 +68,6 @@
 #
 
 import os
-import pytest
 import sys
 
 from datetime import datetime
@@ -79,7 +78,7 @@ from caom2pipe import manage_composable as mc
 from caom2.diff import get_differences
 
 from vlass2caom2 import scrape, time_bounds_augmentation, composable
-from vlass2caom2 import validator, VlassName, quality_augmentation
+from vlass2caom2 import validator, VlassName
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
@@ -289,6 +288,9 @@ def test_build_file_url_list():
             'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.' \
             'pbcor.tt0.rms.subim.fits', \
             temp[1][0]
+        #
+        # from vlass2caom2 import work
+        # wrk = work.NraoPageScrape()
 
 
 @patch('sys.exit', Mock(return_value=MyExitError))
@@ -422,7 +424,7 @@ def test_run_state():
             assert test_storage.url.endswith('.fits'), test_storage.url
             assert test_storage.file_name == test_storage.fname_on_disk, \
                 'wrong fname on disk'
-            assert run_mock.call_count == 42, 'wrong call count'
+            assert run_mock.call_count == 40, 'wrong call count'
         finally:
             os.getcwd = getcwd_orig
 
@@ -489,7 +491,7 @@ def test_run_state_with_work():
             assert test_result is not None, 'expect a result'
             assert test_result == 0, 'wrong result'
             assert run_mock.called, 'should have been called'
-            assert run_mock.call_count == 42, 'wrong call count'
+            assert run_mock.call_count == 40, 'wrong call count'
             args, kwargs = run_mock.call_args
             assert args[3] == 'vlass2caom2', 'wrong command'
             test_storage = args[2]
@@ -510,7 +512,7 @@ def test_run_state_with_work():
             assert test_result is not None, 'expect a result'
             assert test_result == 0, 'wrong test result'
             assert run_mock.called, 'run_mock not called'
-            assert run_mock.call_count == 8, 'wrong number of calls'
+            assert run_mock.call_count == 2, 'wrong number of calls'
 
             # and yes, this combination of start dates and comparison dates
             # will result in some records being processed more than once,
