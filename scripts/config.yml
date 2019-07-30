@@ -43,5 +43,6 @@ interval: 600
 task_types:
   - pull
   - ingest
+  - modify
 features:
   use_file_names: False
