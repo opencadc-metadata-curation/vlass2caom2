@@ -114,6 +114,6 @@ class NraoPageScrape(mc.Work):
         prev_ts = prev_exec_date.timestamp()
         exec_ts = exec_date.timestamp()
         for timestamp in self.todo_list.keys():
-            if timestamp > prev_ts and timestamp <= exec_ts:
+            if prev_ts < timestamp <= exec_ts:
                 temp += self.todo_list[timestamp]
         return list(set(temp))
