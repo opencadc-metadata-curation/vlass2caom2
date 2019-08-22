@@ -147,6 +147,25 @@ def _parse_top_page(html_string, start_date):
     return result
 
 
+def _parse_top_page_no_date(html_string):
+    """
+    Parse the page which lists the epochs.
+
+    :return a dict, where keys are URLs, and values are timestamps
+    """
+    result = {}
+    soup = BeautifulSoup(html_string, features='lxml')
+    hrefs = soup.find_all('a')
+    for ii in hrefs:
+        y = ii.get('href')
+        if y.startswith('VLASS') and y.endswith('/'):
+            z = ii.next_element.next_element.string.replace('-', '').strip()
+            dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+            logging.info('Adding epoch: {}'.format(y))
+            result[y] = dt
+    return result
+
+
 def build_good_todo(start_date):
     """Create the list of work, based on timestamps from the NRAO
     Quicklook page.
@@ -165,7 +184,7 @@ def build_good_todo(start_date):
         if response is None:
             logging.warning('Could not query {}'.format(QL_URL))
         else:
-            epochs = _parse_top_page(response.text, start_date)
+            epochs = _parse_top_page_no_date(response.text)
             response.close()
 
             for epoch in epochs:
@@ -283,7 +302,7 @@ def build_qa_rejected_todo(start_date):
         if response is None:
             logging.warning('Could not query {}'.format(QL_URL))
         else:
-            epochs = _parse_top_page(response.text, start_date)
+            epochs = _parse_top_page_no_date(response.text)
             response.close()
 
             for epoch in epochs:
