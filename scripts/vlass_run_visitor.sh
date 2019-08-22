@@ -7,14 +7,15 @@ then
     exit -1
 fi
 
+CONTAINER="bucket.canfar.net/vlass2caom2"
 echo "Get the container"
-docker pull bucket.canfar.net/vlass2caom2 || exit $?
+docker pull ${CONTAINER} || exit $?
 
 echo "Generate todo list"
 ./visitor_query.sh
 
-echo "Run vlass_run container"
-docker run --rm --name vlass_run -v ${PWD}:/usr/src/app/ bucket.canfar.net/vlass2caom2 vlass_run || exit $?
+echo "Run container ${CONTAINER}"
+docker run --rm --name vlass_run -v ${PWD}:/usr/src/app/ ${CONTAINER} vlass_run || exit $?
 
 date
 exit 0
