@@ -112,6 +112,15 @@ class VlassName(StorageName):
                     url.split('/')[-1])
         super(VlassName, self).__init__(
             obs_id, COLLECTION, COLLECTION_PATTERN)
+        product_id = None
+        if file_name is not None:
+            product_id = VlassName.get_product_id_from_file_name(file_name)
+        elif fname_on_disk is not None:
+            product_id = VlassName.get_product_id_from_file_name(fname_on_disk)
+        elif url is not None:
+            product_id = VlassName.get_product_id_from_file_name(
+                url.split('/')[-1])
+        self._product_id = product_id
         self.file_name = file_name
         if file_name is None:
             self.file_id = None
@@ -148,7 +157,7 @@ class VlassName(StorageName):
 
     @property
     def product_id(self):
-        return '{}.quicklook.v1'.format(self.obs_id)
+        return self._product_id
 
     @property
     def url(self):
@@ -172,6 +181,16 @@ class VlassName(StorageName):
         bits = file_name.split('.')
         obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
         return obs_id
+
+    @staticmethod
+    def get_product_id_from_file_name(file_name):
+        """The product id is made of the obs id, the string 'quicklook', and
+        the version from the file name.
+        """
+        bits = file_name.split('.')
+        obs_id = VlassName.get_obs_id_from_file_name(file_name)
+        product_id = '{}.quicklook.{}'.format(obs_id, bits[7])
+        return product_id
 
     @staticmethod
     def remove_extensions(file_name):
