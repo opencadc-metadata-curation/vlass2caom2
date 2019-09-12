@@ -543,42 +543,42 @@ def _query_endpoint(url, timeout=-1):
     result = Object()
     result.text = None
 
-    if 'VLASS1.1' in url:
-        result.text = ''
-    else:
-        if url == scrape.QL_WEB_LOG_URL:
-            with open(WL_INDEX) as f:
+    if url == scrape.QL_WEB_LOG_URL:
+        with open(WL_INDEX) as f:
+            result.text = f.read()
+    elif (url.startswith(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/') and
+          url.endswith('.10.2048.v1/') and
+          'QA_REJECTED' not in url):
+        with open(SPECIFIC_NO_FILES) as f:
+            result.text = f.read()
+    elif url.endswith('index.html'):
+        with open(SINGLE_FIELD_DETAIL) as f:
+            result.text = f.read()
+    elif url == scrape.QL_URL:
+        with open(QL_INDEX) as f:
+            result.text = f.read()
+    elif 'vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql' in url:
+        with open(SPECIFIC_REJECTED) as f:
+            result.text = f.read()
+    elif 'QA_REJECTED' in url:
+        with open(REJECT_INDEX) as f:
+            result.text = f.read()
+    elif len(url.split('/')) == 8:
+        if 'weblog' in url:
+            with open(PIPELINE_INDEX) as f:
                 result.text = f.read()
-        elif (url.startswith(
-                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/') and
-              url.endswith('.10.2048.v1/') and
-              'QA_REJECTED' not in url):
-            with open(SPECIFIC_NO_FILES) as f:
-                result.text = f.read()
-        elif url.endswith('index.html'):
-            with open(SINGLE_FIELD_DETAIL) as f:
-                result.text = f.read()
-        elif url == scrape.QL_URL:
-            with open(QL_INDEX) as f:
-                result.text = f.read()
-        elif 'vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql' in url:
-            with open(SPECIFIC_REJECTED) as f:
-                result.text = f.read()
-        elif 'QA_REJECTED' in url:
-            with open(REJECT_INDEX) as f:
-                result.text = f.read()
-        elif len(url.split('/')) == 8:
-            if 'weblog' in url:
-                with open(PIPELINE_INDEX) as f:
-                    result.text = f.read()
+        else:
+            if 'VLASS1.1' in url:
+                result.text = ''
             else:
                 with open(SINGLE_TILE) as f:
                     result.text = f.read()
-        elif url.endswith('VLASS1.1/') or url.endswith('VLASS1.2/'):
-            with open(ALL_FIELDS) as f:
-                result.text = f.read()
-        else:
-            raise Exception('wut? {} {}'.format(url, len(url.split('/'))))
+    elif url.endswith('VLASS1.1/') or url.endswith('VLASS1.2/'):
+        with open(ALL_FIELDS) as f:
+            result.text = f.read()
+    else:
+        raise Exception('wut? {} {}'.format(url, len(url.split('/'))))
     return result
 
 

@@ -89,7 +89,7 @@ QL_WEB_LOG_URL = 'https://archive-new.nrao.edu/vlass/weblog/quicklook/'
 web_log_content = {}
 
 
-def _parse_id_page(html_string, epoch, start_date):
+def _parse_id_page(html_string, start_date):
     """
     :return a dict, where keys are URLs, and values are timestamps
     """
@@ -210,7 +210,7 @@ def build_good_todo(start_date):
                                 'Could not query {}'.format(tile_url))
                         else:
                             observations = _parse_id_page(
-                                response.text, epoch.strip('/'), start_date)
+                                response.text, start_date)
                             response.close()
 
                             # for each tile, get the list of observations
