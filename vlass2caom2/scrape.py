@@ -95,21 +95,20 @@ def _parse_id_page(html_string, epoch, start_date):
     """
     result = {}
     soup = BeautifulSoup(html_string, features='lxml')
-    hrefs = soup.find_all('a')
+    hrefs = soup.find_all('a', string=re.compile('^VLASS[123]\\.[123]'))
     for ii in hrefs:
         y = ii.get('href')
-        if y.startswith(epoch):
-            z = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = datetime.strptime(z, PAGE_TIME_FORMAT)
-            if dt >= start_date:
-                logging.info('Adding ID Page: {}'.format(y))
-                result[y] = dt
+        z = ii.next_element.next_element.string.replace('-', '').strip()
+        dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+        if dt >= start_date:
+            logging.info('Adding ID Page: {}'.format(y))
+            result[y] = dt
     return result
 
 
-def _parse_field_page(html_string, start_date):
+def _parse_tile_page(html_string, start_date):
     """
-    Parse the page which lists the fields viewed during an epoch.
+    Parse the page which lists the tiles viewed during an epoch.
 
     :return a dict, where keys are URLs, and values are timestamps
     """
@@ -122,7 +121,7 @@ def _parse_field_page(html_string, start_date):
             z = ii.next_element.next_element.string.replace('-', '').strip()
             dt = datetime.strptime(z, PAGE_TIME_FORMAT)
             if dt >= start_date:
-                logging.info('Adding Field Page: {}'.format(y))
+                logging.info('Adding Tile Page: {}'.format(y))
                 result[y] = dt
     return result
 
@@ -197,26 +196,26 @@ def build_good_todo(start_date):
                     logging.warning(
                         'Could not query epoch {}'.format(epoch_url))
                 else:
-                    fields = _parse_field_page(response.text, start_date)
+                    tiles = _parse_tile_page(response.text, start_date)
                     response.close()
 
-                    # get the list of fields
-                    for field in fields:
-                        logging.info('Checking field {} with date {}'.format(
-                            field, fields[field]))
-                        field_url = '{}{}'.format(epoch_url, field)
-                        response = mc.query_endpoint(field_url)
+                    # get the list of tiles
+                    for tile in tiles:
+                        logging.info('Checking tile {} with date {}'.format(
+                            tile, tiles[tile]))
+                        tile_url = '{}{}'.format(epoch_url, tile)
+                        response = mc.query_endpoint(tile_url)
                         if response is None:
                             logging.warning(
-                                'Could not query {}'.format(field_url))
+                                'Could not query {}'.format(tile_url))
                         else:
                             observations = _parse_id_page(
                                 response.text, epoch.strip('/'), start_date)
                             response.close()
 
-                            # for each field, get the list of observations
+                            # for each tile, get the list of observations
                             for observation in observations:
-                                obs_url = '{}{}'.format(field_url, observation)
+                                obs_url = '{}{}'.format(tile_url, observation)
                                 dt_as_s = observations[observation].timestamp()
                                 max_date = max(
                                     max_date, observations[observation])

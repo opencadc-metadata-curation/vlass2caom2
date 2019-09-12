@@ -84,7 +84,8 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 ALL_FIELDS = os.path.join(TEST_DATA_DIR, 'all_fields_list.html')
 CAOM_QUERY = os.path.join(TEST_DATA_DIR, 'caom_query.csv')
-SINGLE_FIELD = os.path.join(TEST_DATA_DIR, 'single_field_list.html')
+CROSS_EPOCH = os.path.join(TEST_DATA_DIR, 'cross_epoch.html')
+SINGLE_TILE = os.path.join(TEST_DATA_DIR, 'single_tile_list.html')
 QL_INDEX = os.path.join(TEST_DATA_DIR, 'vlass_quicklook.html')
 WL_INDEX = os.path.join(TEST_DATA_DIR, 'weblog_quicklook.html')
 PIPELINE_INDEX = os.path.join(TEST_DATA_DIR, 'pipeline_weblog_quicklook.htm')
@@ -114,8 +115,8 @@ class Object(object):
 def test_build_bits():
     with open(ALL_FIELDS) as f:
         test_content = f.read()
-        test_result = scrape._parse_field_page(test_content,
-                                               TEST_START_TIME)
+        test_result = scrape._parse_tile_page(test_content,
+                                              TEST_START_TIME)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 4, 'wrong number of results'
         first_answer = next(iter(test_result.items()))
@@ -123,7 +124,7 @@ def test_build_bits():
         assert first_answer[0] == 'T07t13/', 'wrong content'
         assert first_answer[1] == datetime(2019, 4, 29, 8, 2)
 
-    with open(SINGLE_FIELD) as f:
+    with open(SINGLE_TILE) as f:
         test_content = f.read()
         test_result = scrape._parse_id_page(test_content,
                                             'VLASS1.2',
@@ -135,6 +136,19 @@ def test_build_bits():
         assert first_answer[0] == \
             'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
         assert first_answer[1] == datetime(2019, 4, 26, 15, 19)
+
+    with open(CROSS_EPOCH) as f:
+        test_content = f.read()
+        test_result = scrape._parse_id_page(test_content,
+                                            'VLASS1.2',
+                                            TEST_START_TIME)
+        assert test_result is not None, 'expected a result'
+        assert len(test_result) == 5, 'wrong number of results'
+        first_answer = next(iter(test_result.items()))
+        assert len(first_answer) == 2, 'wrong number of results'
+        assert first_answer[0] == \
+               'VLASS1.1.ql.T05t33.J212207-203000.10.2048.v1/'
+        assert first_answer[1] == datetime(2019, 7, 16, 9, 24)
 
 
 def test_build_todo_good():
@@ -288,9 +302,6 @@ def test_build_file_url_list():
             'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.' \
             'pbcor.tt0.rms.subim.fits', \
             temp[1][0]
-        #
-        # from vlass2caom2 import work
-        # wrk = work.NraoPageScrape()
 
 
 @patch('sys.exit', Mock(return_value=MyExitError))
@@ -531,39 +542,43 @@ def _query_tap(ignore):
 def _query_endpoint(url, timeout=-1):
     result = Object()
     result.text = None
-    if url == scrape.QL_WEB_LOG_URL:
-        with open(WL_INDEX) as f:
-            result.text = f.read()
-    elif (url.startswith(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/') and
-          url.endswith('.10.2048.v1/') and
-          'QA_REJECTED' not in url):
-        with open(SPECIFIC_NO_FILES) as f:
-            result.text = f.read()
-    elif url.endswith('index.html'):
-        with open(SINGLE_FIELD_DETAIL) as f:
-            result.text = f.read()
-    elif url == scrape.QL_URL:
-        with open(QL_INDEX) as f:
-            result.text = f.read()
-    elif 'vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql' in url:
-        with open(SPECIFIC_REJECTED) as f:
-            result.text = f.read()
-    elif 'QA_REJECTED' in url:
-        with open(REJECT_INDEX) as f:
-            result.text = f.read()
-    elif len(url.split('/')) == 8:
-        if 'weblog' in url:
-            with open(PIPELINE_INDEX) as f:
+
+    if 'VLASS1.1' in url:
+        result.text = ''
+    else:
+        if url == scrape.QL_WEB_LOG_URL:
+            with open(WL_INDEX) as f:
+                result.text = f.read()
+        elif (url.startswith(
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/') and
+              url.endswith('.10.2048.v1/') and
+              'QA_REJECTED' not in url):
+            with open(SPECIFIC_NO_FILES) as f:
+                result.text = f.read()
+        elif url.endswith('index.html'):
+            with open(SINGLE_FIELD_DETAIL) as f:
+                result.text = f.read()
+        elif url == scrape.QL_URL:
+            with open(QL_INDEX) as f:
+                result.text = f.read()
+        elif 'vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql' in url:
+            with open(SPECIFIC_REJECTED) as f:
+                result.text = f.read()
+        elif 'QA_REJECTED' in url:
+            with open(REJECT_INDEX) as f:
+                result.text = f.read()
+        elif len(url.split('/')) == 8:
+            if 'weblog' in url:
+                with open(PIPELINE_INDEX) as f:
+                    result.text = f.read()
+            else:
+                with open(SINGLE_TILE) as f:
+                    result.text = f.read()
+        elif url.endswith('VLASS1.1/') or url.endswith('VLASS1.2/'):
+            with open(ALL_FIELDS) as f:
                 result.text = f.read()
         else:
-            with open(SINGLE_FIELD) as f:
-                result.text = f.read()
-    elif url.endswith('VLASS1.1/') or url.endswith('VLASS1.2/'):
-        with open(ALL_FIELDS) as f:
-            result.text = f.read()
-    else:
-        raise Exception('wut? {} {}'.format(url, len(url.split('/'))))
+            raise Exception('wut? {} {}'.format(url, len(url.split('/'))))
     return result
 
 
