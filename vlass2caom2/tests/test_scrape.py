@@ -127,7 +127,6 @@ def test_build_bits():
     with open(SINGLE_TILE) as f:
         test_content = f.read()
         test_result = scrape._parse_id_page(test_content,
-                                            'VLASS1.2',
                                             TEST_START_TIME)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 3, 'wrong number of results'
@@ -140,7 +139,6 @@ def test_build_bits():
     with open(CROSS_EPOCH) as f:
         test_content = f.read()
         test_result = scrape._parse_id_page(test_content,
-                                            'VLASS1.2',
                                             TEST_START_TIME)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 5, 'wrong number of results'

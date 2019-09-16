@@ -114,24 +114,29 @@ features.supports_catalog = False
 if features.supports_catalog:
     test_obs = [[obs_id_a, a, b],
                 [obs_id_c, c, d],
+                [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
                 [obs_id_e, e, f, g, h],
                 [obs_id_f, i, j]]
 else:
     test_obs = [[obs_id_a, a, b],
                 [obs_id_c, c, d],
+                [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
                 [obs_id_f, i, j]]
 
 
 @pytest.mark.parametrize('test_files', test_obs)
 def test_main_app(test_files):
     obs_id = test_files[0]
+    obs_path = os.path.join(TESTDATA_DIR, '{}.xml'.format(obs_id))
+    expected = mc.read_obs_from_file(obs_path)
+    if obs_id.endswith('r'):
+        obs_path = os.path.join(TESTDATA_DIR, '{}.in.xml'.format(obs_id))
+        input_param = '--in {}'.format(obs_path)
+    else:
+        input_param = '--observation {} {}'.format(COLLECTION, obs_id)
     lineage = _get_lineage(obs_id, test_files)
-    import logging
-    logging.error(lineage)
-
-    output_file = '{}.actual.xml'.format(obs_id)
+    output_file = 'actual.{}.xml'.format(obs_id)
     local = _get_local(test_files[1:])
-    plugin = PLUGIN
 
     with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
         def get_file_info(archive, file_id):
@@ -147,22 +152,20 @@ def test_main_app(test_files):
             get_file_info
 
         sys.argv = \
-            ('vlass2caom2 --local {} --observation {} {} -o {} '
-             '--plugin {} --module {} --lineage {}'.format(
-                local, COLLECTION, obs_id, output_file, plugin, plugin,
-                lineage)).split()
+            ('vlass2caom2 --local {} {} -o {} --plugin {} --module {} '
+             '--lineage {}'.format(local, input_param, output_file, PLUGIN,
+                                   PLUGIN, lineage)).split()
         print(sys.argv)
         vlass_main()
-        obs_path = os.path.join(TESTDATA_DIR, '{}.xml'.format(obs_id))
-        expected = mc.read_obs_from_file(obs_path)
-        actual = mc.read_obs_from_file(output_file)
-        result = get_differences(expected, actual, 'Observation')
-        if result:
-            msg = 'Differences found in observation {}\n{}'. \
-                format(expected.observation_id, '\n'.join(
-                    [r for r in result]))
-            raise AssertionError(msg)
-        # assert False  # cause I want to see logging messages
+
+    actual = mc.read_obs_from_file(output_file)
+    result = get_differences(expected, actual, 'Observation')
+    if result:
+        msg = 'Differences found in observation {}\n{}'. \
+            format(expected.observation_id, '\n'.join(
+                [r for r in result]))
+        raise AssertionError(msg)
+    # assert False  # cause I want to see logging messages
 
 
 def _get_local(test_files):
@@ -173,15 +176,13 @@ def _get_local(test_files):
 
 
 def _get_lineage(obs_id, test_files):
-    if obs_id in [obs_id_a, obs_id_c, obs_id_f]:
-        product_id = '{}.quicklook.v1'.format(obs_id)
-        return ' '.join(VlassName(obs_id, fname_on_disk=ii).get_lineage(
-            product_id)
-                        for ii in test_files[1:])
+    if obs_id in [obs_id_a, obs_id_c, obs_id_c + 'r', obs_id_f]:
+        return ' '.join(VlassName(fname_on_disk=ii).lineage for ii in
+                        test_files[1:])
     else:
-        ql_pid = '{}.quicklook.v1'.format(obs_id)
-        cat_pid = '{}.catalog.v1'.format(obs_id)
-        coarse_pid = '{}.coarsecube.v1'.format(obs_id)
+        ql_pid = '{}.quicklook'.format(obs_id)
+        cat_pid = '{}.catalog'.format(obs_id)
+        coarse_pid = '{}.coarsecube'.format(obs_id)
         return '{}/ad:VLASS/{} {}/ad:VLASS/{} {}/ad:VLASS/{} ' \
                '{}/ad:VLASS/{}'.format(ql_pid, test_files[1], ql_pid,
                                        test_files[2], cat_pid, test_files[3],

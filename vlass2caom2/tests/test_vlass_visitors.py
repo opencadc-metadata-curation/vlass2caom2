@@ -102,7 +102,7 @@ def test_aug_visit_works():
     assert test_result is not None, 'should have a result status'
     assert len(test_result) == 1, 'modified artifacts count'
     assert test_result['artifacts'] == 2, 'artifact count'
-    plane = test_obs.planes['VLASS1.1.T01t01.J000228-363000.quicklook.v1']
+    plane = test_obs.planes['VLASS1.1.T01t01.J000228-363000.quicklook']
     chunk = plane.artifacts[TEST_URI].parts['0'].chunks[0]
     assert chunk is not None
     assert chunk.time is not None, 'no time information'

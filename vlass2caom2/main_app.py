@@ -151,9 +151,9 @@ class VlassName(StorageName):
     @file_name.setter
     def file_name(self, value):
         self._file_name = value
-
-    def get_lineage(self, product_id):
-        return '{}/{}'.format(product_id, self.file_uri)
+    #
+    # def get_lineage(self, product_id):
+    #     return '{}/{}'.format(product_id, self.file_uri)
 
     @property
     def product_id(self):
@@ -184,13 +184,10 @@ class VlassName(StorageName):
 
     @staticmethod
     def get_product_id_from_file_name(file_name):
-        """The product id is made of the obs id, the string 'quicklook', and
-        the version from the file name.
+        """The product id is made of the obs id plus the string 'quicklook'.
         """
-        bits = file_name.split('.')
         obs_id = VlassName.get_obs_id_from_file_name(file_name)
-        product_id = '{}.quicklook.{}'.format(obs_id, bits[7])
-        return product_id
+        return '{}.quicklook'.format(obs_id)
 
     @staticmethod
     def remove_extensions(file_name):
@@ -205,7 +202,7 @@ def accumulate_wcs(bp):
     bp.configure_energy_axis(3)
     bp.configure_polarization_axis(4)
 
-    # obervation level
+    # observation level
     bp.set('Observation.type', 'OBJECT')
 
     # over-ride use of value from default keyword 'DATE'
@@ -303,13 +300,12 @@ def update(observation, **kwargs):
 
     try:
 
+        plane_ids_to_delete = []
         mc.check_param(observation, Observation)
-        for plane in observation.planes:
-            for a in observation.planes[plane].artifacts:
-                artifact = observation.planes[plane].artifacts[a]
-                for part in artifact.parts:
-                    p = artifact.parts[part]
-                    for chunk in p.chunks:
+        for plane in observation.planes.values():
+            for artifact in plane.artifacts.values():
+                for part in artifact.parts.values():
+                    for chunk in part.chunks:
                         if 'headers' in kwargs:
                             headers = kwargs['headers']
                             chunk.position.resolution = \
@@ -320,6 +316,14 @@ def update(observation, **kwargs):
                                 # blueprint is implemented to not set WCS
                                 # information to None
                                 chunk.energy.restfrq = None
+            if not plane.product_id.endswith('quicklook'):
+                plane_ids_to_delete.append(plane.product_id)
+
+        for product_id in plane_ids_to_delete:
+            # change handling of product ids - remove the version number
+            logging.warning('Removing plane {} from {}'.format(
+                product_id, observation.observation_id))
+            observation.planes.pop(product_id)
         logging.debug('Done update.')
         return observation
     except mc.CadcException as e:
