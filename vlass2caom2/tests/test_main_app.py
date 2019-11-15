@@ -82,7 +82,7 @@ from mock import patch
 TEST_URI = 'ad:TEST_COLLECTION/test_file.fits'
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-TESTDATA_DIR = os.path.join(THIS_DIR, 'data')
+TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
 a = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
     'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
@@ -127,10 +127,10 @@ else:
 @pytest.mark.parametrize('test_files', test_obs)
 def test_main_app(test_files):
     obs_id = test_files[0]
-    obs_path = os.path.join(TESTDATA_DIR, '{}.xml'.format(obs_id))
+    obs_path = os.path.join(TEST_DATA_DIR, '{}.xml'.format(obs_id))
     expected = mc.read_obs_from_file(obs_path)
     if obs_id.endswith('r'):
-        obs_path = os.path.join(TESTDATA_DIR, '{}.in.xml'.format(obs_id))
+        obs_path = os.path.join(TEST_DATA_DIR, '{}.in.xml'.format(obs_id))
         input_param = '--in {}'.format(obs_path)
     else:
         input_param = '--observation {} {}'.format(COLLECTION, obs_id)
@@ -171,7 +171,7 @@ def test_main_app(test_files):
 def _get_local(test_files):
     result = ''
     for test_name in test_files:
-        result = '{} {}/{}'.format(result, TESTDATA_DIR, test_name)
+        result = '{} {}/{}'.format(result, TEST_DATA_DIR, test_name)
     return result
 
 

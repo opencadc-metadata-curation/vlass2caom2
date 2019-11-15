@@ -1,44 +1,20 @@
-FROM python:3.6-alpine
+FROM opencadc/matplotlib:3.6-alpine
 
 RUN apk --no-cache add \
         bash \
         coreutils \
-        gcc \
         git \
         g++ \
-        libffi-dev \
-        libxml2-dev \
-        libxslt-dev \
-        make \
-        musl-dev \
-        openssl-dev
+        libmagic \
+        wget
 
-RUN pip install aenum && \
-    pip install astropy && \
-    pip install cadcdata && \
+RUN pip install cadcdata && \
     pip install cadctap && \
     pip install caom2repo && \
-    pip install funcsigs && \
-    pip install future && \
-    pip install numpy && \
+    pip install ftputil && \
     pip install PyYAML && \
     pip install spherical-geometry && \
-    pip install vos && \
-    pip install xml-compare
-
-RUN apk --no-cache add \
-    build-base \
-    freetype-dev \
-    libpng-dev \
-    gfortran \
-    openblas-dev \
-    py-numpy \
-    py-pip \
-    python \
-    python-dev \
-    wget
-
-RUN pip install matplotlib
+    pip install vos
 
 RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
@@ -64,4 +40,3 @@ RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
 RUN apk --no-cache del git
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-

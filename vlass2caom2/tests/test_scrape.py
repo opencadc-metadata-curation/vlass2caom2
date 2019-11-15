@@ -369,33 +369,6 @@ def test_retrieve_metadata():
             'wrong reference'
 
 
-def test_validator():
-    _write_state('23Apr2019 10:30')
-    with patch('caom2pipe.manage_composable.query_endpoint') as \
-        query_endpoint_mock, \
-            patch('vlass2caom2.validator.read_list_from_caom') as \
-            read_mock:
-        query_endpoint_mock.side_effect = _query_endpoint
-        read_mock.side_effect = _query_tap
-        getcwd_orig = os.getcwd
-        os.getcwd = Mock(return_value=TEST_DATA_DIR)
-        try:
-            test_nrao, test_caom = validator.validate()
-            assert test_nrao is not None, 'expected a nrao result'
-            assert test_caom is not None, 'expected a caom result'
-            assert len(test_nrao) == 2, 'wrong nrao result'
-            assert len(test_caom) == 2420, 'wrong caom result'
-            assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
-            assert test_caom[0] == \
-                'VLASS1.1.ql.T24t19.J181027+553000.10.2048.v1.I.iter1.' \
-                'image.pbcor.tt0.subim.fits', 'wrong caom value'
-        finally:
-            os.getcwd = getcwd_orig
-            nrao_fqn = os.path.join('/usr/src/app', 'nrao_state.csv')
-            if os.path.exists(nrao_fqn):
-                os.unlink(nrao_fqn)
-
-
 def test_read_list_from_nrao():
     nrao_file = os.path.join(TEST_DATA_DIR, 'nrao_state.csv')
     if os.path.exists(nrao_file):
@@ -403,7 +376,7 @@ def test_read_list_from_nrao():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
-        test_nrao = validator.read_list_from_nrao(
+        test_nrao, ignore = validator.read_list_from_nrao(
             nrao_file, os.path.join(TEST_DATA_DIR, 'state.yml'))
         assert test_nrao is not None, 'expected a nrao result'
         assert len(test_nrao) == 6, 'wrong nrao result'

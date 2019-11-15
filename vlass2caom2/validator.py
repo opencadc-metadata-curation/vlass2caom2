@@ -83,10 +83,9 @@ from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import APPLICATION, scrape, utils
 
-__all__ = ['validate', 'generate_reconciliation_todo']
+__all__ = ['VlassValidator', 'validate']
 
 NRAO_STATE = 'nrao_state.csv'
-VALIDATE_STATE = 'validate_state.yml'
 ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 
@@ -128,12 +127,15 @@ def read_list_from_caom(config):
 
 
 def read_list_from_nrao(nrao_state_fqn, config_state_fqn):
+    validate_dict = {}
     if os.path.exists(nrao_state_fqn):
         temp = []
         with open(nrao_state_fqn, 'r') as f:
             for line in f:
-                value = line.split(',')[1].split('/')[-1]
+                url = line.split(',')[1]
+                value = url.split('/')[-1]
                 temp.append(value.strip())
+                validate_dict[value] = url
     else:
         start_date = datetime.strptime('01Jan1990 00:00',
                                        scrape.PAGE_TIME_FORMAT)
@@ -150,78 +152,36 @@ def read_list_from_nrao(nrao_state_fqn, config_state_fqn):
                             ts_date.isoformat(), url.strip()))
                         value = url.split('/')[-1]
                         temp.append(value.strip())
+                        validate_dict[value] = url
     result = list(set(temp))
-    return result
+    return result, validate_dict
 
 
-def _find_missing(compare_this, to_this):
-    return [ii for ii in compare_this if ii not in to_this]
+class VlassValidator(mc.Validator):
+    def __init__(self):
+        super(VlassValidator, self).__init__(source_name='NRAO')
+        # a dictionary where the file name is the key, and the fully-qualified
+        # file name at the HTTP site is the value
+        self._fully_qualified_list = None
 
+    def read_list_from_source(self):
+        nrao_state_fqn = os.path.join(
+            self._config.working_directory, NRAO_STATE)
+        validator_list, fully_qualified_list = read_list_from_nrao(
+            nrao_state_fqn, self._config.state_fqn)
+        self._fully_qualified_list = fully_qualified_list
+        return validator_list
 
-def generate_reconciliation_todo():
-    config = mc.Config()
-    config.get_executors()
-    result_fqn = os.path.join(config.working_directory, VALIDATE_STATE)
-    if os.access(result_fqn, os.R_OK):
-        logging.info('Read the validation list from {}'.format(result_fqn))
-        validation = mc.read_as_yaml(result_fqn)
-        nrao_file_list = validation.get('at_nrao')
-        if len(nrao_file_list) > 0:
-            logging.info(
-                'There are {} NRAO files that are missing from CADC.'.format(
-                    len(nrao_file_list)))
-            nrao_state_fqn = os.path.join(config.working_directory,
-                                          NRAO_STATE)
-            logging.info(
-                'Look up the URLs for those files in {}'.format(nrao_state_fqn))
-            urls_dict = {}
-            # build a map so it's possible to look up file names, and get
-            # URLs
-            with open(nrao_state_fqn, 'r') as f:
-                for line in f:
-                    url = line.split(',')[1]
-                    f_name = url.split('/')[-1].strip()
-                    urls_dict[f_name] = url
-
-            logging.info('Check for empty directories at NRAO.')
-            empty_dir_list = []
-            for f_name in nrao_file_list:
-                url = '/'.join(
-                    ii for ii in urls_dict.get(f_name).strip().split('/')[:-1])
-                result = scrape.list_files_on_page(url)
-                if len(result) == 0:
-                    empty_dir_list.append(f_name)
-
-            logging.info('Build a todo.txt file.')
-            with open(config.work_fqn, 'w') as f:
-                for f_name in nrao_file_list:
-                    if f_name in empty_dir_list:
-                        logging.info('{} is empty at NRAO.'.format(f_name))
-                        continue
-                    else:
-                        f.write('{}\n'.format(urls_dict.get(f_name.strip())))
-        else:
-            logging.info('No NRAO files to retrieve.')
-    else:
-        logging.error('Need to run validate first, to provide input.')
+    def write_todo(self):
+        with open(self._config.work_fqn, 'w') as f:
+            for entry in self._source:
+                f.write(f'{self._fully_qualified_list[entry]}\n')
 
 
 def validate():
-    config = mc.Config()
-    config.get_executors()
-    caom_list = read_list_from_caom(config)
-    nrao_state_fqn = os.path.join(config.working_directory, NRAO_STATE)
-    vlass_list = read_list_from_nrao(nrao_state_fqn, config.state_fqn)
-    caom = _find_missing(caom_list, vlass_list)
-    nrao = _find_missing(vlass_list, caom_list)
-    result = {'at_nrao': nrao,
-              'at_cadc': caom}
-    result_fqn = os.path.join(config.working_directory, VALIDATE_STATE)
-    mc.write_as_yaml(result, result_fqn)
-    logging.info('There are {} files at NRAO that are not represented '
-                 'at CADC, and {} CAOM entries at CADC that are not '
-                 'available from NRAO.'.format(len(nrao), len(caom)))
-    return nrao, caom
+    validator = VlassValidator()
+    validator.validate()
+    validator.write_todo()
 
 
 if __name__ == '__main__':
