@@ -122,6 +122,12 @@ def test_validator(http_mock, caps_mock, tap_mock):
          b'</VOTABLE>\n']
     tap_mock.return_value.__enter__.return_value = response
 
+    if not os.path.exists('/root/.ssl/cadcproxy.pem'):
+        if not os.path.exists('/root/.ssl'):
+            os.mkdir('/root/.ssl')
+        with open('/root/.ssl/cadcproxy.pem', 'w') as f:
+            f.write('proxy content')
+
     http_mock.side_effect = test_scrape._query_endpoint
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
