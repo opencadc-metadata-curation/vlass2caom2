@@ -484,7 +484,7 @@ def retrieve_obs_metadata(obs_id):
 
 def build_file_url_list(start_time):
     """
-    :return a dict, where keys are URLs, and values are timestamps
+    :return a dict, where values are URLs, and keys are timestamps
     """
     result = {}
     todo_list, max_date = build_todo(start_time)

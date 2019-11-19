@@ -77,9 +77,10 @@ import test_main_app, test_scrape
 
 
 @patch('cadcdata.core.net.BaseWsClient.post')
+@patch('cadcdata.core.net.BaseWsClient.get')
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.manage_composable.query_endpoint')
-def test_validator(http_mock, caps_mock, tap_mock):
+def test_validator(http_mock, caps_mock, ad_mock, tap_mock):
     caps_mock.return_value = 'https://sc2.canfar.net/sc2repo'
     response = Mock()
     response.status_code = 200
@@ -129,6 +130,12 @@ def test_validator(http_mock, caps_mock, tap_mock):
             f.write('proxy content')
 
     http_mock.side_effect = test_scrape._query_endpoint
+
+    ad_response = Mock()
+    ad_response.status_code = 200
+    ad_response.text = []
+    ad_mock.return_value = ad_response
+
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
     try:
@@ -144,16 +151,16 @@ def test_validator(http_mock, caps_mock, tap_mock):
         if os.path.exists(test_source_list_fqn):
             os.unlink(test_source_list_fqn)
 
-        test_source, test_destination = test_subject.validate()
+        test_source, test_meta, test_data = test_subject.validate()
         assert test_source is not None, 'expected source result'
-        assert test_destination is not None, 'expected destination result'
+        assert test_meta is not None, 'expected destination result'
         assert len(test_source) == 16, 'wrong number of source results'
         assert 'VLASS1.2.ql.T08t20.J131022-093000.10.2048.v1.I.iter1.image.' \
                'pbcor.tt0.rms.subim.fits' in test_source, \
             'wrong source content'
-        assert len(test_destination) == 3, 'wrong # of destination results'
+        assert len(test_meta) == 3, 'wrong # of destination results'
         assert 'VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits' in test_destination, \
+               'pbcor.tt0.rms.subim.fits' in test_meta, \
             'wrong destination content'
         assert os.path.exists(test_listing_fqn), 'should create file record'
 
@@ -171,7 +178,7 @@ def test_validator(http_mock, caps_mock, tap_mock):
 
         # does the cached list work too?
         assert os.path.exists(test_source_list_fqn), 'cache should exist'
-        test_cache = test_subject.read_list_from_source()
+        test_cache = test_subject.read_from_source()
         assert test_cache is not None, 'expected cached source result'
         compare = 'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.' \
                   'image.pbcor.tt0.subim.fits'

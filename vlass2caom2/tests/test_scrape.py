@@ -376,11 +376,11 @@ def test_read_list_from_nrao():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
-        test_nrao, ignore = validator.read_list_from_nrao(
-            nrao_file, os.path.join(TEST_DATA_DIR, 'state.yml'))
+        test_nrao, ignore = validator.read_list_from_nrao(nrao_file)
         assert test_nrao is not None, 'expected a nrao result'
-        assert len(test_nrao) == 6, 'wrong nrao result'
-        assert test_nrao[0].startswith('VLASS1.2.ql.T'), 'not a url'
+        assert len(test_nrao) == 16, 'wrong nrao result'
+        test_subject = test_nrao.popitem()
+        assert test_subject[0].startswith('VLASS1.2.ql.T'), 'not a url'
 
 
 def test_run_state():

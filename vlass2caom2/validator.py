@@ -85,7 +85,7 @@ from vlass2caom2 import APPLICATION, scrape, utils
 
 __all__ = ['VlassValidator', 'validate']
 
-NRAO_STATE = 'nrao_state.csv'
+NRAO_STATE = 'nrao_state.yml'
 ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 
@@ -126,34 +126,21 @@ def read_list_from_caom(config):
             for ii in temp['uri']]
 
 
-def read_list_from_nrao(nrao_state_fqn, config_state_fqn):
-    validate_dict = {}
+def read_list_from_nrao(nrao_state_fqn):
     if os.path.exists(nrao_state_fqn):
-        temp = []
-        with open(nrao_state_fqn, 'r') as f:
-            for line in f:
-                url = line.split(',')[1]
-                value = url.split('/')[-1]
-                temp.append(value.strip())
-                validate_dict[value] = url
+        vlass_list = mc.read_as_yaml(nrao_state_fqn)
     else:
         start_date = datetime.strptime('01Jan1990 00:00',
                                        scrape.PAGE_TIME_FORMAT)
-        state = mc.State(config_state_fqn)
-        end_date = utils.get_bookmark(state)
         vlass_list, vlass_date = scrape.build_file_url_list(start_date)
-        temp = []
-        with open(nrao_state_fqn, 'w') as f:
-            for timestamp, urls in vlass_list.items():
-                ts_date = datetime.fromtimestamp(timestamp)
-                if ts_date <= end_date:
-                    for url in urls:
-                        f.write('{}, {}\n'.format(
-                            ts_date.isoformat(), url.strip()))
-                        value = url.split('/')[-1]
-                        temp.append(value.strip())
-                        validate_dict[value] = url
-    result = list(set(temp))
+        mc.write_as_yaml(vlass_list, nrao_state_fqn)
+    result = {}
+    validate_dict = {}
+    for key, value in vlass_list.items():
+        for url in value:
+            f_name = url.split('/')[-1]
+            result[f_name] = datetime.fromtimestamp(key).isoformat()
+            validate_dict[f_name] = url
     return result, validate_dict
 
 
@@ -164,17 +151,19 @@ class VlassValidator(mc.Validator):
         # file name at the HTTP site is the value
         self._fully_qualified_list = None
 
-    def read_list_from_source(self):
+    def read_from_source(self):
         nrao_state_fqn = os.path.join(
             self._config.working_directory, NRAO_STATE)
         validator_list, fully_qualified_list = read_list_from_nrao(
-            nrao_state_fqn, self._config.state_fqn)
+            nrao_state_fqn)
         self._fully_qualified_list = fully_qualified_list
         return validator_list
 
     def write_todo(self):
         with open(self._config.work_fqn, 'w') as f:
             for entry in self._source:
+                f.write(f'{self._fully_qualified_list[entry]}\n')
+            for entry in self._destination_data:
                 f.write(f'{self._fully_qualified_list[entry]}\n')
 
 
