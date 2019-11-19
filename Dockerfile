@@ -10,8 +10,11 @@ RUN apk --no-cache add \
 
 RUN pip install cadcdata && \
     pip install cadctap && \
+    pip install caom2 && \
     pip install caom2repo && \
+    pip install caom2utils && \
     pip install ftputil && \
+    pip install pytz && \
     pip install PyYAML && \
     pip install spherical-geometry && \
     pip install vos
@@ -26,9 +29,8 @@ WORKDIR /usr/src/app
 
 RUN pip install bs4
 
-RUN git clone https://github.com/opencadc-metadata-curation/caom2tools.git && \
-  cd caom2tools && git pull origin master && \
-  pip install ./caom2utils && pip install ./caom2pipe && cd ..
+RUN git clone https://github.com/opencadc-metadata-curation/caom2pipe.git && \
+  git pull origin master && pip install ./caom2pipe
 
 RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
   cp ./vlass2caom2/data/ArchiveQuery-2018-08-15.csv /usr/src/ && \
