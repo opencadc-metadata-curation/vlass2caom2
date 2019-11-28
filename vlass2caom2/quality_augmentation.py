@@ -71,7 +71,6 @@ import logging
 
 from caom2 import Observation, Requirements, Status
 from caom2pipe import manage_composable as mc
-from caom2pipe import execute_composable as ec
 
 START_DATE = '2019-01-01'
 
@@ -112,7 +111,7 @@ def _augment(observation, artifact, url):
     logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
     csv_file = mc.read_csv_file(
         '/usr/src/rejected_file_names-2018-09-05.csv')
-    file_name = ec.CaomName(artifact.uri).file_name
+    file_name = mc.CaomName(artifact.uri).file_name
     for row in csv_file:
         for column in row:
             if file_name in column:

@@ -78,7 +78,6 @@ from caom2 import Observation, ProductType
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import StorageName
 from caom2pipe import astro_composable as ac
-from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 
 
@@ -275,7 +274,7 @@ def get_product_type(uri):
 
 
 def get_proposal_id(uri):
-    caom_name = ec.CaomName(uri)
+    caom_name = mc.CaomName(uri)
     bits = caom_name.file_name.split('.')
     return '{}.{}'.format(bits[0], bits[1])
 

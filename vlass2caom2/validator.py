@@ -81,7 +81,7 @@ from cadcutils import net
 from cadctap import CadcTapClient
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import APPLICATION, scrape, utils
+from vlass2caom2 import APPLICATION, scrape
 
 __all__ = ['VlassValidator', 'validate']
 
