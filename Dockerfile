@@ -1,4 +1,6 @@
-FROM opencadc/matplotli
+FROM opencadc/matplotlib
+
+RUN apk add --no-cache \
         bash \
         coreutils \
         git \
