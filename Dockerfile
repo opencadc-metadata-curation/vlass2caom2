@@ -1,4 +1,4 @@
-FROM opencadc/matplotli
+FROM opencadc/matplotlib
         bash \
         coreutils \
         git \
