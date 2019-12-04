@@ -30,7 +30,7 @@ WORKDIR /usr/src/app
 RUN pip install bs4
 
 RUN git clone https://github.com/opencadc-metadata-curation/caom2pipe.git && \
-  git pull origin master && pip install ./caom2pipe
+  pip install ./caom2pipe
 
 RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
   cp ./vlass2caom2/data/ArchiveQuery-2018-08-15.csv /usr/src/ && \
