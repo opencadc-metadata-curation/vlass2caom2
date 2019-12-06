@@ -139,7 +139,7 @@ def read_list_from_nrao(nrao_state_fqn):
     for key, value in vlass_list.items():
         for url in value:
             f_name = url.split('/')[-1]
-            result[f_name] = datetime.fromtimestamp(key).isoformat()
+            result[f_name] = key
             validate_dict[f_name] = url
     return result, validate_dict
 
