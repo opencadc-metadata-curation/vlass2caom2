@@ -383,6 +383,27 @@ def test_read_list_from_nrao():
         assert test_subject[0].startswith('VLASS1.2.ql.T'), 'not a url'
 
 
+def test_list_files_on_page():
+    result = Object()
+    with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
+        result.text = f.read()
+
+    start_time = datetime(2018, 4, 15, 12, 34, 56)
+
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
+        query_endpoint_mock.return_value = result
+
+        test_list = scrape.list_files_on_page('https://localhost:8080/',
+                                              start_time)
+        assert test_list is not None, 'expect result'
+        assert len(test_list) == 2, 'wrong number of results'
+        assert 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
+               'T01t01/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/' \
+               'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.' \
+               'image.pbcor.tt0.subim.fits' in test_list, 'wrong content'
+
+
 def test_run_state():
     _write_state('23Apr2019 10:30')
     # execution
@@ -516,6 +537,10 @@ def _query_endpoint(url, timeout=-1):
 
     if url == scrape.QL_WEB_LOG_URL:
         with open(WL_INDEX) as f:
+            result.text = f.read()
+    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+                'T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/':
+        with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
             result.text = f.read()
     elif (url.startswith(
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/') and

@@ -171,7 +171,7 @@ def test_aug_visit_position_bounds():
                    'iter1.image.pbcor.tt0.subim'
     test_file = os.path.join(TEST_DATA_DIR, 'fpf_start_obs.xml')
     test_obs = mc.read_obs_from_file(test_file)
-    kwargs = {'working_directory': TEST_DATA_DIR,
+    kwargs = {'working_directory': '/test_files',
               'science_file': '{}.fits'.format(test_file_id),
               'log_file_directory': os.path.join(TEST_DATA_DIR, 'logs')}
     test_result = position_bounds_augmentation.visit(test_obs, **kwargs)

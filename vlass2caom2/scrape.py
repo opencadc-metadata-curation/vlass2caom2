@@ -79,7 +79,7 @@ from caom2pipe import manage_composable as mc
 
 __all__ = ['build_good_todo', 'retrieve_obs_metadata',
            'build_qa_rejected_todo', 'PAGE_TIME_FORMAT', 'query_top_page',
-           'list_files_on_page']
+           'list_files_on_page', 'build_file_url_list', 'build_url_list']
 
 
 PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
@@ -376,22 +376,28 @@ def _parse_page_for_hrefs(html_string, reference, start_date):
     return result
 
 
-def _parse_specific_file_list_page(html_string):
+def _parse_specific_file_list_page(html_string, start_time):
     """
-    :return: list, where entries are file names found on the page
-        that lists them for a specific field
+    :return: a dict, where keys are URLS, and values are timestamps
     """
-    result = []
+    result = {}
     soup = BeautifulSoup(html_string, features='lxml')
     fits_files = soup.find_all('a', string=re.compile('\\.fits'))
     for ii in fits_files:
-        logging.debug('fits file is {}'.format(ii.get('href')))
-        result.append(ii.get('href'))
+        # looks like 16-Apr-2018 15:43   53M, make it into a datetime
+        # for comparison
+        temp = ii.next_element.next_element.string.split()
+        dt = datetime.strptime(f'{temp[0]} {temp[1]}', '%d-%b-%Y %H:%M')
+        if dt >= start_time:
+            # the hrefs are fully-qualified URLS
+            f_url = ii.get('href')
+            logging.info(f'Adding {f_url}')
+            result[f_url] = dt
     return result
 
 
-def list_files_on_page(url):
-    """:return a list of URLS for .fits files on a page, from
+def list_files_on_page(url, start_time):
+    """:return a dict, where keys are URLS, and values are timestamps, from
     a specific page listing at NRAO."""
     response = None
     try:
@@ -400,7 +406,8 @@ def list_files_on_page(url):
         if response is None:
             raise mc.CadcException('Could not query {}'.format(url))
         else:
-            result = _parse_specific_file_list_page(response.text)
+            result = _parse_specific_file_list_page(response.text,
+                                                    start_time)
             response.close()
             return result
     finally:
@@ -501,6 +508,30 @@ def build_file_url_list(start_time):
                 result[timestamp].append(f1)
                 result[timestamp].append(f2)
     return result, max_date
+
+
+def build_url_list(start_date):
+    """
+    Differs from build_file_url_list in that it loads the page and checks the
+    timestamps for the file individually, as opposed to trusting that the
+    source location directory timestamps are representative.
+
+    :return a dict, where keys are URLs, and values are timestamps
+    """
+    result = {}
+    todo_list, ignore_date = build_good_todo(start_date)
+    rejected, ignore_date = build_qa_rejected_todo(start_date)
+    for coll in [todo_list, rejected]:
+        if len(coll) > 0:
+            for timestamp, urls in coll.items():
+                for url in urls:
+                    temp = list_files_on_page(url, start_date)
+                    for key, value in temp.items():
+                        # key f_name
+                        # value timestamp
+                        temp_url = f'{url}{key}'
+                        result[temp_url] = value.timestamp()
+    return result
 
 
 def query_top_page():

@@ -144,9 +144,30 @@ def read_list_from_nrao(nrao_state_fqn):
     return result, validate_dict
 
 
+def read_file_url_list_from_nrao(nrao_state_fqn):
+    if os.path.exists(nrao_state_fqn):
+        vlass_list = mc.read_as_yaml(nrao_state_fqn)
+    else:
+        start_date = datetime.strptime('01Jan1990 00:00',
+                                       scrape.PAGE_TIME_FORMAT)
+        vlass_list = scrape.build_url_list(start_date)
+        mc.write_as_yaml(vlass_list, nrao_state_fqn)
+    result = {}
+    validate_dict = {}
+    for url, dt in vlass_list.items():
+        # remove the fully-qualified path names from the validator list while
+        # creating a dictionary where the file name is the key, and the
+        # fully-qualified file name at NRAO is the value
+        f_name = url.split('/')[-1]
+        result[f_name] = dt
+        validate_dict[f_name] = url
+    return result, validate_dict
+
+
 class VlassValidator(mc.Validator):
     def __init__(self):
-        super(VlassValidator, self).__init__(source_name='NRAO')
+        super(VlassValidator, self).__init__(source_name='NRAO',
+                                             source_tz='Canada/Eastern')
         # a dictionary where the file name is the key, and the fully-qualified
         # file name at the HTTP site is the value
         self._fully_qualified_list = None
@@ -154,7 +175,7 @@ class VlassValidator(mc.Validator):
     def read_from_source(self):
         nrao_state_fqn = os.path.join(
             self._config.working_directory, NRAO_STATE)
-        validator_list, fully_qualified_list = read_list_from_nrao(
+        validator_list, fully_qualified_list = read_file_url_list_from_nrao(
             nrao_state_fqn)
         self._fully_qualified_list = fully_qualified_list
         return validator_list
