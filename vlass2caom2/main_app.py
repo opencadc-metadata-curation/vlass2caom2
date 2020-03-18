@@ -151,6 +151,11 @@ class VlassName(StorageName):
         return f'{bits[0]}.{bits[1]}'
 
     @property
+    def epoch(self):
+        bits = self._file_name.split('.')
+        return f'{bits[0]}.{bits[1]}'
+
+    @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
         return 'ad:{}/{}'.format(self.collection, self.file_name)
@@ -210,6 +215,12 @@ class VlassName(StorageName):
     @property
     def version(self):
         return self._version
+
+    @staticmethod
+    def get_image_pointing_dir(file_name):
+        bits = file_name.split('.')
+        return f'{bits[0]}.{bits[1]}.ql.{bits[3]}.{bits[4]}.{bits[5]}.' \
+               f'{bits[6]}.{bits[7]}'
 
     @staticmethod
     def get_obs_id_from_file_name(file_name):
