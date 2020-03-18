@@ -79,7 +79,8 @@ from caom2pipe import manage_composable as mc
 
 __all__ = ['build_good_todo', 'retrieve_obs_metadata',
            'build_qa_rejected_todo', 'PAGE_TIME_FORMAT', 'query_top_page',
-           'list_files_on_page', 'build_file_url_list', 'build_url_list']
+           'list_files_on_page', 'build_file_url_list', 'build_url_list',
+           'query_by_tile_listing']
 
 
 PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
@@ -232,6 +233,19 @@ def build_good_todo(start_date):
 def _parse_for_reference(html_string, reference):
     soup = BeautifulSoup(html_string, features='lxml')
     return soup.find(string=re.compile(reference))
+
+
+def _parse_image_phase_centre_list_page(html_string):
+    """
+    :param html_string:
+    :return: a list of all hrefs on the page
+    """
+    result = []
+    soup = BeautifulSoup(html_string, features='lxml')
+    hrefs = soup.find_all('a', string=re.compile('^VLASS[123]\\.[123]'))
+    for href in hrefs:
+        result.append(href.get('href'))
+    return result
 
 
 def _parse_single_field(html_string):
@@ -560,3 +574,25 @@ def query_top_page():
             response.close()
 
     return max_date
+
+
+def query_by_tile_listing(url):
+    """
+    Query a tile listing or a QA_REJECTED directory.
+
+    :return: the list of hrefs for the image phase centre directories on the
+        queried page
+    """
+    response = None
+    result = None
+    try:
+        # get the last modified date on the quicklook images listing
+        response = mc.query_endpoint(url)
+        if response is None:
+            logging.warning('Could not query {}'.format(url))
+        else:
+            result = _parse_image_phase_centre_list_page(response.text)
+    finally:
+        if response is not None:
+            response.close()
+    return result

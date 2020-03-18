@@ -67,14 +67,9 @@
 # ***********************************************************************
 #
 
-import pytest
-import sys
-
 from vlass2caom2 import main_app
 
 
-@pytest.mark.skipif(not sys.version.startswith('3.6'),
-                    reason='support 3.6 only')
 def test_storage_name():
     test_bit = 'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.' \
                'pbcor.tt0'
@@ -97,3 +92,14 @@ def test_storage_name():
             'wrong log file'
         assert main_app.VlassName.remove_extensions(ts.file_name) == \
             '{}.subim'.format(test_bit), 'wrong extensions'
+        assert ts.epoch == 'VLASS1.2', 'wrong epoch'
+        assert ts.tile_url == 'https://archive-new.nrao.edu/vlass/quicklook/' \
+                              'VLASS1.2/T23t09/', 'wrong tile url'
+        assert ts.rejected_url == 'https://archive-new.nrao.edu/vlass/' \
+                                  'quicklook/VLASS1.2/QA_REJECTED/', \
+            'wrong rejected url'
+        assert ts.image_pointing_url == 'https://archive-new.nrao.edu/vlass/' \
+                                        'quicklook/VLASS1.2/T23t09/' \
+                                        'VLASS1.2.ql.T23t09.J083851+483000.' \
+                                        '10.2048.v1/', \
+            'wrong image pointing url'

@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2020.                            (c) 2020.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,116 +67,49 @@
 # ***********************************************************************
 #
 
-import logging
-import sys
-import tempfile
-import traceback
+from mock import patch
 
-from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import VlassName, APPLICATION
-from vlass2caom2 import time_bounds_augmentation, quality_augmentation
-from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
-from vlass2caom2 import work
+from vlass2caom2 import cleanup_augmentation
+import test_main_app
+import test_scrape
 
 
-VLASS_BOOKMARK = 'vlass_timestamp'
+@patch('caom2pipe.manage_composable.query_endpoint')
+def test_visit(query_mock):
+    query_mock.side_effect = _query_mock
+    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+               'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/' \
+               'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.' \
+               'pbcor.tt0.rms.subim.fits'
+    test_obs_id = 'VLASS1.2.T20t12.J092604+383000'
+    test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
+    test_fname = f'{test_main_app.TEST_DATA_DIR}/{test_obs_id}.xml'
+    test_obs = mc.read_obs_from_file(test_fname)
 
-meta_visitors = [time_bounds_augmentation, quality_augmentation,
-                 cleanup_augmentation]
-data_visitors = [position_bounds_augmentation]
+    test_artifacts = test_obs.planes[test_product_id].artifacts
+    assert len(test_artifacts) == 4, 'wrong starting conditions'
+
+    kwargs = {'url': test_url}
+    test_result = cleanup_augmentation.visit(test_obs, **kwargs)
+
+    assert test_result is not None, 'expect a result'
+    assert 'artifacts' in test_result, 'expect artifact count'
+    assert test_result['artifacts'] == 2, f'actual deleted count ' \
+                                          f'{test_result["artifacts"]}'
+    assert len(test_artifacts) == 2, 'wrong ending conditions'
 
 
-def _run_by_file():
-    """uses a todo file with URLs, which is the only way to find
-    context information about QA_REJECTED.
-    """
-    config = mc.Config()
-    config.get_executors()
-    config.features.use_urls = True
-    with open(config.work_fqn) as f:
-        todo_list_length = sum(1 for _ in f)
-    if todo_list_length > 0:
-        work.init_web_log()
-        result = ec.run_by_file(config, VlassName, APPLICATION, meta_visitors,
-                                data_visitors, chooser=None)
+def _query_mock(url):
+    import logging
+    logging.error(url)
+    result = test_scrape.Object()
+    if 'QA_REJECTED' in url:
+        qa_rejected_content = mc.read_from_file(
+            f'{test_main_app.TEST_DATA_DIR}/cleanup_augmentation_QA_REJECTED.html')
+        result.text = ''.join(ii for ii in qa_rejected_content)
     else:
-        logging.info('No records to process.')
-        result = 0
+        tile_list_content = mc.read_from_file(
+            f'{test_main_app.TEST_DATA_DIR}/cleanup_augmentation_T20t12.html')
+        result.text = ''.join(ii for ii in tile_list_content)
     return result
-
-
-def run_by_file():
-    """Wraps _run_by_file in exception handling."""
-    try:
-        result = _run_by_file()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_single():
-    """expects a single file name on the command line"""
-    import sys
-    config = mc.Config()
-    config.get_executors()
-    file_name = sys.argv[1]
-    if config.features.use_file_names:
-        vlass_name = VlassName(file_name=file_name)
-    elif config.features.use_urls:
-        vlass_name = VlassName(url=file_name)
-    else:
-        vlass_name = VlassName(obs_id=sys.argv[1])
-    if config.features.run_in_airflow:
-        temp = tempfile.NamedTemporaryFile()
-        mc.write_to_file(temp.name, sys.argv[2])
-        config.proxy_fqn = temp.name
-    else:
-        config.proxy_fqn = sys.argv[2]
-    return ec.run_single(config, vlass_name, APPLICATION,
-                         meta_visitors=meta_visitors,
-                         data_visitors=data_visitors)
-
-
-def run_single():
-    """Wraps _run_single in exception handling."""
-    try:
-        result = _run_single()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_state():
-    """Uses a state file with a timestamp to control which quicklook
-    files will be retrieved from VLASS.
-
-    Ingestion is based on URLs, because a URL that contains the phrase
-    'QA_REJECTED' is the only way to tell if the attribute 'requirements'
-    should be set to 'fail', or not.
-    """
-    config = mc.Config()
-    config.get_executors()
-    state = mc.State(config.state_fqn)
-    start_time = state.get_bookmark(VLASS_BOOKMARK)
-    state_work = work.NraoPageScrape(start_time)
-    return ec.run_from_state(config, VlassName, APPLICATION, meta_visitors,
-                             data_visitors, VLASS_BOOKMARK, state_work)
-
-
-def run_state():
-    """Wraps _run_state in exception handling."""
-    try:
-        _run_state()
-        sys.exit(0)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)

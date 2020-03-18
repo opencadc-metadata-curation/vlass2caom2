@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2018.                            (c) 2018.
+#  (c) 2020.                            (c) 2020.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -68,115 +68,58 @@
 #
 
 import logging
-import sys
-import tempfile
-import traceback
 
-from caom2pipe import execute_composable as ec
+from caom2 import Observation
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import VlassName, APPLICATION
-from vlass2caom2 import time_bounds_augmentation, quality_augmentation
-from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
-from vlass2caom2 import work
+from vlass2caom2 import scrape, VlassName
 
 
-VLASS_BOOKMARK = 'vlass_timestamp'
-
-meta_visitors = [time_bounds_augmentation, quality_augmentation,
-                 cleanup_augmentation]
-data_visitors = [position_bounds_augmentation]
-
-
-def _run_by_file():
-    """uses a todo file with URLs, which is the only way to find
-    context information about QA_REJECTED.
+def visit(observation, **kwargs):
     """
-    config = mc.Config()
-    config.get_executors()
-    config.features.use_urls = True
-    with open(config.work_fqn) as f:
-        todo_list_length = sum(1 for _ in f)
-    if todo_list_length > 0:
-        work.init_web_log()
-        result = ec.run_by_file(config, VlassName, APPLICATION, meta_visitors,
-                                data_visitors, chooser=None)
-    else:
-        logging.info('No records to process.')
-        result = 0
-    return result
-
-
-def run_by_file():
-    """Wraps _run_by_file in exception handling."""
-    try:
-        result = _run_by_file()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_single():
-    """expects a single file name on the command line"""
-    import sys
-    config = mc.Config()
-    config.get_executors()
-    file_name = sys.argv[1]
-    if config.features.use_file_names:
-        vlass_name = VlassName(file_name=file_name)
-    elif config.features.use_urls:
-        vlass_name = VlassName(url=file_name)
-    else:
-        vlass_name = VlassName(obs_id=sys.argv[1])
-    if config.features.run_in_airflow:
-        temp = tempfile.NamedTemporaryFile()
-        mc.write_to_file(temp.name, sys.argv[2])
-        config.proxy_fqn = temp.name
-    else:
-        config.proxy_fqn = sys.argv[2]
-    return ec.run_single(config, vlass_name, APPLICATION,
-                         meta_visitors=meta_visitors,
-                         data_visitors=data_visitors)
-
-
-def run_single():
-    """Wraps _run_single in exception handling."""
-    try:
-        result = _run_single()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_state():
-    """Uses a state file with a timestamp to control which quicklook
-    files will be retrieved from VLASS.
-
-    Ingestion is based on URLs, because a URL that contains the phrase
-    'QA_REJECTED' is the only way to tell if the attribute 'requirements'
-    should be set to 'fail', or not.
+    NRAO reprocesses tile + image phase center files. This visitor ensures
+    the respective artifacts are removed from the observations if old versions
+    of those files are removed.
     """
-    config = mc.Config()
-    config.get_executors()
-    state = mc.State(config.state_fqn)
-    start_time = state.get_bookmark(VLASS_BOOKMARK)
-    state_work = work.NraoPageScrape(start_time)
-    return ec.run_from_state(config, VlassName, APPLICATION, meta_visitors,
-                             data_visitors, VLASS_BOOKMARK, state_work)
+    mc.check_param(observation, Observation)
+    url = kwargs.get('url')
+    if url is None:
+        raise mc.CadcException(f'Require url for cleanup augmentation of '
+                               f'{observation.observation_id}')
 
+    count = 0
+    for plane in observation.planes.values():
+        temp = []
+        if len(plane.artifacts) > 2:
+            for artifact in plane.artifacts.values():
+                logging.error(f'artifact uri is {artifact.uri}')
+                vlass_name = VlassName(url=url)
+                caom_name = mc.CaomName(artifact.uri)
+                current_dir = VlassName.get_image_pointing_dir(
+                    caom_name.file_name)
+                image_pointing_url = f'{vlass_name.tile_url}/' \
+                                     f'{current_dir}/'
+                existing_urls = scrape.query_by_tile_listing(
+                    vlass_name.tile_url)
+                if image_pointing_url in existing_urls:
+                    continue
 
-def run_state():
-    """Wraps _run_state in exception handling."""
-    try:
-        _run_state()
-        sys.exit(0)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
+                qa_rejected_url = f'{vlass_name.rejected_url}{current_dir}/'
+                existing_urls = scrape.query_by_tile_listing(
+                    vlass_name.rejected_url)
+                if qa_rejected_url in existing_urls:
+                    continue
+
+                temp.append(artifact.uri)
+
+        delete_list = list(set(temp))
+        for entry in delete_list:
+            logging.warning(
+                f'Removing artifact {entry} from observation '
+                f'{observation.observation_id}, plane {plane.product_id}.')
+            count += 1
+            observation.planes[plane.product_id].artifacts.pop(entry)
+
+    logging.info(
+        f'Completed cleanup augmentation for {observation.observation_id}. '
+        f'Remove {count} artifacts from the observation.')
+    return {'artifacts': count}

@@ -79,6 +79,7 @@ from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import StorageName
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
+from vlass2caom2 import scrape
 
 
 __all__ = ['vlass_main', 'update', 'VlassName', 'VlassCardinality',
@@ -139,6 +140,11 @@ class VlassName(StorageName):
             self._url = url
 
     @property
+    def epoch(self):
+        bits = self._file_name.split('.')
+        return f'{bits[0]}.{bits[1]}'
+
+    @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
         return 'ad:{}/{}'.format(self.collection, self.file_name)
@@ -150,13 +156,28 @@ class VlassName(StorageName):
     @file_name.setter
     def file_name(self, value):
         self._file_name = value
-    #
-    # def get_lineage(self, product_id):
-    #     return '{}/{}'.format(product_id, self.file_uri)
+
+    @property
+    def image_pointing_url(self):
+        bits = self._file_name.split('.')
+        return f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.' \
+               f'{bits[5]}.{bits[6]}.{bits[7]}/'
 
     @property
     def product_id(self):
         return self._product_id
+
+    @property
+    def rejected_url(self):
+        return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
+
+    @property
+    def tile(self):
+        return self._file_name.split('.')[3]
+
+    @property
+    def tile_url(self):
+        return f'{scrape.QL_URL}{self.epoch}/{self.tile}/'
 
     @property
     def url(self):
@@ -171,6 +192,12 @@ class VlassName(StorageName):
 
     def is_valid(self):
         return True
+
+    @staticmethod
+    def get_image_pointing_dir(file_name):
+        bits = file_name.split('.')
+        return f'{bits[0]}.{bits[1]}.ql.{bits[3]}.{bits[4]}.{bits[5]}.' \
+               f'{bits[6]}.{bits[7]}'
 
     @staticmethod
     def get_obs_id_from_file_name(file_name):
