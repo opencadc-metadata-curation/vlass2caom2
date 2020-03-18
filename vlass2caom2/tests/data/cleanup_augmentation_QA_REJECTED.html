@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!-- saved from url=(0066)https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <title>Index of /vlass/quicklook/VLASS1.2/QA_REJECTED</title>
+ <script data-dapp-detection="">
+(function() {
+  let alreadyInsertedMetaTag = false
+
+  function __insertDappDetected() {
+    if (!alreadyInsertedMetaTag) {
+      const meta = document.createElement('meta')
+      meta.name = 'dapp-detected'
+      document.head.appendChild(meta)
+      alreadyInsertedMetaTag = true
+    }
+  }
+
+  if (window.hasOwnProperty('web3')) {
+    // Note a closure can't be used for this var because some sites like
+    // www.wnyc.org do a second script execution via eval for some reason.
+    window.__disableDappDetectionInsertion = true
+    // Likely oldWeb3 is undefined and it has a property only because
+    // we defined it. Some sites like wnyc.org are evaling all scripts
+    // that exist again, so this is protection against multiple calls.
+    if (window.web3 === undefined) {
+      return
+    }
+    __insertDappDetected()
+  } else {
+    var oldWeb3 = window.web3
+    Object.defineProperty(window, 'web3', {
+      configurable: true,
+      set: function (val) {
+        if (!window.__disableDappDetectionInsertion)
+          __insertDappDetected()
+        oldWeb3 = val
+      },
+      get: function () {
+        if (!window.__disableDappDetectionInsertion)
+          __insertDappDetected()
+        return oldWeb3
+      }
+    })
+  }
+})()</script></head>
+ <body>
+<!-- start of nrao-header.html -->
+
+
+  
+    
+    <link rel="icon" href="https://archive-new.nrao.edu/common/favicon.ico">
+    <link rel="stylesheet" href="./cleanup_augmentation_QA_REJECTED_files/nraostyle.css" media="screen">
+    <!-- end of nrao-header.html -->
+
+
+<title>VLA Sky Survey Quick Look Images</title>
+
+  <!-- Start of nrao-nav1.html -->
+  
+  
+    <div id="main">
+      <div id="topbar">
+	<div id="logo">
+	  <a href="http://www.nrao.edu/">
+	    <img align="left" src="./cleanup_augmentation_QA_REJECTED_files/nrao_logo_pms_51.png" alt="NRAO" border="0" width="39" height="51">
+	  </a>
+	  National Radio<br>Astronomy Observatory
+	</div>
+	<div id="search">
+	  <form name="gs" method="get" action="http://search.nrao.edu/search" style="display: inline;">
+	    <input type="text" name="q" size="15" maxlength="255">
+	    <input type="submit" name="btn" value="Search NRAO">
+	  </form>
+	</div>
+	<div id="subnavArea">
+	  <!-- End of nrao-nav1.html -->
+
+
+&nbsp;<a class="navig" href="http://www.nrao.edu/">NRAO Home</a> &gt;
+<a class="navig" href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/level2.shtml">New Archive</a> &gt;
+<a class="navig" href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/level3.shtml">VLASS</a> &gt;
+Quicklook Images
+
+          <!-- Start of nrao-nav2nomenu.html -->
+        </div>
+      </div>
+    </div>	
+    <hr style="height:1px;">
+    <table width="100%" cellpadding="5" cellspacing="0" border="0">
+      <tbody><tr>
+	<td bgcolor="#ffffff" valign="top" id="contentArea">
+      
+
+
+<h2>VLA Sky Survey Quick Look Images</h2>
+
+<p>
+Quick Look image products are 1x1 degree images of the 2-4GHz Stokes
+I continuum, and an associated image of the RMS.
+</p>
+
+<p>
+Images are grouped by tiles, as described at <a href="https://archive-new.nrao.edu/vlass/VLASS_dyn_summary.php">Tile
+Definitions and Observing Status</a>, and individual images are are
+named as follows:
+</p>
+
+<ul>
+<li>
+VLASS epoch (1.1=first half of first epoch; 1.2=second half of first epoch; 2.1=first half of second epoch, etc.)
+</li>
+<li>
+Product type (ql=Quick Look imaging)
+</li>
+<li>
+Tile name
+</li>
+<li>
+Image phase center
+</li>
+<li>
+Pixel size x10 (10=1.0arcsec)
+</li>
+<li>
+Bandwidth in MHz 
+</li>
+<li>
+Version number
+</li>
+<li>
+Stokes type
+</li>
+</ul>
+
+<p>Quick Look images do not fully sample the PSF, and are cleaned to
+a threshold of ~5 sigma (details can be found in the weblogs for 
+individual images). They are used for Quality
+Assurance and for transient searches, but should not be used for any
+other purpose. In addition to imaging artifacts, source positions can
+be off by up to 1-arcsec, and the flux density uncertainties are ~10-20%.</p>
+
+<p>UPDATE, Nov 2017: We have found a VLA system issue that is
+resulting in "ghost" images of bright sources separated by
+approximately 3 arcmin in RA. These can be either +RA or -RA,
+depending on the scan direction of the affected OTF row. We are
+investigating and will re-post corrected images as and when they are
+identified.</p>
+
+<!-- Start of nrao-end.html -->
+
+
+		</td>
+	</tr>
+</tbody></table>
+
+
+
+
+<!-- End of nrao-end.html -->
+<pre>      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/?C=N;O=D">Name</a>                                          <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/?C=M;O=A">Last modified</a>      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/?C=S;O=A">Size</a>  <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/?C=D;O=A">Description</a><hr>      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/">Parent Directory</a>                                                   -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T01t17.J082731-373000.10.2048.v1/">VLASS1.2.ql.T01t17.J082731-373000.10.2048.v1/</a> 21-Aug-2019 14:10    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T01t35.J171800-393000.10.2048.v1/">VLASS1.2.ql.T01t35.J171800-393000.10.2048.v1/</a> 21-Aug-2019 11:07    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T01t38.J183228-363000.10.2048.v2/">VLASS1.2.ql.T01t38.J183228-363000.10.2048.v2/</a> 14-Aug-2019 10:21    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T01t38.J185214-363000.10.2048.v1/">VLASS1.2.ql.T01t38.J185214-363000.10.2048.v1/</a> 19-Aug-2019 10:25    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T01t46.J224718-363000.10.2048.v1/">VLASS1.2.ql.T01t46.J224718-363000.10.2048.v1/</a> 05-Sep-2019 08:37    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T01t46.J224731-373000.10.2048.v1/">VLASS1.2.ql.T01t46.J224731-373000.10.2048.v1/</a> 04-Sep-2019 14:49    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T01t47.J230230-373000.10.2048.v1/">VLASS1.2.ql.T01t47.J230230-373000.10.2048.v1/</a> 19-Aug-2019 10:19    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T02t13.J061653-343000.10.2048.v1/">VLASS1.2.ql.T02t13.J061653-343000.10.2048.v1/</a> 04-Sep-2019 10:17    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T02t24.J115158-353000.10.2048.v2/">VLASS1.2.ql.T02t24.J115158-353000.10.2048.v2/</a> 21-Aug-2019 12:34    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T02t24.J115632-343000.10.2048.v1/">VLASS1.2.ql.T02t24.J115632-343000.10.2048.v1/</a> 07-Aug-2019 08:48    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T02t24.J115651-353000.10.2048.v2/">VLASS1.2.ql.T02t24.J115651-353000.10.2048.v2/</a> 21-Aug-2019 12:35    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T02t42.J203719-353000.10.2048.v1/">VLASS1.2.ql.T02t42.J203719-353000.10.2048.v1/</a> 26-Aug-2019 13:24    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T03t10.J060219-313000.10.2048.v1/">VLASS1.2.ql.T03t10.J060219-313000.10.2048.v1/</a> 01-Aug-2019 17:21    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T03t11.J064655-303000.10.2048.v2/">VLASS1.2.ql.T03t11.J064655-303000.10.2048.v2/</a> 26-Aug-2019 10:43    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T03t16.J101619-313000.10.2048.v1/">VLASS1.2.ql.T03t16.J101619-313000.10.2048.v1/</a> 06-Aug-2019 15:16    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T03t16.J102059-313000.10.2048.v1/">VLASS1.2.ql.T03t16.J102059-313000.10.2048.v1/</a> 01-Aug-2019 17:30    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T04t01.J002416-253000.10.2048.v1/">VLASS1.2.ql.T04t01.J002416-253000.10.2048.v1/</a> 05-Aug-2019 13:36    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T04t01.J002428-263000.10.2048.v1/">VLASS1.2.ql.T04t01.J002428-263000.10.2048.v1/</a> 05-Aug-2019 13:36    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T04t01.J002841-253000.10.2048.v1/">VLASS1.2.ql.T04t01.J002841-253000.10.2048.v1/</a> 05-Aug-2019 13:37    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T04t01.J002855-263000.10.2048.v1/">VLASS1.2.ql.T04t01.J002855-263000.10.2048.v1/</a> 05-Aug-2019 13:34    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T04t09.J052213-263000.10.2048.v1/">VLASS1.2.ql.T04t09.J052213-263000.10.2048.v1/</a> 07-Aug-2019 16:33    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T04t23.J151713-243000.10.2048.v1/">VLASS1.2.ql.T04t23.J151713-243000.10.2048.v1/</a> 14-Aug-2019 09:07    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T04t23.J151942-243000.10.2048.v1/">VLASS1.2.ql.T04t23.J151942-243000.10.2048.v1/</a> 07-Aug-2019 09:34    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t04.J023933-233000.10.2048.v2/">VLASS1.2.ql.T05t04.J023933-233000.10.2048.v2/</a> 01-Aug-2019 17:52    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t05.J024210-233000.10.2048.v2/">VLASS1.2.ql.T05t05.J024210-233000.10.2048.v2/</a> 05-Aug-2019 13:14    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t13.J083610-203000.10.2048.v1/">VLASS1.2.ql.T05t13.J083610-203000.10.2048.v1/</a> 01-Aug-2019 17:28    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t20.J124623-203000.10.2048.v1/">VLASS1.2.ql.T05t20.J124623-203000.10.2048.v1/</a> 23-Jul-2019 16:46    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t20.J125038-203000.10.2048.v1/">VLASS1.2.ql.T05t20.J125038-203000.10.2048.v1/</a> 23-Jul-2019 16:48    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t21.J134802-223000.10.2048.v1/">VLASS1.2.ql.T05t21.J134802-223000.10.2048.v1/</a> 25-Jul-2019 14:16    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t28.J183155-203000.10.2048.v2/">VLASS1.2.ql.T05t28.J183155-203000.10.2048.v2/</a> 01-Aug-2019 17:35    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t28.J183208-213000.10.2048.v2/">VLASS1.2.ql.T05t28.J183208-213000.10.2048.v2/</a> 01-Aug-2019 17:35    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t28.J183610-203000.10.2048.v1/">VLASS1.2.ql.T05t28.J183610-203000.10.2048.v1/</a> 06-Aug-2019 15:09    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T05t28.J183625-213000.10.2048.v1/">VLASS1.2.ql.T05t28.J183625-213000.10.2048.v1/</a> 06-Aug-2019 13:26    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T06t06.J032204-163000.10.2048.v1/">VLASS1.2.ql.T06t06.J032204-163000.10.2048.v1/</a> 19-Aug-2019 13:09    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T06t13.J083557-193000.10.2048.v1/">VLASS1.2.ql.T06t13.J083557-193000.10.2048.v1/</a> 25-Jul-2019 14:17    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T06t13.J083902-193000.10.2048.v1/">VLASS1.2.ql.T06t13.J083902-193000.10.2048.v1/</a> 25-Jul-2019 14:18    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T06t20.J124620-193000.10.2048.v2/">VLASS1.2.ql.T06t20.J124620-193000.10.2048.v2/</a> 13-Aug-2019 11:14    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T06t20.J125034-193000.10.2048.v2/">VLASS1.2.ql.T06t20.J125034-193000.10.2048.v2/</a> 12-Aug-2019 11:23    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T06t33.J215544-183000.10.2048.v1/">VLASS1.2.ql.T06t33.J215544-183000.10.2048.v1/</a> 22-Aug-2019 16:52    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T06t33.J215855-183000.10.2048.v1/">VLASS1.2.ql.T06t33.J215855-183000.10.2048.v1/</a> 22-Aug-2019 16:54    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T07t27.J173422-133000.10.2048.v2/">VLASS1.2.ql.T07t27.J173422-133000.10.2048.v2/</a> 20-May-2019 10:28    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T07t27.J175824-123000.10.2048.v1/">VLASS1.2.ql.T07t27.J175824-123000.10.2048.v1/</a> 31-Jan-2020 08:49    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T07t35.J224608-123000.10.2048.v1/">VLASS1.2.ql.T07t35.J224608-123000.10.2048.v1/</a> 05-Jul-2019 13:08    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T07t36.J235103-153000.10.2048.v1/">VLASS1.2.ql.T07t36.J235103-153000.10.2048.v1/</a> 05-Jul-2019 13:15    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2/">VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2/</a> 15-Apr-2019 11:11    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T08t20.J130619-093000.10.2048.v1/">VLASS1.2.ql.T08t20.J130619-093000.10.2048.v1/</a> 22-Mar-2019 15:42    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T08t20.J131022-093000.10.2048.v1/">VLASS1.2.ql.T08t20.J131022-093000.10.2048.v1/</a> 25-Mar-2019 13:31    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T08t20.J131027-103000.10.2048.v1/">VLASS1.2.ql.T08t20.J131027-103000.10.2048.v1/</a> 11-Oct-2019 16:05    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T08t35.J224606-113000.10.2048.v1/">VLASS1.2.ql.T08t35.J224606-113000.10.2048.v1/</a> 23-Jul-2019 15:58    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T09t20.J125403-053000.10.2048.v2/">VLASS1.2.ql.T09t20.J125403-053000.10.2048.v2/</a> 15-Apr-2019 10:57    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T09t20.J125804-053000.10.2048.v2/">VLASS1.2.ql.T09t20.J125804-053000.10.2048.v2/</a> 16-Apr-2019 10:26    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T11t19.J123000+013000.10.2048.v2/">VLASS1.2.ql.T11t19.J123000+013000.10.2048.v2/</a> 23-May-2019 16:45    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T11t19.J123001+023000.10.2048.v2/">VLASS1.2.ql.T11t19.J123001+023000.10.2048.v2/</a> 23-May-2019 16:46    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T12t20.J130203+043000.10.2048.v1/">VLASS1.2.ql.T12t20.J130203+043000.10.2048.v1/</a> 03-Jun-2019 17:10    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T12t24.J152200+043000.10.2048.v1/">VLASS1.2.ql.T12t24.J152200+043000.10.2048.v1/</a> 28-Mar-2019 17:32    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T15t08.J052114+163000.10.2048.v2/">VLASS1.2.ql.T15t08.J052114+163000.10.2048.v2/</a> 17-Apr-2019 10:06    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T15t12.J085511+193000.10.2048.v1/">VLASS1.2.ql.T15t12.J085511+193000.10.2048.v1/</a> 29-Apr-2019 13:06    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T15t31.J225253+163000.10.2048.v2/">VLASS1.2.ql.T15t31.J225253+163000.10.2048.v2/</a> 07-Jun-2019 19:10    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T16t25.J184413+233000.10.2048.v1/">VLASS1.2.ql.T16t25.J184413+233000.10.2048.v1/</a> 12-Apr-2019 12:04    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T17t03.J013213+263000.10.2048.v1/">VLASS1.2.ql.T17t03.J013213+263000.10.2048.v1/</a> 26-Feb-2020 10:35    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T17t16.J115635+243000.10.2048.v1/">VLASS1.2.ql.T17t16.J115635+243000.10.2048.v1/</a> 29-Apr-2019 10:06    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T18t04.J023523+283000.10.2048.v1/">VLASS1.2.ql.T18t04.J023523+283000.10.2048.v1/</a> 09-Apr-2019 16:50    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T18t04.J023954+283000.10.2048.v1/">VLASS1.2.ql.T18t04.J023954+283000.10.2048.v1/</a> 09-Apr-2019 16:53    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T18t07.J043651+293000.10.2048.v2/">VLASS1.2.ql.T18t07.J043651+293000.10.2048.v2/</a> 22-Apr-2019 12:43    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T18t11.J074139+313000.10.2048.v1/">VLASS1.2.ql.T18t11.J074139+313000.10.2048.v1/</a> 29-Apr-2019 09:53    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T18t26.J190119+313000.10.2048.v2/">VLASS1.2.ql.T18t26.J190119+313000.10.2048.v2/</a> 10-Jun-2019 10:51    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T19t03.J013821+323000.10.2048.v2/">VLASS1.2.ql.T19t03.J013821+323000.10.2048.v2/</a> 24-Jun-2019 16:41    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T19t10.J073327+333000.10.2048.v1/">VLASS1.2.ql.T19t10.J073327+333000.10.2048.v1/</a> 19-Jun-2019 10:06    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T19t10.J073756+323000.10.2048.v1/">VLASS1.2.ql.T19t10.J073756+323000.10.2048.v1/</a> 05-Jul-2019 13:38    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T19t13.J100721+343000.10.2048.v1/">VLASS1.2.ql.T19t13.J100721+343000.10.2048.v1/</a> 28-Jun-2019 14:09    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T20t08.J062250+383000.10.2048.v1/">VLASS1.2.ql.T20t08.J062250+383000.10.2048.v1/</a> 17-Jan-2020 16:08    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T20t09.J062632+383000.10.2048.v1/">VLASS1.2.ql.T20t09.J062632+383000.10.2048.v1/</a> 26-Feb-2020 10:50    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T20t12.J092604+383000.10.2048.v5/">VLASS1.2.ql.T20t12.J092604+383000.10.2048.v5/</a> 22-Jan-2020 18:00    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T20t12.J092636+393000.10.2048.v5/">VLASS1.2.ql.T20t12.J092636+393000.10.2048.v5/</a> 21-Jan-2020 10:26    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t04.J031833+413000.10.2048.v2/">VLASS1.2.ql.T21t04.J031833+413000.10.2048.v2/</a> 18-Jul-2019 17:33    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t05.J042909+413000.10.2048.v1/">VLASS1.2.ql.T21t05.J042909+413000.10.2048.v1/</a> 03-Jun-2019 17:26    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t05.J043427+413000.10.2048.v1/">VLASS1.2.ql.T21t05.J043427+413000.10.2048.v1/</a> 28-May-2019 15:14    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T22t04.J030255+473000.10.2048.v1/">VLASS1.2.ql.T22t04.J030255+473000.10.2048.v1/</a> 01-Aug-2019 17:18    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T23t04.J035800+503000.10.2048.v2/">VLASS1.2.ql.T23t04.J035800+503000.10.2048.v2/</a> 17-Jun-2019 16:46    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T23t04.J035836+513000.10.2048.v2/">VLASS1.2.ql.T23t04.J035836+513000.10.2048.v2/</a> 17-Jun-2019 16:52    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T23t05.J040306+503000.10.2048.v2/">VLASS1.2.ql.T23t05.J040306+503000.10.2048.v2/</a> 14-May-2019 09:44    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T23t06.J053937+493000.10.2048.v2/">VLASS1.2.ql.T23t06.J053937+493000.10.2048.v2/</a> 15-May-2019 13:16    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T23t06.J054543+493000.10.2048.v2/">VLASS1.2.ql.T23t06.J054543+493000.10.2048.v2/</a> 15-May-2019 13:17    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T23t21.J203457+513000.10.2048.v1/">VLASS1.2.ql.T23t21.J203457+513000.10.2048.v1/</a> 06-Jun-2019 16:04    -   
+      <a href="https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T23t21.J204118+513000.10.2048.v1/">VLASS1.2.ql.T23t21.J204118+513000.10.2048.v1/</a> 05-Jun-2019 16:11    -   
+<hr></pre>
+
+</body></html>

@@ -470,6 +470,33 @@ def test_run_state_with_work(query_endpoint_mock, run_mock):
         os.getcwd = getcwd_orig
 
 
+@patch('caom2pipe.manage_composable.query_endpoint')
+def test_query_by_tile_listing(query_mock):
+    test_url = ''
+    tile_list_content = mc.read_from_file(
+        f'{TEST_DATA_DIR}/cleanup_augmentation_T20t12.html')
+    result = Object()
+    result.text = ''.join(ii for ii in tile_list_content)
+    query_mock.return_value = result
+    test_result = scrape.query_by_tile_listing(test_url)
+    assert test_result is not None, 'expect result'
+    assert len(test_result) == 38, 'wrong number of results'
+    expected_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+                   'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/'
+    assert expected_url in test_result, 'wrong results'
+
+    qa_rejected_content = mc.read_from_file(
+        f'{TEST_DATA_DIR}/cleanup_augmentation_QA_REJECTED.html')
+    result.text = ''.join(ii for ii in qa_rejected_content)
+    query_mock.return_value = result
+    test_result = scrape.query_by_tile_listing(test_url)
+    assert test_result is not None, 'expect result'
+    assert len(test_result) == 85, 'wrong number of results'
+    expected_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+                   'QA_REJECTED/VLASS1.2.ql.T01t46.J224731-373000.10.2048.v1/'
+    assert expected_url in test_result, 'wrong results'
+
+
 def _query_tap(ignore):
     with open(CAOM_QUERY) as f:
         temp = f.readlines()
