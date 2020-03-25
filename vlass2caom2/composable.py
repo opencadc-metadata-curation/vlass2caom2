@@ -233,12 +233,18 @@ def _run_by_builder():
     """
     config = mc.Config()
     config.get_executors()
-    name_builder = builder.VlassInstanceBuilder(config)
-    return rc.run_by_todo(config=config,
-                          name_builder=name_builder,
-                          command_name=APPLICATION,
-                          meta_visitors=meta_visitors,
-                          data_visitors=data_visitors)
+    with open(config.work_fqn) as f:
+        todo_list_length = sum(1 for _ in f)
+    if todo_list_length > 0:
+        work.init_web_log()
+        name_builder = builder.VlassInstanceBuilder(config)
+        return rc.run_by_todo(config=config,
+                              name_builder=name_builder,
+                              command_name=APPLICATION,
+                              meta_visitors=meta_visitors,
+                              data_visitors=data_visitors)
+    else:
+        return 0
 
 
 def run_by_builder():

@@ -73,7 +73,7 @@ from mock import patch, Mock
 
 from cadctap import CadcTapClient
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import composable, VlassName, COLLECTION
+from vlass2caom2 import composable, VlassName, COLLECTION, scrape
 import test_main_app
 import test_scrape
 
@@ -100,6 +100,8 @@ def test_run_by_builder(data_client_mock, repo_mock, exec_mock):
                   'image.pbcor.tt0.subim.fits'
     with open(test_config.work_fqn, 'w') as f:
         f.write(f'{test_f_name}\n')
+
+    scrape.web_log_content['abc'] = 123
 
     try:
         # execution
