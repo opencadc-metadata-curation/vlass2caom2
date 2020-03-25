@@ -72,32 +72,47 @@ import os
 from mock import patch, Mock
 
 from cadctap import CadcTapClient
+from caom2pipe import manage_composable as mc
 from vlass2caom2 import composable, VlassName, COLLECTION
 import test_main_app
 import test_scrape
 
-# @patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd_local_direct')
-# @patch('caom2pipe.execute_composable.CAOM2RepoClient')
-# @patch('caom2pipe.execute_composable.CadcDataClient')
-# def test_run_by_builder(data_client_mock, repo_mock, exec_mock):
-#     repo_mock.return_value.read.side_effect = _mock_repo_read
-#     repo_mock.return_value.create.side_effect = Mock()
-#     repo_mock.return_value.update.side_effect = _mock_repo_update
-#     data_client_mock.return_value.get_file_info.side_effect = \
-#         _mock_get_file_info
-#     getcwd_orig = os.getcwd
-#     os.getcwd = Mock(return_value=TEST_DIR)
-#     try:
-#         # execution
-#         sys.argv = ['test command']
-#         test_result = composable._run_by_builder()
-#         assert test_result == 0, 'wrong result'
-#     finally:
-#         os.getcwd = getcwd_orig
-#
-#     assert repo_mock.return_value.read.called, 'repo read not called'
-#     assert repo_mock.return_value.create.called, 'repo create not called'
-#     assert exec_mock.called, 'expect to be called'
+
+@patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd_direct')
+@patch('caom2pipe.execute_composable.CAOM2RepoClient')
+@patch('caom2pipe.execute_composable.CadcDataClient')
+def test_run_by_builder(data_client_mock, repo_mock, exec_mock):
+    repo_mock.return_value.read.side_effect = _mock_repo_read
+    repo_mock.return_value.create.side_effect = Mock()
+    repo_mock.return_value.update.side_effect = _mock_repo_update
+    data_client_mock.return_value.get_file_info.side_effect = \
+        _mock_get_file_info
+
+    exec_mock.side_effect = _cmd_direct_mock
+
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+
+    test_config = mc.Config()
+    test_config.get_executors()
+
+    test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
+                  'image.pbcor.tt0.subim.fits'
+    with open(test_config.work_fqn, 'w') as f:
+        f.write(f'{test_f_name}\n')
+
+    try:
+        # execution
+        test_result = composable._run_by_builder()
+        assert test_result == 0, 'wrong result'
+    finally:
+        os.getcwd = getcwd_orig
+
+    assert repo_mock.return_value.read.called, 'repo read not called'
+    assert repo_mock.return_value.create.called, 'repo create not called'
+    assert exec_mock.called, 'expect to be called'
+    if os.path.exists(test_config.work_fqn):
+        os.unlink(test_config.work_fqn)
 
 
 @patch('caom2pipe.execute_composable.CadcDataClient')
@@ -116,11 +131,11 @@ def test_run_state(run_mock, query_mock, data_client_mock):
 
     test_obs_id = 'VLASS1.2.T07t13.J083838-153000'
     test_product_id = 'VLASS1.2.T07t13.J083838-153000.quicklook'
-    test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.' \
-                  'pbcor.tt0.subim.fits'
+    test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
+                  'image.pbcor.tt0.subim.fits'
     try:
         # execution
-        test_result = composable._run_state_rc()
+        test_result = composable._run_by_state_rc()
         assert test_result == 0, 'mocking correct execution'
 
         # assert query_mock.called, 'service query not created'
@@ -146,13 +161,31 @@ def test_run_state(run_mock, query_mock, data_client_mock):
         CadcTapClient.__init__ = orig_client
 
 
+def _cmd_direct_mock():
+    from caom2 import SimpleObservation, Algorithm
+    obs = SimpleObservation(observation_id='VLASS1.2.T07t13.J083838-153000',
+                            collection=COLLECTION,
+                            algorithm=Algorithm(name='testing'))
+    mc.write_obs_to_file(
+        obs, '/usr/src/app/logs/VLASS1.2.T07t13.J083838-153000.fits.xml')
+
+
 def _mock_service_query():
     return None
 
 
-def _mock_get_file_info():
-    return None
+def _mock_get_file_info(arg1, arg2):
+    # arg2 is the file name
+    return {'name': arg2}
 
 
 def _mock_get_file():
     return None
+
+
+def _mock_repo_read(arg1, arg2):
+    return None
+
+
+def _mock_repo_update():
+    assert True

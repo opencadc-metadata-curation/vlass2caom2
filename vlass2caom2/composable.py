@@ -88,35 +88,35 @@ meta_visitors = [time_bounds_augmentation, quality_augmentation,
 data_visitors = [position_bounds_augmentation]
 
 
-def _run_by_file():
-    """uses a todo file with URLs, which is the only way to find
-    context information about QA_REJECTED.
-    """
-    config = mc.Config()
-    config.get_executors()
-    config.features.use_urls = True
-    with open(config.work_fqn) as f:
-        todo_list_length = sum(1 for _ in f)
-    if todo_list_length > 0:
-        work.init_web_log()
-        result = ec.run_by_file(config, VlassName, APPLICATION, meta_visitors,
-                                data_visitors, chooser=None)
-    else:
-        logging.info('No records to process.')
-        result = 0
-    return result
-
-
-def run_by_file():
-    """Wraps _run_by_file in exception handling."""
-    try:
-        result = _run_by_file()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
+# def _run_by_file():
+#     """uses a todo file with URLs, which is the only way to find
+#     context information about QA_REJECTED.
+#     """
+#     config = mc.Config()
+#     config.get_executors()
+#     config.features.use_urls = True
+#     with open(config.work_fqn) as f:
+#         todo_list_length = sum(1 for _ in f)
+#     if todo_list_length > 0:
+#         work.init_web_log()
+#         result = ec.run_by_file(config, VlassName, APPLICATION, meta_visitors,
+#                                 data_visitors, chooser=None)
+#     else:
+#         logging.info('No records to process.')
+#         result = 0
+#     return result
+#
+#
+# def run_by_file():
+#     """Wraps _run_by_file in exception handling."""
+#     try:
+#         result = _run_by_file()
+#         sys.exit(result)
+#     except Exception as e:
+#         logging.error(e)
+#         tb = traceback.format_exc()
+#         logging.debug(tb)
+#         sys.exit(-1)
 
 
 def _run_single():
@@ -183,7 +183,7 @@ def run_state():
         sys.exit(-1)
 
 
-def _run_state_rc():
+def _run_by_state_rc():
     """Uses a state file with a timestamp to control which quicklook
     files will be retrieved from VLASS.
 
@@ -208,3 +208,46 @@ def _run_state_rc():
                            name_builder=name_builder,
                            source=source,
                            end_time=max_date)
+
+
+def run_by_state():
+    """Wraps _run_by_state in exception handling."""
+    try:
+        result = _run_by_state_rc()
+        sys.exit(result)
+    except Exception as e:
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)
+
+
+def _run_by_builder():
+    """Run the processing for observations using a todo file to identify the
+    work to be done, but with the support of a Builder, so that StorageName
+    instances can be provided. This is important here, because the
+    instrument name needs to be provided to the StorageName constructor.
+
+    :return 0 if successful, -1 if there's any sort of failure. Return status
+        is used by airflow for task instance management and reporting.
+    """
+    config = mc.Config()
+    config.get_executors()
+    name_builder = builder.VlassInstanceBuilder(config)
+    return rc.run_by_todo(config=config,
+                          name_builder=name_builder,
+                          command_name=APPLICATION,
+                          meta_visitors=meta_visitors,
+                          data_visitors=data_visitors)
+
+
+def run_by_builder():
+    """Wraps _run_by_builder in exception handling."""
+    try:
+        result = _run_by_builder()
+        sys.exit(result)
+    except Exception as e:
+        logging.error(e)
+        tb = traceback.format_exc()
+        logging.debug(tb)
+        sys.exit(-1)

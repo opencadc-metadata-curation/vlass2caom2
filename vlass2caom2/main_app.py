@@ -83,7 +83,7 @@ from vlass2caom2 import scrape
 
 
 __all__ = ['vlass_main', 'update', 'VlassName', 'VlassCardinality',
-           'COLLECTION', 'APPLICATION']
+           'COLLECTION', 'APPLICATION', 'to_caom2']
 
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
@@ -393,17 +393,21 @@ class VlassCardinality(object):
         pass  # TODO
 
 
-def vlass_main():
+def to_caom2():
     args = get_gen_proc_arg_parser().parse_args()
+    vlass = VlassCardinality()
+    blueprints = vlass.build_blueprints(args)
+    return gen_proc(args, blueprints)
+
+
+def vlass_main():
     try:
-        vlass = VlassCardinality()
-        blueprints = vlass.build_blueprints(args)
-        gen_proc(args, blueprints)
+        result = to_caom2()
+        logging.debug('Done {} processing.'.format(APPLICATION))
+        sys.exit(result)
     except Exception as e:
         logging.error('Failed {} execution.'.format(APPLICATION))
         logging.error(e)
         tb = traceback.format_exc()
         logging.error(tb)
         sys.exit(-1)
-
-    logging.debug('Done {} processing.'.format(APPLICATION))
