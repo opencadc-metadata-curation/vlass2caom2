@@ -591,25 +591,3 @@ def query_top_page():
             response.close()
 
     return max_date
-
-
-def query_by_tile_listing(url):
-    """
-    Query a tile listing or a QA_REJECTED directory.
-
-    :return: the list of hrefs for the image phase centre directories on the
-        queried page
-    """
-    response = None
-    result = None
-    try:
-        # get the last modified date on the quicklook images listing
-        response = mc.query_endpoint(url)
-        if response is None:
-            logging.warning('Could not query {}'.format(url))
-        else:
-            result = _parse_image_phase_centre_list_page(response.text)
-    finally:
-        if response is not None:
-            response.close()
-    return result

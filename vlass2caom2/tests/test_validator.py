@@ -72,7 +72,7 @@ import os
 from datetime import datetime
 
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import validator, scrape
+from vlass2caom2 import validator
 
 from mock import patch, Mock
 import test_main_app, test_scrape
