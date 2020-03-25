@@ -24,8 +24,8 @@ RUN pip3 install cadcdata && \
 
 RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
-    cp footprintfinder.py /usr/local/lib/python3.7/site-packages/footprintfinder.py && \
-    chmod 755 /usr/local/lib/python3.7/site-packages/footprintfinder.py && \
+    cp footprintfinder.py /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
+    chmod 755 /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
     cd $oldpath
 
 WORKDIR /usr/src/app
@@ -45,7 +45,7 @@ RUN git clone https://github.com/${OMC_REPO}/vlass2caom2.git && \
   pip install ./vlass2caom2
 
 RUN apt-get purge -y \
-    git
+    git \
     wget
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

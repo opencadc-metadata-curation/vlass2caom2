@@ -111,6 +111,7 @@ def test_run_state(run_mock, query_mock, data_client_mock):
         _mock_get_file_info
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    orig_client = CadcTapClient.__init__
     CadcTapClient.__init__ = Mock(return_value=None)
 
     test_obs_id = 'VLASS1.2.T07t13.J083838-153000'
@@ -121,27 +122,28 @@ def test_run_state(run_mock, query_mock, data_client_mock):
         # execution
         test_result = composable._run_state_rc()
         assert test_result == 0, 'mocking correct execution'
+
+        # assert query_mock.called, 'service query not created'
+        # assert builder_data_mock.return_value.get_file.called, \
+        #     'get_file not called'
+        assert run_mock.called, 'should have been called'
+        args, kwargs = run_mock.call_args
+        test_storage = args[0]
+        assert isinstance(test_storage, VlassName), type(test_storage)
+        assert test_storage.obs_id == test_obs_id, 'wrong obs id'
+        assert test_storage.file_name == test_f_name, 'wrong file name'
+        assert test_storage.fname_on_disk == test_f_name, 'wrong fname on disk'
+        assert test_storage.url.startswith(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'), \
+            f'wrong url start format {test_storage.url}'
+        assert test_storage.url.endswith('.fits'), \
+            f'wrong url end format {test_storage.url}'
+        assert test_storage.lineage == f'{test_product_id}/ad:{COLLECTION}/' \
+                                       f'{test_f_name}', 'wrong lineage'
+        assert test_storage.external_urls is None, 'wrong external urls'
     finally:
         os.getcwd = getcwd_orig
-
-    # assert query_mock.called, 'service query not created'
-    # assert builder_data_mock.return_value.get_file.called, \
-    #     'get_file not called'
-    assert run_mock.called, 'should have been called'
-    args, kwargs = run_mock.call_args
-    test_storage = args[0]
-    assert isinstance(test_storage, VlassName), type(test_storage)
-    assert test_storage.obs_id == test_obs_id, 'wrong obs id'
-    assert test_storage.file_name == test_f_name, 'wrong file name'
-    assert test_storage.fname_on_disk == test_f_name, 'wrong fname on disk'
-    assert test_storage.url.startswith(
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS'), \
-        f'wrong url start format {test_storage.url}'
-    assert test_storage.url.endswith('.fits'), \
-        f'wrong url end format {test_storage.url}'
-    assert test_storage.lineage == f'{test_product_id}/ad:{COLLECTION}/' \
-                                   f'{test_f_name}', 'wrong lineage'
-    assert test_storage.external_urls is None, 'wrong external urls'
+        CadcTapClient.__init__ = orig_client
 
 
 def _mock_service_query():
