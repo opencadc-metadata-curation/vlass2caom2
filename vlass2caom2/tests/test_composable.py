@@ -67,29 +67,90 @@
 # ***********************************************************************
 #
 
-from caom2pipe import manage_composable as mc
-from vlass2caom2 import cleanup_augmentation
+import os
+
+from mock import patch, Mock
+
+from cadctap import CadcTapClient
+from vlass2caom2 import composable, VlassName, COLLECTION
 import test_main_app
+import test_scrape
+
+# @patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd_local_direct')
+# @patch('caom2pipe.execute_composable.CAOM2RepoClient')
+# @patch('caom2pipe.execute_composable.CadcDataClient')
+# def test_run_by_builder(data_client_mock, repo_mock, exec_mock):
+#     repo_mock.return_value.read.side_effect = _mock_repo_read
+#     repo_mock.return_value.create.side_effect = Mock()
+#     repo_mock.return_value.update.side_effect = _mock_repo_update
+#     data_client_mock.return_value.get_file_info.side_effect = \
+#         _mock_get_file_info
+#     getcwd_orig = os.getcwd
+#     os.getcwd = Mock(return_value=TEST_DIR)
+#     try:
+#         # execution
+#         sys.argv = ['test command']
+#         test_result = composable._run_by_builder()
+#         assert test_result == 0, 'wrong result'
+#     finally:
+#         os.getcwd = getcwd_orig
+#
+#     assert repo_mock.return_value.read.called, 'repo read not called'
+#     assert repo_mock.return_value.create.called, 'repo create not called'
+#     assert exec_mock.called, 'expect to be called'
 
 
-def test_visit():
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/' \
-               'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits'
-    test_obs_id = 'VLASS1.2.T20t12.J092604+383000'
-    test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
-    test_fname = f'{test_main_app.TEST_DATA_DIR}/{test_obs_id}.xml'
-    test_obs = mc.read_obs_from_file(test_fname)
+@patch('caom2pipe.execute_composable.CadcDataClient')
+@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.execute_composable.OrganizeExecutesWithDoOne.do_one')
+def test_run_state(run_mock, query_mock, data_client_mock):
+    test_scrape._write_state('24Apr2019 12:34')
+    query_mock.side_effect = test_scrape._query_endpoint
+    run_mock.return_value = 0
+    data_client_mock.return_value.get_file_info.side_effect = \
+        _mock_get_file_info
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    CadcTapClient.__init__ = Mock(return_value=None)
 
-    test_artifacts = test_obs.planes[test_product_id].artifacts
-    assert len(test_artifacts) == 4, 'wrong starting conditions'
+    test_obs_id = 'VLASS1.2.T07t13.J083838-153000'
+    test_product_id = 'VLASS1.2.T07t13.J083838-153000.quicklook'
+    test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.' \
+                  'pbcor.tt0.subim.fits'
+    try:
+        # execution
+        test_result = composable._run_state_rc()
+        assert test_result == 0, 'mocking correct execution'
+    finally:
+        os.getcwd = getcwd_orig
 
-    kwargs = {'url': test_url}
-    test_result = cleanup_augmentation.visit(test_obs, **kwargs)
+    # assert query_mock.called, 'service query not created'
+    # assert builder_data_mock.return_value.get_file.called, \
+    #     'get_file not called'
+    assert run_mock.called, 'should have been called'
+    args, kwargs = run_mock.call_args
+    test_storage = args[0]
+    assert isinstance(test_storage, VlassName), type(test_storage)
+    assert test_storage.obs_id == test_obs_id, 'wrong obs id'
+    assert test_storage.file_name == test_f_name, 'wrong file name'
+    assert test_storage.fname_on_disk == test_f_name, 'wrong fname on disk'
+    assert test_storage.url.startswith(
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS'), \
+        f'wrong url start format {test_storage.url}'
+    assert test_storage.url.endswith('.fits'), \
+        f'wrong url end format {test_storage.url}'
+    assert test_storage.lineage == f'{test_product_id}/ad:{COLLECTION}/' \
+                                   f'{test_f_name}', 'wrong lineage'
+    assert test_storage.external_urls is None, 'wrong external urls'
 
-    assert test_result is not None, 'expect a result'
-    assert 'artifacts' in test_result, 'expect artifact count'
-    assert test_result['artifacts'] == 2, f'actual deleted count ' \
-                                          f'{test_result["artifacts"]}'
-    assert len(test_artifacts) == 2, 'wrong ending conditions'
+
+def _mock_service_query():
+    return None
+
+
+def _mock_get_file_info():
+    return None
+
+
+def _mock_get_file():
+    return None

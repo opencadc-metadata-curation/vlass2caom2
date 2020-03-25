@@ -67,29 +67,23 @@
 # ***********************************************************************
 #
 
-from caom2pipe import manage_composable as mc
-from vlass2caom2 import cleanup_augmentation
-import test_main_app
+from datetime import datetime
+
+from vlass2caom2 import data_source as ds
 
 
-def test_visit():
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/' \
-               'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits'
-    test_obs_id = 'VLASS1.2.T20t12.J092604+383000'
-    test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
-    test_fname = f'{test_main_app.TEST_DATA_DIR}/{test_obs_id}.xml'
-    test_obs = mc.read_obs_from_file(test_fname)
-
-    test_artifacts = test_obs.planes[test_product_id].artifacts
-    assert len(test_artifacts) == 4, 'wrong starting conditions'
-
-    kwargs = {'url': test_url}
-    test_result = cleanup_augmentation.visit(test_obs, **kwargs)
-
-    assert test_result is not None, 'expect a result'
-    assert 'artifacts' in test_result, 'expect artifact count'
-    assert test_result['artifacts'] == 2, f'actual deleted count ' \
-                                          f'{test_result["artifacts"]}'
-    assert len(test_artifacts) == 2, 'wrong ending conditions'
+def test_get_time_box_work():
+    test_todo_list = {1585092104: ['a.fits'],
+                      1585092204: ['b.fits'],
+                      1585092304: ['c.fits']}
+    prev_exec_time = datetime.fromtimestamp(1585092199)
+    exec_time = datetime.fromtimestamp(1585092209)
+    test_subject = ds.NraoPage(test_todo_list)
+    test_result = test_subject.get_time_box_work(prev_exec_time, exec_time)
+    assert test_result is not None, 'expected a result'
+    assert len(test_result) == 1, 'wrong number of results'
+    result = False
+    for entry in test_result:
+        result = True
+        assert 'b.fits' == entry[0], 'wrong result content'
+    assert result, 'make sure the for loop did something'

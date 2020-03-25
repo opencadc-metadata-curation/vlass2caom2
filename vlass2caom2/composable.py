@@ -74,10 +74,11 @@ import traceback
 
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
+from caom2pipe import run_composable as rc
 from vlass2caom2 import VlassName, APPLICATION
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
-from vlass2caom2 import work
+from vlass2caom2 import work, data_source, scrape, builder
 
 
 VLASS_BOOKMARK = 'vlass_timestamp'
@@ -180,3 +181,30 @@ def run_state():
         tb = traceback.format_exc()
         logging.debug(tb)
         sys.exit(-1)
+
+
+def _run_state_rc():
+    """Uses a state file with a timestamp to control which quicklook
+    files will be retrieved from VLASS.
+
+    Ingestion is based on URLs, because a URL that contains the phrase
+    'QA_REJECTED' is the only way to tell if the attribute 'requirements'
+    should be set to 'fail', or not.
+    """
+    config = mc.Config()
+    config.get_executors()
+    state = mc.State(config.state_fqn)
+    start_time = state.get_bookmark(VLASS_BOOKMARK)
+    todo_list, max_date = scrape.build_file_url_list(start_time)
+    if len(todo_list) > 0:
+        work.init_web_log()
+    source = data_source.NraoPage(todo_list)
+    name_builder = builder.VlassInstanceBuilder(config)
+    return rc.run_by_state(config=config,
+                           command_name=APPLICATION,
+                           bookmark_name=VLASS_BOOKMARK,
+                           meta_visitors=meta_visitors,
+                           data_visitors=data_visitors,
+                           name_builder=name_builder,
+                           source=source,
+                           end_time=max_date)

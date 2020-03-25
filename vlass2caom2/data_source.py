@@ -67,29 +67,37 @@
 # ***********************************************************************
 #
 
-from caom2pipe import manage_composable as mc
-from vlass2caom2 import cleanup_augmentation
-import test_main_app
+import logging
+
+from astropy.table import Table
+from caom2pipe import data_source_composable as dsc
 
 
-def test_visit():
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/' \
-               'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits'
-    test_obs_id = 'VLASS1.2.T20t12.J092604+383000'
-    test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
-    test_fname = f'{test_main_app.TEST_DATA_DIR}/{test_obs_id}.xml'
-    test_obs = mc.read_obs_from_file(test_fname)
+class NraoPage(dsc.DataSource):
+    """
+    Put the NRAO page scraping behind the API for state file-based CAOM record
+    creation.
+    """
 
-    test_artifacts = test_obs.planes[test_product_id].artifacts
-    assert len(test_artifacts) == 4, 'wrong starting conditions'
+    def __init__(self, todo_list):
+        super(NraoPage, self).__init__()
+        self._todo_list = todo_list
+        self._logger = logging.getLogger(__name__)
 
-    kwargs = {'url': test_url}
-    test_result = cleanup_augmentation.visit(test_obs, **kwargs)
+    def get_time_box_work(self, prev_exec_time, exec_time):
+        """
+        Time-boxing the file url list returned from the site scrape.
 
-    assert test_result is not None, 'expect a result'
-    assert 'artifacts' in test_result, 'expect artifact count'
-    assert test_result['artifacts'] == 2, f'actual deleted count ' \
-                                          f'{test_result["artifacts"]}'
-    assert len(test_artifacts) == 2, 'wrong ending conditions'
+        :param prev_exec_time datetime start of the timestamp chunk
+        :param exec_time datetime end of the timestamp chunk
+        :return: an astropy Table of file names with time they were modified
+        """
+        temp = Table(names=('fileName', 'modificationTimestamp'),
+                     dtype=('S128', 'i4'))
+        prev_ts = prev_exec_time.timestamp()
+        exec_ts = exec_time.timestamp()
+        for timestamp in self._todo_list.keys():
+            if prev_ts < timestamp <= exec_ts:
+                for entry in self._todo_list[timestamp]:
+                    temp.add_row((entry, timestamp))
+        return temp

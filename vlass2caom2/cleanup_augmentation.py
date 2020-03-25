@@ -71,7 +71,7 @@ import logging
 
 from caom2 import Observation
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import scrape, VlassName
+from vlass2caom2 import VlassName
 
 
 def visit(observation, **kwargs):
@@ -89,27 +89,24 @@ def visit(observation, **kwargs):
     count = 0
     for plane in observation.planes.values():
         temp = []
-        if len(plane.artifacts) > 2:
+        # SG - 25-03-20 - later versions of files are replacements, so just
+        # automatically remove the 'older' artifacts.
+        #
+        # quicklook check is to cover the future case of having cubes in
+        # the collection
+        if len(plane.artifacts) > 2 and plane.product_id.endswith('quicklook'):
+            # first - get the newest version
+            max_version = 1
             for artifact in plane.artifacts.values():
-                logging.error(f'artifact uri is {artifact.uri}')
-                vlass_name = VlassName(url=url)
-                caom_name = mc.CaomName(artifact.uri)
-                current_dir = VlassName.get_image_pointing_dir(
-                    caom_name.file_name)
-                image_pointing_url = f'{vlass_name.tile_url}/' \
-                                     f'{current_dir}/'
-                existing_urls = scrape.query_by_tile_listing(
-                    vlass_name.tile_url)
-                if image_pointing_url in existing_urls:
-                    continue
+                version = VlassName.get_version(artifact.uri)
+                logging.error(f'version is {version} uri is {artifact.uri}')
+                max_version = max(max_version, version)
 
-                qa_rejected_url = f'{vlass_name.rejected_url}{current_dir}/'
-                existing_urls = scrape.query_by_tile_listing(
-                    vlass_name.rejected_url)
-                if qa_rejected_url in existing_urls:
-                    continue
-
-                temp.append(artifact.uri)
+            # now collect the list of artifacts not at the maximum version
+            for artifact in plane.artifacts.values():
+                version = VlassName.get_version(artifact.uri)
+                if version != max_version:
+                    temp.append(artifact.uri)
 
         delete_list = list(set(temp))
         for entry in delete_list:

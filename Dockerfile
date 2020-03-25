@@ -1,23 +1,26 @@
-FROM opencadc/matplotlib
+FROM opencadc/matplotlib:3.8-slim
+  
+RUN apt-get update -y && apt-get dist-upgrade -y
 
-RUN apk add --no-cache \
-        bash \
-        coreutils \
-        git \
-        g++ \
-        libmagic \
-        wget
+RUN apt-get install -y \
+    git \
+    python3-pip \
+    python3-tz \
+    python3-yaml \
+    wget
 
-RUN pip install cadcdata && \
-    pip install cadctap && \
-    pip install caom2 && \
-    pip install caom2repo && \
-    pip install caom2utils && \
-    pip install ftputil && \
-    pip install pytz && \
-    pip install PyYAML && \
-    pip install spherical-geometry && \
-    pip install vos
+RUN pip3 install cadcdata && \
+    pip3 install cadctap && \
+    pip3 install caom2 && \
+    pip3 install caom2repo && \
+    pip3 install caom2utils && \
+    pip3 install deprecated && \
+    pip3 install ftputil && \
+    pip3 install importlib-metadata && \
+    pip3 install pytz && \
+    pip3 install PyYAML && \
+    pip3 install spherical-geometry && \
+    pip3 install vos
 
 RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
@@ -27,18 +30,22 @@ RUN oldpath=`pwd` && cd /tmp && \
 
 WORKDIR /usr/src/app
 
-RUN pip install bs4
+RUN pip3 install bs4
 
-RUN git clone https://github.com/opencadc-metadata-curation/caom2pipe.git && \
+ARG OMC_REPO=opencadc-metadata-curation
+
+RUN git clone https://github.com/${OMC_REPO}/caom2pipe.git && \
   pip install ./caom2pipe
 
-RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
+RUN git clone https://github.com/${OMC_REPO}/vlass2caom2.git && \
   cp ./vlass2caom2/data/ArchiveQuery-2018-08-15.csv /usr/src/ && \
   cp ./vlass2caom2/data/rejected_file_names-2018-09-05.csv /usr/src/ && \
   cp ./vlass2caom2/scripts/config.yml / && \
   cp ./vlass2caom2/scripts/docker-entrypoint.sh / && \
   pip install ./vlass2caom2
 
-RUN apk --no-cache del git
+RUN apt-get purge -y \
+    git
+    wget
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

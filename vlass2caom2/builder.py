@@ -67,29 +67,28 @@
 # ***********************************************************************
 #
 
-from caom2pipe import manage_composable as mc
-from vlass2caom2 import cleanup_augmentation
-import test_main_app
+import logging
+
+from caom2pipe import name_builder_composable as nbc
+from vlass2caom2 import VlassName
+
+__all__ = ['VlassInstanceBuilder']
 
 
-def test_visit():
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/' \
-               'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits'
-    test_obs_id = 'VLASS1.2.T20t12.J092604+383000'
-    test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
-    test_fname = f'{test_main_app.TEST_DATA_DIR}/{test_obs_id}.xml'
-    test_obs = mc.read_obs_from_file(test_fname)
+class VlassInstanceBuilder(nbc.StorageNameBuilder):
 
-    test_artifacts = test_obs.planes[test_product_id].artifacts
-    assert len(test_artifacts) == 4, 'wrong starting conditions'
+    def __init__(self, config):
+        super(VlassInstanceBuilder, self).__init__()
+        self._config = config
+        self._logger = logging.getLogger(__name__)
 
-    kwargs = {'url': test_url}
-    test_result = cleanup_augmentation.visit(test_obs, **kwargs)
-
-    assert test_result is not None, 'expect a result'
-    assert 'artifacts' in test_result, 'expect artifact count'
-    assert test_result['artifacts'] == 2, f'actual deleted count ' \
-                                          f'{test_result["artifacts"]}'
-    assert len(test_artifacts) == 2, 'wrong ending conditions'
+    def build(self, entry):
+        """An entry may be a URL, a file name or an obs id."""
+        self._logger.debug(f'Build StorageName instance for {entry}.')
+        if self._config.features.use_urls:
+            result = VlassName(url=entry)
+        elif self._config.features.use_file_names:
+            result = VlassName(file_name=entry)
+        else:
+            result = VlassName(obs_id=entry)
+        return result

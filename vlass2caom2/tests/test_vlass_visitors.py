@@ -69,6 +69,7 @@
 
 import os
 import pytest
+import shutil
 
 from caom2 import Status
 from caom2pipe import manage_composable as mc
@@ -169,6 +170,10 @@ def test_aug_visit_quality_works_uri():
 def test_aug_visit_position_bounds():
     test_file_id = 'VLASS1.2.ql.T24t07.J065836+563000.10.2048.v1.I.' \
                    'iter1.image.pbcor.tt0.subim'
+    test_input_file = f'/test_files/{test_file_id}.fits'
+    if not os.path.exists(test_input_file):
+        shutil.copy(f'/usr/src/app/test_files/{test_file_id}.fits',
+                    test_input_file)
     test_file = os.path.join(TEST_DATA_DIR, 'fpf_start_obs.xml')
     test_obs = mc.read_obs_from_file(test_file)
     kwargs = {'working_directory': '/test_files',
@@ -181,3 +186,5 @@ def test_aug_visit_position_bounds():
     return_file = os.path.join(
         THIS_DIR, '{}__footprint.txt'.format(test_file_id))
     assert not os.path.exists(return_file), 'bad cleanup'
+    if os.path.exists(test_input_file):
+        os.unlink(test_input_file)

@@ -194,12 +194,6 @@ class VlassName(StorageName):
         return True
 
     @staticmethod
-    def get_image_pointing_dir(file_name):
-        bits = file_name.split('.')
-        return f'{bits[0]}.{bits[1]}.ql.{bits[3]}.{bits[4]}.{bits[5]}.' \
-               f'{bits[6]}.{bits[7]}'
-
-    @staticmethod
     def get_obs_id_from_file_name(file_name):
         """The obs id is made of the VLASS epoch, tile name, and image centre
         from the file name.
@@ -214,6 +208,15 @@ class VlassName(StorageName):
         """
         obs_id = VlassName.get_obs_id_from_file_name(file_name)
         return '{}.quicklook'.format(obs_id)
+
+    @staticmethod
+    def get_version(uri):
+        # file name looks like:
+        # 'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.
+        #                'pbcor.tt0.rms.subim.fits'
+        bits = mc.CaomName(uri).file_name.split('.')
+        version_str = bits[7].replace('v', '')
+        return mc.to_int(version_str)
 
     @staticmethod
     def remove_extensions(file_name):
