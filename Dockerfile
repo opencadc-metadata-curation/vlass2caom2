@@ -18,12 +18,6 @@ RUN pip install bs4 \
     spherical-geometry \
     vos
 
-RUN oldpath=`pwd` && cd /tmp && \
-    wget http://www.eso.org/~fstoehr/footprintfinder.py && \
-    cp footprintfinder.py /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
-    chmod 755 /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
-    cd $oldpath
-
 WORKDIR /usr/src/app
 
 ARG OPENCADC_BRANCH=master
