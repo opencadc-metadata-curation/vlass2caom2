@@ -1,13 +1,16 @@
 FROM opencadc/matplotlib:3.8-slim
   
-RUN apt-get update -y && apt-get dist-upgrade -y
-
+RUN apt-get update
 RUN apt-get install -y \
+    build-essential \
     git \
-    python3-pip \
-    python3-tz \
-    python3-yaml \
     wget
+
+RUN oldpath=`pwd` && cd /tmp && \
+    wget http://www.eso.org/~fstoehr/footprintfinder.py && \
+    cp footprintfinder.py /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
+    chmod 755 /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
+    cd $oldpath
 
 RUN pip3 install cadcdata && \
     pip3 install cadctap && \
@@ -22,22 +25,17 @@ RUN pip3 install cadcdata && \
     pip3 install spherical-geometry && \
     pip3 install vos
 
-RUN oldpath=`pwd` && cd /tmp && \
-    wget http://www.eso.org/~fstoehr/footprintfinder.py && \
-    cp footprintfinder.py /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
-    chmod 755 /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
-    cd $oldpath
-
 WORKDIR /usr/src/app
 
 RUN pip3 install bs4
 
+ARG OPENCADC_BRANCH=master
 ARG OPENCADC_REPO=opencadc
 ARG OMC_REPO=opencadc-metadata-curation
 
-RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git && \
+RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git --branch ${OPENCADC_BRANCH} --single-branch && \
   pip install ./caom2tools/caom2 && \
-  pip install ./caomtools/caom2utils
+  pip install ./caom2tools/caom2utils
 
 RUN git clone https://github.com/${OMC_REPO}/caom2pipe.git && \
   pip install ./caom2pipe

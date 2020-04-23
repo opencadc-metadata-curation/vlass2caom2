@@ -101,6 +101,7 @@ def test_run_by_builder(data_client_mock, repo_mock, exec_mock):
     with open(test_config.work_fqn, 'w') as f:
         f.write(f'{test_f_name}\n')
 
+    # the equivalent of calling work.init_web_log()
     scrape.web_log_content['abc'] = 123
 
     try:
