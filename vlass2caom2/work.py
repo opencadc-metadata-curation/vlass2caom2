@@ -75,22 +75,28 @@ from vlass2caom2 import scrape
 
 __all__ = ['init_web_log', 'NraoPageScrape']
 
+VLASS_CONTEXT = 'vlass_context'
+
 
 def make_time(value):
     # 01-May-2019 15:40 - support the format of what's visible on the
     # web page, to make it easy to cut-and-paste
     # make a datetime from a string
-    return datetime.strptime(value, '%d-%b-%Y %H:%M')
+    result = value
+    if isinstance(value, str):
+        result = datetime.strptime(value, '%d-%b-%Y %H:%M')
+    return result
 
 
-def init_web_log():
+def init_web_log(state):
     """Cache content of https:archive-new.nrao.edu/vlass/weblog, because
     it's large and takes a long time to read. This cached information
     is how time and provenance metadata is found for the individual
     observations.
     """
-    epochs = {'VLASS1.1': make_time('01-Jan-2018 00:00'),
-              'VLASS1.2': make_time('01-Nov-2018 00:00')}
+    epochs = state.get_context(VLASS_CONTEXT)
+    for key, value in epochs.items():
+        epochs[key] = make_time(value)
     scrape.init_web_log_content(epochs)
 
 
@@ -99,14 +105,15 @@ class NraoPageScrape(mc.Work):
     CAOM record creation.
     """
 
-    def __init__(self, from_time):
+    def __init__(self, from_time, state):
         # make a string into a datetime value
         temp = mc.increment_time(from_time, 0)
         self.todo_list, max_date = scrape.build_file_url_list(temp)
         super(NraoPageScrape, self).__init__(max_date.timestamp())
+        self._state = state
 
     def initialize(self):
-        init_web_log()
+        init_web_log(self._state)
 
     def todo(self, prev_exec_date, exec_date):
         """Time-boxing the file url list returned from the site scrape."""

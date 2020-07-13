@@ -164,6 +164,29 @@ def test_run_state(run_mock, query_mock, data_client_mock):
         CadcTapClient.__init__ = orig_client
 
 
+@patch('vlass2caom2.to_caom2')
+@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.execute_composable.CAOM2RepoClient')
+def test_run_state_rc(repo_client_mock,
+                      query_mock, to_caom2_mock):
+    test_scrape._write_state('24Apr2019 12:34')
+    query_mock.side_effect = test_scrape._query_endpoint
+    repo_client_mock.return_value.read.return_value = None
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    try:
+        test_result = composable._run_by_state_rc()
+        assert test_result is not None, 'expect result'
+        assert test_result == 0, 'expect success'
+        assert repo_client_mock.return_value.read.called, 'read called'
+        assert to_caom2_mock.called, 'to_caom2 called'
+        assert query_mock.called, 'what about you?'
+        args, kwargs = query_mock.call_args
+        assert args[0].endswith('QA_REJECTED/'), 'wrong processing log'
+    finally:
+        os.getcwd = getcwd_orig
+
+
 def _cmd_direct_mock():
     from caom2 import SimpleObservation, Algorithm
     obs = SimpleObservation(observation_id='VLASS1.2.T07t13.J083838-153000',
@@ -192,3 +215,30 @@ def _mock_repo_read(arg1, arg2):
 
 def _mock_repo_update():
     assert True
+
+
+def _mock_get_cadc_headers(archive, file_id):
+    import logging
+    logging.error(f'\n\n\nmock get cadc headers\n\n\n')
+    return {'md5sum': 'md5:abc123'}
+
+
+def _mock_x(archive, file_id, b, fhead):
+    import logging
+    logging.error(f'{archive} {file_id} {fhead}')
+    logging.error(f'\n\n\ncalled called called \n\n\n')
+    from astropy.io import fits
+    x = """SIMPLE  =                    T / Written by IDL:  Fri Oct  6 01:48:35 2017
+BITPIX  =                  -32 / Bits per pixel
+NAXIS   =                    2 / Number of dimensions
+NAXIS1  =                 2048 /
+NAXIS2  =                 2048 /
+DATATYPE= 'REDUC   '           /Data type, SCIENCE/CALIB/REJECT/FOCUS/TEST
+TYPE    = 'image  '
+END
+"""
+    delim = '\nEND'
+    extensions = \
+        [e + delim for e in x.split(delim) if e.strip()]
+    headers = [fits.Header.fromstring(e, sep='\n') for e in extensions]
+    return headers
