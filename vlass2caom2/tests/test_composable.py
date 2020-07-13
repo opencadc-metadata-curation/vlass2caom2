@@ -106,7 +106,7 @@ def test_run_by_builder(data_client_mock, repo_mock, exec_mock):
 
     try:
         # execution
-        test_result = composable._run_by_builder()
+        test_result = composable._run()
         assert test_result == 0, 'wrong result'
     finally:
         os.getcwd = getcwd_orig

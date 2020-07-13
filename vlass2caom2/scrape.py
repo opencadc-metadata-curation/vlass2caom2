@@ -323,18 +323,25 @@ def build_qa_rejected_todo(start_date):
                 logging.info(
                     'Checking epoch {} on date {}'.format(
                         epoch_name, epochs[epoch]))
-                response = mc.query_endpoint(epoch_rejected_url)
-                if response is None:
-                    logging.warning(
-                        'Could not query epoch {}'.format(epoch_rejected_url))
-                else:
-                    temp, rejected_max = _parse_rejected_page(
-                        response.text, epoch_name, start_date,
-                        epoch_rejected_url)
-                    max_date = max(start_date, rejected_max)
-                    response.close()
-                    temp_rejected = rejected
-                    rejected = {**temp, **temp_rejected}
+                try:
+                    response = mc.query_endpoint(epoch_rejected_url)
+                    if response is None:
+                        logging.warning(
+                            'Could not query epoch {}'.format(epoch_rejected_url))
+                    else:
+                        temp, rejected_max = _parse_rejected_page(
+                            response.text, epoch_name, start_date,
+                            epoch_rejected_url)
+                        max_date = max(start_date, rejected_max)
+                        response.close()
+                        temp_rejected = rejected
+                        rejected = {**temp, **temp_rejected}
+                except mc.CadcException as e:
+                    if 'Not Found for url' in str(e):
+                        logging.info(f'No QA_REJECTED directory for '
+                                     f'{epoch_name}. Continuing.')
+                    else:
+                        raise e
     finally:
         if response is not None:
             response.close()

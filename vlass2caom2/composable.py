@@ -225,7 +225,7 @@ def run_by_state():
         sys.exit(-1)
 
 
-def _run_by_builder():
+def _run():
     """Run the processing for observations using a todo file to identify the
     work to be done, but with the support of a Builder, so that StorageName
     instances can be provided. This is important here, because the
@@ -251,10 +251,10 @@ def _run_by_builder():
     return result
 
 
-def run_by_builder():
-    """Wraps _run_by_builder in exception handling."""
+def run():
+    """Wraps _run in exception handling."""
     try:
-        result = _run_by_builder()
+        result = _run()
         sys.exit(result)
     except Exception as e:
         logging.error(e)
