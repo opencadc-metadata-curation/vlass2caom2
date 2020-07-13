@@ -229,8 +229,6 @@ def test_store(put_mock):
         'wrong destination parameter'
 
 
-=======
->>>>>>> Issue #4 - initial commit.
 def _cmd_direct_mock():
     from caom2 import SimpleObservation, Algorithm
     obs = SimpleObservation(observation_id='VLASS1.2.T07t13.J083838-153000',
