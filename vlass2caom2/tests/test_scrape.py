@@ -383,6 +383,27 @@ def test_read_list_from_nrao():
         assert test_subject[0].startswith('VLASS1.2.ql.T'), 'not a url'
 
 
+def test_list_files_on_page():
+    result = Object()
+    with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
+        result.text = f.read()
+
+    start_time = datetime(2018, 4, 15, 12, 34, 56)
+
+    with patch('caom2pipe.manage_composable.query_endpoint') as \
+            query_endpoint_mock:
+        query_endpoint_mock.return_value = result
+
+        test_list = scrape.list_files_on_page('https://localhost:8080/',
+                                              start_time)
+        assert test_list is not None, 'expect result'
+        assert len(test_list) == 2, 'wrong number of results'
+        assert 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
+               'T01t01/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/' \
+               'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.' \
+               'image.pbcor.tt0.subim.fits' in test_list, 'wrong content'
+
+
 def test_run_state():
     _write_state('23Apr2019 10:30')
     # execution
@@ -409,45 +430,6 @@ def test_run_state():
             assert run_mock.call_count == 40, 'wrong call count'
         finally:
             os.getcwd = getcwd_orig
-
-
-def test_run_by_file():
-    test_fname = 'VLASS1.2.ql.T08t20.J130619-093000.10.2048.' \
-                 'v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'QA_REJECTED/VLASS1.2.ql.T08t20.J130619-093000.10.2048.v1/' \
-               '{}'.format(test_fname)
-
-    # execution
-    with patch('caom2pipe.manage_composable.query_endpoint') as \
-            query_endpoint_mock, \
-            patch('caom2pipe.execute_composable._do_one') as run_mock:
-        query_endpoint_mock.side_effect = _query_endpoint
-        getcwd_orig = os.getcwd
-        os.getcwd = Mock(return_value=TEST_DATA_DIR)
-        try:
-            sys.argv = ['test_command']
-            config = mc.Config()
-            config.get_executors()
-            with open(config.work_fqn, 'w') as f:
-                f.write('{}\n'.format(test_url))
-
-            composable._run_by_file()
-            assert run_mock.called, 'should have been called'
-            args, kwargs = run_mock.call_args
-            assert args[3] == 'vlass2caom2', 'wrong command'
-            test_storage = args[2]
-            assert isinstance(test_storage, VlassName), type(test_storage)
-            assert test_storage.url == test_url, test_storage.url
-            assert test_storage.obs_id == 'VLASS1.2.T08t20.J130619-093000', \
-                'wrong obs id'
-            assert test_storage.file_name == test_fname, 'wrong file name'
-            assert test_storage.fname_on_disk == test_fname, \
-                'wrong fname on disk'
-        finally:
-            os.getcwd = getcwd_orig
-            if os.path.exists(config.work_fqn):
-                os.unlink(config.work_fqn)
 
 
 def test_run_state_with_work():
@@ -517,6 +499,10 @@ def _query_endpoint(url, timeout=-1):
     if url == scrape.QL_WEB_LOG_URL:
         with open(WL_INDEX) as f:
             result.text = f.read()
+    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+                'T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/':
+        with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
+            result.text = f.read()
     elif (url.startswith(
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/') and
           url.endswith('.10.2048.v1/') and
@@ -556,5 +542,9 @@ def _query_endpoint(url, timeout=-1):
 def _write_state(start_time_str):
     test_time = datetime.strptime(start_time_str, scrape.PAGE_TIME_FORMAT)
     test_bookmark = {'bookmarks': {'vlass_timestamp':
-                                        {'last_record': test_time}}}
+                                        {'last_record': test_time}},
+                     'context': {'vlass_context':
+                                     {'VLASS1.1': '01-Jan-2018 00:00',
+                                      'VLASS1.2': '01-Nov-2018 00:00',
+                                      'VLASS2.1': '01-Jul-2020 00:00'}}}
     mc.write_as_yaml(test_bookmark, STATE_FILE)

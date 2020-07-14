@@ -79,10 +79,11 @@ from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
 from caom2pipe import StorageName
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
+from vlass2caom2 import scrape
 
 
 __all__ = ['vlass_main', 'update', 'VlassName', 'VlassCardinality',
-           'COLLECTION', 'APPLICATION']
+           'COLLECTION', 'APPLICATION', 'to_caom2']
 
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
@@ -139,6 +140,11 @@ class VlassName(StorageName):
             self._url = url
 
     @property
+    def epoch(self):
+        bits = self._file_name.split('.')
+        return f'{bits[0]}.{bits[1]}'
+
+    @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
         return 'ad:{}/{}'.format(self.collection, self.file_name)
@@ -150,13 +156,28 @@ class VlassName(StorageName):
     @file_name.setter
     def file_name(self, value):
         self._file_name = value
-    #
-    # def get_lineage(self, product_id):
-    #     return '{}/{}'.format(product_id, self.file_uri)
+
+    @property
+    def image_pointing_url(self):
+        bits = self._file_name.split('.')
+        return f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.' \
+               f'{bits[5]}.{bits[6]}.{bits[7]}/'
 
     @property
     def product_id(self):
         return self._product_id
+
+    @property
+    def rejected_url(self):
+        return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
+
+    @property
+    def tile(self):
+        return self._file_name.split('.')[3]
+
+    @property
+    def tile_url(self):
+        return f'{scrape.QL_URL}{self.epoch}/{self.tile}/'
 
     @property
     def url(self):
@@ -187,6 +208,15 @@ class VlassName(StorageName):
         """
         obs_id = VlassName.get_obs_id_from_file_name(file_name)
         return '{}.quicklook'.format(obs_id)
+
+    @staticmethod
+    def get_version(uri):
+        # file name looks like:
+        # 'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.
+        #                'pbcor.tt0.rms.subim.fits'
+        bits = mc.CaomName(uri).file_name.split('.')
+        version_str = bits[7].replace('v', '')
+        return mc.to_int(version_str)
 
     @staticmethod
     def remove_extensions(file_name):
@@ -363,17 +393,21 @@ class VlassCardinality(object):
         pass  # TODO
 
 
-def vlass_main():
+def to_caom2():
     args = get_gen_proc_arg_parser().parse_args()
+    vlass = VlassCardinality()
+    blueprints = vlass.build_blueprints(args)
+    return gen_proc(args, blueprints)
+
+
+def vlass_main():
     try:
-        vlass = VlassCardinality()
-        blueprints = vlass.build_blueprints(args)
-        gen_proc(args, blueprints)
+        result = to_caom2()
+        logging.debug('Done {} processing.'.format(APPLICATION))
+        sys.exit(result)
     except Exception as e:
         logging.error('Failed {} execution.'.format(APPLICATION))
         logging.error(e)
         tb = traceback.format_exc()
         logging.error(tb)
         sys.exit(-1)
-
-    logging.debug('Done {} processing.'.format(APPLICATION))

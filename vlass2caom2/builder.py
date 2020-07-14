@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2019.                            (c) 2019.
+#  (c) 2020.                            (c) 2020.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,39 +67,28 @@
 # ***********************************************************************
 #
 
-from vlass2caom2 import main_app
+import logging
+
+from caom2pipe import name_builder_composable as nbc
+from vlass2caom2 import VlassName
+
+__all__ = ['VlassInstanceBuilder']
 
 
-def test_storage_name():
-    test_bit = 'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.' \
-               'pbcor.tt0'
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'T23t09/VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/' \
-               '{}.subim.fits'.format(test_bit)
-    ts1 = main_app.VlassName(url=test_url)
-    ts2 = main_app.VlassName(file_name='{}.subim.fits'.format(test_bit))
-    for ts in [ts1, ts2]:
-        assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
-        assert ts.fname_on_disk == '{}.subim.fits'.format(test_bit), \
-            'wrong fname on disk'
-        assert ts.file_name == '{}.subim.fits'.format(test_bit), 'wrong fname'
-        assert ts.file_id == '{}.subim'.format(test_bit), 'wrong fid'
-        assert ts.file_uri == \
-            'ad:VLASS/{}.subim.fits'.format(test_bit), 'wrong uri'
-        assert ts.model_file_name == \
-            'VLASS1.2.T23t09.J083851+483000.fits.xml', 'wrong model name'
-        assert ts.log_file == 'VLASS1.2.T23t09.J083851+483000.log', \
-            'wrong log file'
-        assert main_app.VlassName.remove_extensions(ts.file_name) == \
-            '{}.subim'.format(test_bit), 'wrong extensions'
-        assert ts.epoch == 'VLASS1.2', 'wrong epoch'
-        assert ts.tile_url == 'https://archive-new.nrao.edu/vlass/quicklook/' \
-                              'VLASS1.2/T23t09/', 'wrong tile url'
-        assert ts.rejected_url == 'https://archive-new.nrao.edu/vlass/' \
-                                  'quicklook/VLASS1.2/QA_REJECTED/', \
-            'wrong rejected url'
-        assert ts.image_pointing_url == 'https://archive-new.nrao.edu/vlass/' \
-                                        'quicklook/VLASS1.2/T23t09/' \
-                                        'VLASS1.2.ql.T23t09.J083851+483000.' \
-                                        '10.2048.v1/', \
-            'wrong image pointing url'
+class VlassInstanceBuilder(nbc.StorageNameBuilder):
+
+    def __init__(self, config):
+        super(VlassInstanceBuilder, self).__init__()
+        self._config = config
+        self._logger = logging.getLogger(__name__)
+
+    def build(self, entry):
+        """An entry may be a URL, a file name or an obs id."""
+        self._logger.debug(f'Build StorageName instance for {entry}.')
+        if self._config.features.use_urls:
+            result = VlassName(url=entry)
+        elif self._config.features.use_file_names:
+            result = VlassName(file_name=entry)
+        else:
+            result = VlassName(obs_id=entry)
+        return result

@@ -70,21 +70,20 @@
 import os
 
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import validator, scrape
+from vlass2caom2 import validator
 
 from mock import patch, Mock
 import test_main_app, test_scrape
 
 
 @patch('cadcdata.core.net.BaseWsClient.post')
-@patch('cadcdata.core.net.BaseWsClient.get')
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.manage_composable.query_endpoint')
-def test_validator(http_mock, caps_mock, ad_mock, tap_mock):
+def test_validator(http_mock, caps_mock, post_mock):
     caps_mock.return_value = 'https://sc2.canfar.net/sc2repo'
     response = Mock()
     response.status_code = 200
-    response.iter_content.return_value = \
+    x = \
         [b'uri\n'
          b'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.'
          b'iter1.image.pbcor.tt0.rms.subim.fits\n'
@@ -92,7 +91,22 @@ def test_validator(http_mock, caps_mock, ad_mock, tap_mock):
          b'image.pbcor.tt0.subim.fits\n'
          b'ad:VLASS/VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.'
          b'image.pbcor.tt0.rms.subim.fits']
-    tap_mock.return_value.__enter__.return_value = response
+
+    y = [b'ingestDate,fileName\n']
+
+    global count
+    count = 0
+
+    def _mock_post(chunk_size):
+        global count
+        if count == 0:
+            count = 1
+            return x
+        else:
+            return y
+
+    response.iter_content.side_effect = _mock_post
+    post_mock.return_value.__enter__.return_value = response
 
     if not os.path.exists('/root/.ssl/cadcproxy.pem'):
         if not os.path.exists('/root/.ssl'):
@@ -101,11 +115,6 @@ def test_validator(http_mock, caps_mock, ad_mock, tap_mock):
             f.write('proxy content')
 
     http_mock.side_effect = test_scrape._query_endpoint
-
-    ad_response = Mock()
-    ad_response.status_code = 200
-    ad_response.text = []
-    ad_mock.return_value = ad_response
 
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
@@ -125,11 +134,11 @@ def test_validator(http_mock, caps_mock, ad_mock, tap_mock):
         test_source, test_meta, test_data = test_subject.validate()
         assert test_source is not None, 'expected source result'
         assert test_meta is not None, 'expected destination result'
-        assert len(test_source) == 16, 'wrong number of source results'
-        assert 'VLASS1.2.ql.T08t20.J131022-093000.10.2048.v1.I.iter1.image.' \
+        assert len(test_source) == 2, 'wrong number of source results'
+        assert 'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.' \
                'pbcor.tt0.rms.subim.fits' in test_source, \
             'wrong source content'
-        assert len(test_meta) == 3, 'wrong # of destination results'
+        assert len(test_meta) == 1, 'wrong # of destination results'
         assert 'VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.image.' \
                'pbcor.tt0.rms.subim.fits' in test_meta, \
             'wrong destination content'
@@ -140,22 +149,20 @@ def test_validator(http_mock, caps_mock, ad_mock, tap_mock):
             'should create file record'
         with open(test_subject._config.work_fqn, 'r') as f:
             content = f.readlines()
-        assert len(content) == 16, 'wrong number of entries'
+        assert len(content) == 2, 'wrong number of entries'
         compare = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-                  'QA_REJECTED/VLASS1.2.ql.T08t20.J131022-093000.10.2048.v1/' \
-                  'VLASS1.2.ql.T08t20.J131022-093000.10.2048.v1.I.iter1.' \
-                  'image.pbcor.tt0.subim.fits\n'
+                  'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/' \
+                  'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.' \
+                  'image.pbcor.tt0.rms.subim.fits\n'
         assert compare in content, 'unexpected content'
 
         # does the cached list work too?
         assert os.path.exists(test_source_list_fqn), 'cache should exist'
         test_cache = test_subject.read_from_source()
         assert test_cache is not None, 'expected cached source result'
-        compare = 'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.' \
-                  'image.pbcor.tt0.subim.fits'
-        assert len(test_cache) == 16, 'wrong amount of cache content'
-        import logging
-        logging.error('\n'.join(ii for ii in test_cache))
+        compare = 'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.' \
+                  'image.pbcor.tt0.rms.subim.fits'
+        assert len(test_cache) == 4, 'wrong amount of cache content'
         assert compare in test_cache, 'wrong cached result'
     finally:
         os.getcwd = getcwd_orig

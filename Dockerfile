@@ -8,16 +8,17 @@ RUN apk add --no-cache \
         libmagic \
         wget
 
-RUN pip install cadcdata && \
-    pip install cadctap && \
-    pip install caom2 && \
-    pip install caom2repo && \
-    pip install caom2utils && \
-    pip install ftputil && \
-    pip install pytz && \
-    pip install PyYAML && \
-    pip install spherical-geometry && \
-    pip install vos
+RUN pip install cadcdata \
+    cadctap \
+    caom2 \
+    caom2repo \
+    caom2utils \
+    ftputil \
+    importlib-metadata \
+    pytz \
+    PyYAML \
+    spherical-geometry \
+    vos
 
 RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
@@ -29,10 +30,12 @@ WORKDIR /usr/src/app
 
 RUN pip install bs4
 
-RUN git clone https://github.com/opencadc-metadata-curation/caom2pipe.git && \
+ARG OMC_REPO=opencadc-metadata-curation
+
+RUN git clone https://github.com/${OMC_REPO}/caom2pipe.git && \
   pip install ./caom2pipe
 
-RUN git clone https://github.com/opencadc-metadata-curation/vlass2caom2.git && \
+RUN git clone https://github.com/${OMC_REPO}/vlass2caom2.git && \
   cp ./vlass2caom2/data/ArchiveQuery-2018-08-15.csv /usr/src/ && \
   cp ./vlass2caom2/data/rejected_file_names-2018-09-05.csv /usr/src/ && \
   cp ./vlass2caom2/scripts/config.yml / && \

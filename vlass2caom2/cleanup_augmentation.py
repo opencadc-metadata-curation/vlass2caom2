@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2019.                            (c) 2019.
+#  (c) 2020.                            (c) 2020.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,39 +67,56 @@
 # ***********************************************************************
 #
 
-from vlass2caom2 import main_app
+import logging
+
+from caom2 import Observation
+from caom2pipe import manage_composable as mc
+from vlass2caom2 import VlassName
 
 
-def test_storage_name():
-    test_bit = 'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.' \
-               'pbcor.tt0'
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'T23t09/VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/' \
-               '{}.subim.fits'.format(test_bit)
-    ts1 = main_app.VlassName(url=test_url)
-    ts2 = main_app.VlassName(file_name='{}.subim.fits'.format(test_bit))
-    for ts in [ts1, ts2]:
-        assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
-        assert ts.fname_on_disk == '{}.subim.fits'.format(test_bit), \
-            'wrong fname on disk'
-        assert ts.file_name == '{}.subim.fits'.format(test_bit), 'wrong fname'
-        assert ts.file_id == '{}.subim'.format(test_bit), 'wrong fid'
-        assert ts.file_uri == \
-            'ad:VLASS/{}.subim.fits'.format(test_bit), 'wrong uri'
-        assert ts.model_file_name == \
-            'VLASS1.2.T23t09.J083851+483000.fits.xml', 'wrong model name'
-        assert ts.log_file == 'VLASS1.2.T23t09.J083851+483000.log', \
-            'wrong log file'
-        assert main_app.VlassName.remove_extensions(ts.file_name) == \
-            '{}.subim'.format(test_bit), 'wrong extensions'
-        assert ts.epoch == 'VLASS1.2', 'wrong epoch'
-        assert ts.tile_url == 'https://archive-new.nrao.edu/vlass/quicklook/' \
-                              'VLASS1.2/T23t09/', 'wrong tile url'
-        assert ts.rejected_url == 'https://archive-new.nrao.edu/vlass/' \
-                                  'quicklook/VLASS1.2/QA_REJECTED/', \
-            'wrong rejected url'
-        assert ts.image_pointing_url == 'https://archive-new.nrao.edu/vlass/' \
-                                        'quicklook/VLASS1.2/T23t09/' \
-                                        'VLASS1.2.ql.T23t09.J083851+483000.' \
-                                        '10.2048.v1/', \
-            'wrong image pointing url'
+def visit(observation, **kwargs):
+    """
+    NRAO reprocesses tile + image phase center files. This visitor ensures
+    the respective artifacts are removed from the observations if old versions
+    of those files are removed.
+    """
+    mc.check_param(observation, Observation)
+    url = kwargs.get('url')
+    if url is None:
+        raise mc.CadcException(f'Require url for cleanup augmentation of '
+                               f'{observation.observation_id}')
+
+    count = 0
+    for plane in observation.planes.values():
+        temp = []
+        # SG - 25-03-20 - later versions of files are replacements, so just
+        # automatically remove the 'older' artifacts.
+        #
+        # quicklook check is to cover the future case of having cubes in
+        # the collection
+        if len(plane.artifacts) > 2 and plane.product_id.endswith('quicklook'):
+            # first - get the newest version
+            max_version = 1
+            for artifact in plane.artifacts.values():
+                version = VlassName.get_version(artifact.uri)
+                logging.error(f'version is {version} uri is {artifact.uri}')
+                max_version = max(max_version, version)
+
+            # now collect the list of artifacts not at the maximum version
+            for artifact in plane.artifacts.values():
+                version = VlassName.get_version(artifact.uri)
+                if version != max_version:
+                    temp.append(artifact.uri)
+
+        delete_list = list(set(temp))
+        for entry in delete_list:
+            logging.warning(
+                f'Removing artifact {entry} from observation '
+                f'{observation.observation_id}, plane {plane.product_id}.')
+            count += 1
+            observation.planes[plane.product_id].artifacts.pop(entry)
+
+    logging.info(
+        f'Completed cleanup augmentation for {observation.observation_id}. '
+        f'Remove {count} artifacts from the observation.')
+    return {'artifacts': count}

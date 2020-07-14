@@ -69,7 +69,7 @@
 
 
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import vlass_main, VlassName
+from vlass2caom2 import to_caom2, VlassName
 from caom2.diff import get_differences
 
 import os
@@ -156,7 +156,7 @@ def test_main_app(test_files):
              '--lineage {}'.format(local, input_param, output_file, PLUGIN,
                                    PLUGIN, lineage)).split()
         print(sys.argv)
-        vlass_main()
+        to_caom2()
 
     actual = mc.read_obs_from_file(output_file)
     result = get_differences(expected, actual, 'Observation')
