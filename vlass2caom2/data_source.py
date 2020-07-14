@@ -93,7 +93,7 @@ class NraoPage(dsc.DataSource):
         :return: an astropy Table of file names with time they were modified
         """
         temp = Table(names=('fileName', 'modificationTimestamp'),
-                     dtype=('S128', 'i4'))
+                     dtype=('S384', 'i4'))
         prev_ts = prev_exec_time.timestamp()
         exec_ts = exec_time.timestamp()
         for timestamp in self._todo_list.keys():

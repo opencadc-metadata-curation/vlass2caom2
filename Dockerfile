@@ -1,41 +1,36 @@
-FROM opencadc/matplotlib:3.8-slim
-  
-RUN apt-get update
-RUN apt-get install -y \
-    build-essential \
-    git \
-    wget
+FROM opencadc/matplotlib
+
+RUN apk add --no-cache \
+        bash \
+        coreutils \
+        git \
+        g++ \
+        libmagic \
+        wget
+
+RUN pip install cadcdata \
+    cadctap \
+    caom2 \
+    caom2repo \
+    caom2utils \
+    ftputil \
+    importlib-metadata \
+    pytz \
+    PyYAML \
+    spherical-geometry \
+    vos
 
 RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
-    cp footprintfinder.py /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
-    chmod 755 /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
+    cp footprintfinder.py /usr/local/lib/python3.7/site-packages/footprintfinder.py && \
+    chmod 755 /usr/local/lib/python3.7/site-packages/footprintfinder.py && \
     cd $oldpath
-
-RUN pip3 install cadcdata && \
-    pip3 install cadctap && \
-    pip3 install caom2 && \
-    pip3 install caom2repo && \
-    pip3 install caom2utils && \
-    pip3 install deprecated && \
-    pip3 install ftputil && \
-    pip3 install importlib-metadata && \
-    pip3 install pytz && \
-    pip3 install PyYAML && \
-    pip3 install spherical-geometry && \
-    pip3 install vos
 
 WORKDIR /usr/src/app
 
-RUN pip3 install bs4
+RUN pip install bs4
 
-ARG OPENCADC_BRANCH=master
-ARG OPENCADC_REPO=opencadc
 ARG OMC_REPO=opencadc-metadata-curation
-
-RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git --branch ${OPENCADC_BRANCH} --single-branch && \
-  pip install ./caom2tools/caom2 && \
-  pip install ./caom2tools/caom2utils
 
 RUN git clone https://github.com/${OMC_REPO}/caom2pipe.git && \
   pip install ./caom2pipe
@@ -47,8 +42,6 @@ RUN git clone https://github.com/${OMC_REPO}/vlass2caom2.git && \
   cp ./vlass2caom2/scripts/docker-entrypoint.sh / && \
   pip install ./vlass2caom2
 
-RUN apt-get purge -y \
-    git \
-    wget
+RUN apk --no-cache del git
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
