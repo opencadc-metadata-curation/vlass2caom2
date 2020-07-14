@@ -83,40 +83,9 @@ from vlass2caom2 import work, data_source, scrape, builder
 
 VLASS_BOOKMARK = 'vlass_timestamp'
 
-meta_visitors = [time_bounds_augmentation, quality_augmentation,
+META_VISITORS = [time_bounds_augmentation, quality_augmentation,
                  cleanup_augmentation]
-data_visitors = [position_bounds_augmentation]
-
-
-# def _run_by_file():
-#     """uses a todo file with URLs, which is the only way to find
-#     context information about QA_REJECTED.
-#     """
-#     config = mc.Config()
-#     config.get_executors()
-#     config.features.use_urls = True
-#     with open(config.work_fqn) as f:
-#         todo_list_length = sum(1 for _ in f)
-#     if todo_list_length > 0:
-#         work.init_web_log()
-#         result = ec.run_by_file(config, VlassName, APPLICATION, meta_visitors,
-#                                 data_visitors, chooser=None)
-#     else:
-#         logging.info('No records to process.')
-#         result = 0
-#     return result
-#
-#
-# def run_by_file():
-#     """Wraps _run_by_file in exception handling."""
-#     try:
-#         result = _run_by_file()
-#         sys.exit(result)
-#     except Exception as e:
-#         logging.error(e)
-#         tb = traceback.format_exc()
-#         logging.debug(tb)
-#         sys.exit(-1)
+DATA_VISITORS = [position_bounds_augmentation]
 
 
 def _run_single():
@@ -138,8 +107,8 @@ def _run_single():
     else:
         config.proxy_fqn = sys.argv[2]
     return ec.run_single(config, vlass_name, APPLICATION,
-                         meta_visitors=meta_visitors,
-                         data_visitors=data_visitors)
+                         meta_visitors=META_VISITORS,
+                         data_visitors=DATA_VISITORS)
 
 
 def run_single():
@@ -154,36 +123,7 @@ def run_single():
         sys.exit(-1)
 
 
-def _run_state():
-    """Uses a state file with a timestamp to control which quicklook
-    files will be retrieved from VLASS.
-
-    Ingestion is based on URLs, because a URL that contains the phrase
-    'QA_REJECTED' is the only way to tell if the attribute 'requirements'
-    should be set to 'fail', or not.
-    """
-    config = mc.Config()
-    config.get_executors()
-    state = mc.State(config.state_fqn)
-    start_time = state.get_bookmark(VLASS_BOOKMARK)
-    state_work = work.NraoPageScrape(start_time, state)
-    return ec.run_from_state(config, VlassName, APPLICATION, meta_visitors,
-                             data_visitors, VLASS_BOOKMARK, state_work)
-
-
-def run_state():
-    """Wraps _run_state in exception handling."""
-    try:
-        _run_state()
-        sys.exit(0)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
-
-
-def _run_by_state_rc():
+def _run_by_state():
     """Uses a state file with a timestamp to control which quicklook
     files will be retrieved from VLASS.
 
@@ -205,8 +145,8 @@ def _run_by_state_rc():
         result = rc.run_by_state(config=config,
                                  command_name=APPLICATION,
                                  bookmark_name=VLASS_BOOKMARK,
-                                 meta_visitors=meta_visitors,
-                                 data_visitors=data_visitors,
+                                 meta_visitors=META_VISITORS,
+                                 data_visitors=DATA_VISITORS,
                                  name_builder=name_builder,
                                  source=source,
                                  end_time=max_date)
@@ -216,7 +156,7 @@ def _run_by_state_rc():
 def run_by_state():
     """Wraps _run_by_state in exception handling."""
     try:
-        result = _run_by_state_rc()
+        result = _run_by_state()
         sys.exit(result)
     except Exception as e:
         logging.error(e)
@@ -246,8 +186,8 @@ def _run():
         result = rc.run_by_todo(config=config,
                                 name_builder=name_builder,
                                 command_name=APPLICATION,
-                                meta_visitors=meta_visitors,
-                                data_visitors=data_visitors)
+                                meta_visitors=META_VISITORS,
+                                data_visitors=DATA_VISITORS)
     return result
 
 
