@@ -72,7 +72,6 @@ import sys
 import tempfile
 import traceback
 
-from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
 from vlass2caom2 import VlassName, APPLICATION
@@ -106,7 +105,7 @@ def _run_single():
         config.proxy_fqn = temp.name
     else:
         config.proxy_fqn = sys.argv[2]
-    return ec.run_single(config, vlass_name, APPLICATION,
+    return rc.run_single(config, vlass_name, APPLICATION,
                          meta_visitors=META_VISITORS,
                          data_visitors=DATA_VISITORS)
 
