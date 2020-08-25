@@ -78,7 +78,8 @@ from caom2pipe import manage_composable as mc
 from caom2.diff import get_differences
 
 from vlass2caom2 import scrape, time_bounds_augmentation, composable
-from vlass2caom2 import validator, VlassName
+from vlass2caom2 import validator, VlassName, builder, data_source
+
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
@@ -302,35 +303,23 @@ def test_build_file_url_list():
             temp[1][0]
 
 
-@patch('sys.exit', Mock(return_value=MyExitError))
-def test_run_state_file_modify():
+@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.run_composable.run_by_state')
+def test_run_state_file_modify(run_mock, query_endpoint_mock):
     test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.' \
                  'image.pbcor.tt0.subim.fits'
     # preconditions
     _write_state(TEST_START_TIME_STR)
 
+    run_mock.side_effect = _run_mock
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=TEST_DATA_DIR)
 
     try:
         # execution
-        with patch('caom2pipe.manage_composable.query_endpoint') as \
-                query_endpoint_mock, \
-                patch('caom2pipe.execute_composable.run_from_state') \
-                as run_mock:
-            query_endpoint_mock.side_effect = _query_endpoint
-            composable.run_state()
-            assert run_mock.assert_called, 'should have been called'
-            args, kwargs = run_mock.call_args
-            import logging
-            logging.error(args)
-            assert args[2] == 'vlass2caom2', 'wrong command'
-            test_config = args[0]
-            assert isinstance(test_config, mc.Config), type(test_config)
-            assert test_config.work_fqn == '/usr/src/app/todo.txt', \
-                'wrong todo file'
-            assert test_config.state_fqn == '/usr/src/app/state.yml', \
-                'wrong state file'
+        query_endpoint_mock.side_effect = _query_endpoint
+        composable._run_by_state()
+        assert run_mock.assert_called, 'should have been called'
     finally:
         os.getcwd = getcwd_orig
 
@@ -404,86 +393,82 @@ def test_list_files_on_page():
                'image.pbcor.tt0.subim.fits' in test_list, 'wrong content'
 
 
-def test_run_state():
+@patch('caom2pipe.execute_composable.OrganizeExecutesWithDoOne.do_one')
+@patch('caom2pipe.manage_composable.query_endpoint')
+def test_run_state(query_endpoint_mock, run_mock):
     _write_state('23Apr2019 10:30')
     # execution
-    with patch('caom2pipe.manage_composable.query_endpoint') as \
-            query_endpoint_mock, \
-            patch('caom2pipe.execute_composable._do_one') as run_mock:
-        query_endpoint_mock.side_effect = _query_endpoint
-        getcwd_orig = os.getcwd
-        os.getcwd = Mock(return_value=TEST_DATA_DIR)
-        try:
-            sys.argv = ['test_command']
-            composable._run_state()
-            assert run_mock.called, 'should have been called'
-            args, kwargs = run_mock.call_args
-            assert args[3] == 'vlass2caom2', 'wrong command'
-            test_storage = args[2]
-            assert isinstance(test_storage, VlassName), type(test_storage)
-            assert test_storage.url.startswith(
-                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
-                test_storage.url
-            assert test_storage.url.endswith('.fits'), test_storage.url
-            assert test_storage.file_name == test_storage.fname_on_disk, \
-                'wrong fname on disk'
-            assert run_mock.call_count == 40, 'wrong call count'
-        finally:
-            os.getcwd = getcwd_orig
+    query_endpoint_mock.side_effect = _query_endpoint
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=TEST_DATA_DIR)
+    try:
+        sys.argv = ['test_command']
+        composable._run_by_state()
+        assert run_mock.called, 'should have been called'
+        args, kwargs = run_mock.call_args
+        test_storage = args[0]
+        assert isinstance(test_storage, VlassName), type(test_storage)
+        assert test_storage.url.startswith(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
+            test_storage.url
+        assert test_storage.url.endswith('.fits'), test_storage.url
+        assert test_storage.file_name == test_storage.fname_on_disk, \
+            'wrong fname on disk'
+        assert run_mock.call_count == 40, 'wrong call count'
+    finally:
+        os.getcwd = getcwd_orig
 
 
-def test_run_state_with_work():
+@patch('caom2pipe.execute_composable.OrganizeExecutesWithDoOne.do_one')
+@patch('caom2pipe.manage_composable.query_endpoint')
+def test_run_state_with_work(query_endpoint_mock, run_mock):
     _write_state('23Apr2019 10:30')
     # execution
 
-    def _run_mock_return(ignore1, ignore2, ignore3, ignore4, ignore5, ignore6):
+    def _run_mock_return(ignore1):
         return 0
 
-    with patch('caom2pipe.manage_composable.query_endpoint') as \
-            query_endpoint_mock, \
-            patch('caom2pipe.execute_composable._do_one') as run_mock:
-        query_endpoint_mock.side_effect = _query_endpoint
-        getcwd_orig = os.getcwd
-        os.getcwd = Mock(return_value=TEST_DATA_DIR)
-        try:
-            # the first time through, the build_todo method will
-            # use the MINIMUM of the good_date and the rejected_date,
-            # because of the start times
-            sys.argv = ['test_command']
-            run_mock.side_effect = _run_mock_return
-            test_result = composable._run_state()
-            assert test_result is not None, 'expect a result'
-            assert test_result == 0, 'wrong result'
-            assert run_mock.called, 'should have been called'
-            assert run_mock.call_count == 40, 'wrong call count'
-            args, kwargs = run_mock.call_args
-            assert args[3] == 'vlass2caom2', 'wrong command'
-            test_storage = args[2]
-            assert isinstance(test_storage, VlassName), type(test_storage)
-            assert test_storage.url.startswith(
-                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
-                test_storage.url
-            assert test_storage.url.endswith('.fits'), test_storage.url
-            assert test_storage.file_name == test_storage.fname_on_disk, \
-                'wrong fname'
+    query_endpoint_mock.side_effect = _query_endpoint
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=TEST_DATA_DIR)
+    try:
+        # the first time through, the build_todo method will
+        # use the MINIMUM of the good_date and the rejected_date,
+        # because of the start times
+        sys.argv = ['test_command']
+        run_mock.side_effect = _run_mock_return
+        test_result = composable._run_by_state()
+        assert test_result is not None, 'expect a result'
+        assert test_result == 0, 'wrong result'
+        assert run_mock.called, 'should have been called'
+        assert run_mock.call_count == 40, 'wrong call count'
+        args, kwargs = run_mock.call_args
+        test_storage = args[0]
+        assert isinstance(test_storage, VlassName), type(test_storage)
+        assert test_storage.url.startswith(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
+            test_storage.url
+        assert test_storage.url.endswith('.fits'), test_storage.url
+        assert test_storage.file_name == test_storage.fname_on_disk, \
+            'wrong fname'
 
-            # the second time through, the build_todo method will
-            # use the MAXIMUM of the good_date and the rejected_date,
-            # because of the start times
-            run_mock.reset_mock()
-            assert not run_mock.called, 'reset worked'
-            test_result = composable._run_state()
-            assert test_result is not None, 'expect a result'
-            assert test_result == 0, 'wrong test result'
-            assert run_mock.called, 'run_mock not called'
-            assert run_mock.call_count == 2, 'wrong number of calls'
+        # the second time through, the build_todo method will
+        # use the MAXIMUM of the good_date and the rejected_date,
+        # because of the start times
+        run_mock.reset_mock()
+        assert not run_mock.called, 'reset worked'
+        test_result = composable._run_by_state()
+        assert test_result is not None, 'expect a result'
+        assert test_result == 0, 'wrong test result'
+        assert run_mock.called, 'run_mock not called'
+        assert run_mock.call_count == 2, 'wrong number of calls'
 
-            # and yes, this combination of start dates and comparison dates
-            # will result in some records being processed more than once,
-            # which is better than some records being missed
+        # and yes, this combination of start dates and comparison dates
+        # will result in some records being processed more than once,
+        # which is better than some records being missed
 
-        finally:
-            os.getcwd = getcwd_orig
+    finally:
+        os.getcwd = getcwd_orig
 
 
 def _query_tap(ignore):
@@ -548,3 +533,20 @@ def _write_state(start_time_str):
                                       'VLASS1.2': '01-Nov-2018 00:00',
                                       'VLASS2.1': '01-Jul-2020 00:00'}}}
     mc.write_as_yaml(test_bookmark, STATE_FILE)
+
+
+def _run_mock(**kwargs):
+    import logging
+    logging.error('well, do I get here?')
+    assert kwargs.get('command_name') == 'vlass2caom2'
+    assert kwargs.get('end_time') == datetime(2019, 4, 28, 15, 18)
+    test_config = kwargs.get('config')
+    assert isinstance(test_config, mc.Config), type(test_config)
+    assert test_config.work_fqn == '/usr/src/app/todo.txt', \
+        'wrong todo file'
+    assert test_config.state_fqn == '/usr/src/app/state.yml', \
+        'wrong state file'
+    test_builder = kwargs.get('name_builder')
+    assert isinstance(test_builder, builder.VlassInstanceBuilder)
+    test_source = kwargs.get('source')
+    assert isinstance(test_source, data_source.NraoPage)

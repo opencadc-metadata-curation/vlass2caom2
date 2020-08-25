@@ -78,13 +78,14 @@ from vlass2caom2 import VlassName, APPLICATION
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
 from vlass2caom2 import work, data_source, scrape, builder
+from vlass2caom2 import preview_augmentation
 
 
 VLASS_BOOKMARK = 'vlass_timestamp'
 
 META_VISITORS = [time_bounds_augmentation, quality_augmentation,
                  cleanup_augmentation]
-DATA_VISITORS = [position_bounds_augmentation]
+DATA_VISITORS = [position_bounds_augmentation, preview_augmentation]
 
 
 def _run_single():

@@ -138,7 +138,7 @@ def test_run_state(run_mock, query_mock, data_client_mock):
                   'image.pbcor.tt0.subim.fits'
     try:
         # execution
-        test_result = composable._run_by_state_rc()
+        test_result = composable._run_by_state()
         assert test_result == 0, 'mocking correct execution'
 
         # assert query_mock.called, 'service query not created'
@@ -167,22 +167,23 @@ def test_run_state(run_mock, query_mock, data_client_mock):
 @patch('vlass2caom2.to_caom2')
 @patch('caom2pipe.manage_composable.query_endpoint')
 @patch('caom2pipe.execute_composable.CAOM2RepoClient')
-def test_run_state_rc(repo_client_mock,
-                      query_mock, to_caom2_mock):
+def test_run_state_rc(repo_client_mock, query_mock, to_caom2_mock):
     test_scrape._write_state('24Apr2019 12:34')
     query_mock.side_effect = test_scrape._query_endpoint
     repo_client_mock.return_value.read.return_value = None
+    to_caom2_mock.side_effect = _write_obs_mock
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
     try:
-        test_result = composable._run_by_state_rc()
+        test_result = composable._run_by_state()
         assert test_result is not None, 'expect result'
         assert test_result == 0, 'expect success'
         assert repo_client_mock.return_value.read.called, 'read called'
         assert to_caom2_mock.called, 'to_caom2 called'
         assert query_mock.called, 'what about you?'
         args, kwargs = query_mock.call_args
-        assert args[0].endswith('QA_REJECTED/'), 'wrong processing log'
+        assert args[0].startswith('https://archive-new.nrao.edu/'), \
+            'should be a URL'
     finally:
         os.getcwd = getcwd_orig
 
@@ -242,3 +243,13 @@ END
         [e + delim for e in x.split(delim) if e.strip()]
     headers = [fits.Header.fromstring(e, sep='\n') for e in extensions]
     return headers
+
+
+def _write_obs_mock():
+    from caom2utils import get_gen_proc_arg_parser
+    from caom2 import SimpleObservation, Algorithm
+    args = get_gen_proc_arg_parser().parse_args()
+    obs = SimpleObservation(collection=args.observation[0],
+                            observation_id=args.observation[1],
+                            algorithm=Algorithm(name='exposure'))
+    mc.write_obs_to_file(obs, args.out_obs_xml)
