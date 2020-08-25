@@ -28,7 +28,10 @@ RUN oldpath=`pwd` && cd /tmp && \
 
 WORKDIR /usr/src/app
 
-RUN pip install bs4
+RUN apk add --no-cache jpeg-dev
+
+RUN pip install bs4 \
+    pillow
 
 ARG OMC_REPO=opencadc-metadata-curation
 
