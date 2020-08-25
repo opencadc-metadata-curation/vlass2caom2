@@ -73,6 +73,8 @@ from mock import patch, Mock
 
 from cadctap import CadcTapClient
 from caom2pipe import manage_composable as mc
+from caom2utils import get_gen_proc_arg_parser
+from caom2 import SimpleObservation, Algorithm
 from vlass2caom2 import composable, VlassName, COLLECTION, scrape
 import test_main_app
 import test_scrape
@@ -246,8 +248,6 @@ END
 
 
 def _write_obs_mock():
-    from caom2utils import get_gen_proc_arg_parser
-    from caom2 import SimpleObservation, Algorithm
     args = get_gen_proc_arg_parser().parse_args()
     obs = SimpleObservation(collection=args.observation[0],
                             observation_id=args.observation[1],
