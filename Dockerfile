@@ -1,4 +1,4 @@
-FROM opencadc/matplotlib:3.8-slim
+FROM opencadc/matplotlib
 
 RUN apt-get update -y && apt-get dist-upgrade -y && \
     apt-get install -y build-essential git wget && \
