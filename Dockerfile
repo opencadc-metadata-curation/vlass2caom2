@@ -1,17 +1,18 @@
-FROM opencadc/matplotlib:3.8-slim
+FROM opencadc/matplotlib
 
-RUN apt-get update -y
-RUN apt-get install -y \
-    build-essential \
-    git \
-    wget
+RUN apk add --no-cache \
+        bash \
+        coreutils \
+        git \
+        g++ \
+        libmagic \
+        wget
 
 RUN pip install cadcdata \
     cadctap \
     caom2 \
     caom2repo \
     caom2utils \
-    deprecated \
     ftputil \
     importlib-metadata \
     pytz \
@@ -41,6 +42,6 @@ RUN git clone https://github.com/${OMC_REPO}/vlass2caom2.git && \
   cp ./vlass2caom2/scripts/docker-entrypoint.sh / && \
   pip install ./vlass2caom2
 
-RUN apt-get purge -y git
+RUN apk --no-cache del git
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
