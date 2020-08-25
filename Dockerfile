@@ -1,5 +1,5 @@
 FROM opencadc/matplotlib:3.8-slim
-  
+
 RUN apt-get update -y && apt-get dist-upgrade -y && \
     apt-get install -y build-essential git wget && \
     rm -rf /var/lib/apt/lists/ /tmp/* /var/tmp/*
