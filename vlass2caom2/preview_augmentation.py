@@ -100,7 +100,6 @@ class VlassPreview(mc.PreviewVisitor):
             self._working_dir,  self._storage_name.prev)
         self._thumb_fqn = os.path.join(
             self._working_dir, self._storage_name.thumb)
-        logging.error(self._storage_name.product_id)
         self._logger = logging.getLogger(__name__)
 
     @property
@@ -174,6 +173,7 @@ class VlassPreview(mc.PreviewVisitor):
         # Save as outfile
         plt.savefig(self._preview_fqn, bbox_inches='tight',
                     dpi=int(desired_resolution / height))
+        plt.close(fig)
         count += 1
         self.add_preview(self._storage_name.prev_uri, self._storage_name.prev,
                          ProductType.PREVIEW)
