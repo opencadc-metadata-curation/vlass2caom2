@@ -9,7 +9,7 @@ fi
 
 CONTAINER="bucket.canfar.net/vlass2caom2"
 echo "Get the container"
-docker pull ${CONTAINER} || exit $?
+docker pull ${CONTAINER}
 
 echo "Generate todo list"
 ./visitor_query.sh
