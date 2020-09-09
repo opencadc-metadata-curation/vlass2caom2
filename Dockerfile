@@ -22,8 +22,8 @@ RUN pip install cadcdata \
 
 RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
-    cp footprintfinder.py /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
-    chmod 755 /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
+    cp footprintfinder.py /usr/local/lib/python3.7/site-packages/footprintfinder.py && \
+    chmod 755 /usr/local/lib/python3.7/site-packages/footprintfinder.py && \
     cd $oldpath
 
 WORKDIR /usr/src/app
