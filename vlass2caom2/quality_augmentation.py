@@ -87,9 +87,7 @@ def visit(observation, **kwargs):
     # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/QA_REJECTED/#
     # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/#
     # etc
-    url = None
-    if 'url' in kwargs:
-        url = kwargs['url']
+    url = kwargs.get('url')
 
     count = 0
     for i in observation.planes:

@@ -81,30 +81,36 @@ obs_metadata = None
 
 def visit(observation, **kwargs):
     mc.check_param(observation, Observation)
-
-    # conversation with JJK, 2018-08-08 - until such time as VLASS becomes
-    # a dynamic collection, rely on the time information as provided for all
-    # observations as retrieved on this date from:
-    #
-    # https://archive-new.nrao.edu/vlass/weblog/quicklook/*
-    #
-    # The lowest-level index.html files are scraped to create a csv file
-    # with observation ID, start time, end time, and exposure time.
-
+    cadc_client = kwargs.get('cadc_client')
     count = 0
-    for plane in observation.planes.values():
-        for artifact in plane.artifacts.values():
-            logging.debug('working on artifact {}'.format(artifact.uri))
-            version, reference = _augment(observation.observation_id, artifact)
-            if version is not None:
-                plane.provenance.version = version
-            if reference is not None:
-                plane.provenance.reference = reference
-                count += 1
-    logging.info('Completed time bounds augmentation for {}'.format(
-        observation.observation_id))
-    global obs_metadata
-    obs_metadata = None
+    if cadc_client is None:
+        logging.warning('No cadc_client parameter, no connection for input '
+                        'metadata. Stopping time_bounds_augmentation.')
+
+    else:
+        # conversation with JJK, 2018-08-08 - until such time as VLASS becomes
+        # a dynamic collection, rely on the time information as provided for all
+        # observations as retrieved on this date from:
+        #
+        # https://archive-new.nrao.edu/vlass/weblog/quicklook/*
+        #
+        # The lowest-level index.html files are scraped to create a csv file
+        # with observation ID, start time, end time, and exposure time.
+
+        count = 0
+        for plane in observation.planes.values():
+            for artifact in plane.artifacts.values():
+                logging.debug('working on artifact {}'.format(artifact.uri))
+                version, reference = _augment(observation.observation_id, artifact)
+                if version is not None:
+                    plane.provenance.version = version
+                if reference is not None:
+                    plane.provenance.reference = reference
+                    count += 1
+        logging.info('Completed time bounds augmentation for {}'.format(
+            observation.observation_id))
+        global obs_metadata
+        obs_metadata = None
     return {'artifacts': count}
 
 
