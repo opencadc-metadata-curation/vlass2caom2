@@ -136,21 +136,18 @@ def _run_by_state():
     state = mc.State(config.state_fqn)
     start_time = state.get_bookmark(VLASS_BOOKMARK)
     todo_list, max_date = scrape.build_file_url_list(start_time)
-    result = 0
-    if len(todo_list) > 0:
-        state = mc.State(config.state_fqn)
-        work.init_web_log(state)
-        source = data_source.NraoPage(todo_list)
-        name_builder = builder.VlassInstanceBuilder(config)
-        result = rc.run_by_state(config=config,
-                                 command_name=APPLICATION,
-                                 bookmark_name=VLASS_BOOKMARK,
-                                 meta_visitors=META_VISITORS,
-                                 data_visitors=DATA_VISITORS,
-                                 name_builder=name_builder,
-                                 source=source,
-                                 end_time=max_date)
-    return result
+    state = mc.State(config.state_fqn)
+    work.init_web_log(state, config)
+    source = data_source.NraoPage(todo_list)
+    name_builder = builder.VlassInstanceBuilder(config)
+    return rc.run_by_state(config=config,
+                           command_name=APPLICATION,
+                           bookmark_name=VLASS_BOOKMARK,
+                           meta_visitors=META_VISITORS,
+                           data_visitors=DATA_VISITORS,
+                           name_builder=name_builder,
+                           source=source,
+                           end_time=max_date)
 
 
 def run_by_state():
@@ -176,19 +173,14 @@ def _run():
     """
     config = mc.Config()
     config.get_executors()
-    with open(config.work_fqn) as f:
-        todo_list_length = sum(1 for _ in f)
-    result = 0
-    if todo_list_length > 0:
-        state = mc.State(config.state_fqn)
-        work.init_web_log(state)
-        name_builder = builder.VlassInstanceBuilder(config)
-        result = rc.run_by_todo(config=config,
-                                name_builder=name_builder,
-                                command_name=APPLICATION,
-                                meta_visitors=META_VISITORS,
-                                data_visitors=DATA_VISITORS)
-    return result
+    state = mc.State(config.state_fqn)
+    work.init_web_log(state, config)
+    name_builder = builder.VlassInstanceBuilder(config)
+    return rc.run_by_todo(config=config,
+                          name_builder=name_builder,
+                          command_name=APPLICATION,
+                          meta_visitors=META_VISITORS,
+                          data_visitors=DATA_VISITORS)
 
 
 def run():
