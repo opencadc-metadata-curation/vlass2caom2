@@ -33,7 +33,12 @@ RUN apk add --no-cache jpeg-dev
 RUN pip install bs4 \
     pillow
 
+ARG OPENCADC_REPO=opencadc
 ARG OMC_REPO=opencadc-metadata-curation
+
+RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git && \
+  pip install ./caom2tools/caom2 && \
+  pip install ./caom2tools/caom2utils
 
 RUN git clone https://github.com/${OMC_REPO}/caom2pipe.git && \
   pip install ./caom2pipe
