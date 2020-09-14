@@ -100,15 +100,17 @@ def visit(observation, **kwargs):
         count = 0
         for plane in observation.planes.values():
             for artifact in plane.artifacts.values():
-                logging.debug('working on artifact {}'.format(artifact.uri))
-                version, reference = _augment(observation.observation_id, artifact)
-                if version is not None:
-                    plane.provenance.version = version
-                if reference is not None:
-                    plane.provenance.reference = reference
-                    count += 1
-        logging.info('Completed time bounds augmentation for {}'.format(
-            observation.observation_id))
+                if len(artifact.parts) > 0:
+                    logging.debug(f'working on artifact {artifact.uri}')
+                    version, reference = _augment(
+                        observation.observation_id, artifact)
+                    if version is not None:
+                        plane.provenance.version = version
+                    if reference is not None:
+                        plane.provenance.reference = reference
+                        count += 1
+        logging.info(f'Completed time bounds augmentation for '
+                     f'{observation.observation_id}')
         global obs_metadata
         obs_metadata = None
     return {'artifacts': count}
@@ -143,8 +145,7 @@ def _augment_artifact(obs_id, artifact, csv_file):
             break
 
     if not found:
-        logging.debug(
-            'Fall back to scraping for time metadata for {}'.format(obs_id))
+        logging.debug(f'Fall back to scraping for time metadata for {obs_id}')
         global obs_metadata
         if obs_metadata is None:
             obs_metadata = scrape.retrieve_obs_metadata(obs_id)
@@ -157,15 +158,14 @@ def _augment_artifact(obs_id, artifact, csv_file):
             reference = obs_metadata.get('reference')
             found = True
         else:
-            logging.warning('Found no time metadata for {}'.format(obs_id))
+            logging.warning(f'Found no time metadata for {obs_id}')
 
     if found:
         time_axis = CoordAxis1D(Axis('TIME', 'd'))
         time_axis.bounds = bounds
         chunk.time = TemporalWCS(time_axis)
         chunk.time.exposure = exposure
-        chunk.time_axis = 5
-        chunk.naxis = 4
+        chunk.time_axis = None
         return version, reference
     else:
         return None, None
