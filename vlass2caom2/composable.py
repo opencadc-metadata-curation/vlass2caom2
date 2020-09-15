@@ -134,7 +134,9 @@ def _run_by_state():
     config = mc.Config()
     config.get_executors()
     state = mc.State(config.state_fqn)
-    start_time = state.get_bookmark(VLASS_BOOKMARK)
+    # a way to get a datetime from a string, or maybe a datetime, depending
+    # on the execution environment
+    start_time = mc.increment_time(state.get_bookmark(VLASS_BOOKMARK), 0)
     todo_list, max_date = scrape.build_file_url_list(start_time)
     state = mc.State(config.state_fqn)
     work.init_web_log(state, config)
