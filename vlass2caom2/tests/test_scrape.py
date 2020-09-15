@@ -253,7 +253,8 @@ def test_visit():
         scrape.web_log_content[test_id] = TEST_START_TIME - timedelta(hours=1)
         test_obs = mc.read_obs_from_file(
             '{}.xml'.format(os.path.join(TEST_DATA_DIR, TEST_OBS_ID)))
-        test_result = time_bounds_augmentation.visit(test_obs)
+        kwargs = {'cadc_client': Mock()}
+        test_result = time_bounds_augmentation.visit(test_obs, **kwargs)
         assert test_result is not None, 'expected a result'
         assert test_result['artifacts'] == 2, 'wrong result'
 

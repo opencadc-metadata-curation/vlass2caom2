@@ -85,21 +85,16 @@ def visit(observation, **kwargs):
     assert isinstance(observation, Observation), \
         'Input parameter must be an Observation'
 
-    working_dir = './'
-    if 'working_directory' in kwargs:
-        working_dir = kwargs['working_directory']
-    if 'science_file' in kwargs:
-        science_file = kwargs['science_file']
-    else:
+    working_dir = kwargs.get('working_directory', './')
+    science_file = kwargs.get('science_file')
+    if science_file is None:
         raise mc.CadcException(
             'No science_file parameter provided to vistor '
             'for obs {}.'.format(observation.observation_id))
     # TODO - this moves location handling structures to other than the
     # main composable code - this could be MUCH better handled, just not
     # sure how right now
-    log_file_directory = None
-    if 'log_file_directory' in kwargs:
-        log_file_directory = kwargs['log_file_directory']
+    log_file_directory = kwargs.get('log_file_directory')
 
     science_fqn = os.path.join(working_dir, science_file)
     count = 0

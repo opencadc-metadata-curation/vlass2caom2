@@ -67,13 +67,14 @@
 # ***********************************************************************
 #
 
+import logging
 from datetime import datetime
 
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import scrape
 
 
-__all__ = ['init_web_log', 'NraoPageScrape']
+__all__ = ['init_web_log']
 
 VLASS_CONTEXT = 'vlass_context'
 
@@ -88,7 +89,7 @@ def make_time(value):
     return result
 
 
-def init_web_log(state):
+def init_web_log(state, config):
     """Cache content of https:archive-new.nrao.edu/vlass/weblog, because
     it's large and takes a long time to read. This cached information
     is how time and provenance metadata is found for the individual
@@ -97,30 +98,9 @@ def init_web_log(state):
     epochs = state.get_context(VLASS_CONTEXT)
     for key, value in epochs.items():
         epochs[key] = make_time(value)
-    scrape.init_web_log_content(epochs)
-
-
-class NraoPageScrape(mc.Work):
-    """Put the NRAO page scraping behind the API for state file-based
-    CAOM record creation.
-    """
-
-    def __init__(self, from_time, state):
-        # make a string into a datetime value
-        temp = mc.increment_time(from_time, 0)
-        self.todo_list, max_date = scrape.build_file_url_list(temp)
-        super(NraoPageScrape, self).__init__(max_date.timestamp())
-        self._state = state
-
-    def initialize(self):
-        init_web_log(self._state)
-
-    def todo(self, prev_exec_date, exec_date):
-        """Time-boxing the file url list returned from the site scrape."""
-        temp = []
-        prev_ts = prev_exec_date.timestamp()
-        exec_ts = exec_date.timestamp()
-        for timestamp in self.todo_list.keys():
-            if prev_ts < timestamp <= exec_ts:
-                temp += self.todo_list[timestamp]
-        return list(set(temp))
+    if mc.TaskType.SCRAPE in config.task_types:
+        logging.warning('No weblog listing from NRAO. No time and provenance '
+                        'metadata generated.')
+    else:
+        logging.info('Initialize weblog listing from NRAO.')
+        scrape.init_web_log_content(epochs)

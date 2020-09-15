@@ -169,11 +169,15 @@ def test_run_state(run_mock, query_mock, data_client_mock):
 @patch('vlass2caom2.to_caom2')
 @patch('caom2pipe.manage_composable.query_endpoint')
 @patch('caom2pipe.execute_composable.CAOM2RepoClient')
-def test_run_state_rc(repo_client_mock, query_mock, to_caom2_mock):
+@patch('caom2pipe.execute_composable.CadcDataClient')
+@patch('cadcdata.CadcDataClient.get_file_info')
+def test_run_state_rc(get_file_info_mock, data_client_mock,
+                      repo_client_mock, query_mock, to_caom2_mock):
     test_scrape._write_state('24Apr2019 12:34')
     query_mock.side_effect = test_scrape._query_endpoint
     repo_client_mock.return_value.read.return_value = None
     to_caom2_mock.side_effect = _write_obs_mock
+    get_file_info_mock.side_effect = _mock_get_file_info
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
     try:

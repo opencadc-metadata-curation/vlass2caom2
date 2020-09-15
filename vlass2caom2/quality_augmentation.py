@@ -87,19 +87,15 @@ def visit(observation, **kwargs):
     # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/QA_REJECTED/#
     # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/#
     # etc
-    url = None
-    if 'url' in kwargs:
-        url = kwargs['url']
+    url = kwargs.get('url')
 
     count = 0
-    for i in observation.planes:
-        plane = observation.planes[i]
-        for j in plane.artifacts:
-            artifact = plane.artifacts[j]
-            logging.debug('working on artifact {}'.format(artifact.uri))
+    for plane in observation.planes.values():
+        for artifact in plane.artifacts.values():
+            logging.debug(f'working on artifact {artifact.uri}')
             count += _augment(observation, artifact, url)
-    logging.info('Completed quality augmentation for {}'.format(
-        observation.observation_id))
+    logging.info(
+        f'Completed quality augmentation for {observation.observation_id}')
     return {'observations': count}
 
 
@@ -115,8 +111,7 @@ def _augment(observation, artifact, url):
     for row in csv_file:
         for column in row:
             if file_name in column:
-                logging.debug(
-                    'Found QA Rejected file {}'.format(file_name))
+                logging.debug(f'Found QA Rejected file {file_name}')
                 _set_failed(observation)
                 return 1
 

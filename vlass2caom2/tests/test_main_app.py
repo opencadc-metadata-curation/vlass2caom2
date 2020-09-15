@@ -135,7 +135,7 @@ def test_main_app(test_files):
     else:
         input_param = '--observation {} {}'.format(COLLECTION, obs_id)
     lineage = _get_lineage(obs_id, test_files)
-    output_file = 'actual.{}.xml'.format(obs_id)
+    output_file = '{}.actual.xml'.format(obs_id)
     local = _get_local(test_files[1:])
 
     with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
