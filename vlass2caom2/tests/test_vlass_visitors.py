@@ -150,7 +150,10 @@ def test_aug_visit_quality_works():
 
 
 def test_aug_visit_quality_works_uri():
-    rejected_uri = 'https://archive-new.nrao.edu/QA_REJECTED'
+    rejected_uri = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
+                   'QA_REJECTED/VLASS1.1.ql.T01t09.J040228-363000.10.2048.v1/' \
+                   'VLASS1.1.ql.T01t09.J040228-363000.10.2048.v1.I.iter1.' \
+                   'image.pbcor.tt0.rms.subim.fits'
     test_file = os.path.join(
         TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
     test_obs = mc.read_obs_from_file(test_file)

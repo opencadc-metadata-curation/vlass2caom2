@@ -101,7 +101,7 @@ class VlassName(StorageName):
     the absence of that functionality in this class.
     """
     def __init__(self, obs_id=None, file_name=None, fname_on_disk=None,
-                 url=None):
+                 url=None, entry=None):
         if obs_id is None:
             if file_name is not None:
                 obs_id = VlassName.get_obs_id_from_file_name(file_name)
@@ -111,7 +111,7 @@ class VlassName(StorageName):
                 obs_id = VlassName.get_obs_id_from_file_name(
                     url.split('/')[-1])
         super(VlassName, self).__init__(
-            obs_id, COLLECTION, COLLECTION_PATTERN)
+            obs_id, COLLECTION, COLLECTION_PATTERN, entry=entry)
         product_id = None
         if file_name is not None:
             product_id = VlassName.get_product_id_from_file_name(file_name)
