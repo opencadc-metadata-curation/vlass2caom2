@@ -72,10 +72,11 @@ import os
 from mock import patch, Mock
 
 from cadctap import CadcTapClient
+from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from caom2utils import get_gen_proc_arg_parser
 from caom2 import SimpleObservation, Algorithm
-from vlass2caom2 import composable, VlassName, COLLECTION, scrape
+from vlass2caom2 import composable, VlassName, COLLECTION, scrape, APPLICATION
 import test_main_app
 import test_scrape
 
@@ -192,6 +193,36 @@ def test_run_state_rc(get_file_info_mock, data_client_mock,
             'should be a URL'
     finally:
         os.getcwd = getcwd_orig
+
+
+@patch('caom2pipe.manage_composable.data_put')
+def test_store(put_mock):
+    test_config = mc.Config()
+    test_config.logging_level = 'ERROR'
+    test_config.working_directory = '/tmp'
+    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/' \
+               'T10t12/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/' \
+               'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.image.' \
+               'pbcor.tt0.rms.subim.fits'
+    test_storage_name = VlassName(url=test_url, entry=test_url)
+    transferrer = Mock()
+    cred_param = Mock()
+    cadc_data_client = Mock()
+    caom_repo_client = Mock()
+    observable = mc.Observable(
+        mc.Rejected('/tmp/rejected.yml'), mc.Metrics(test_config))
+    test_subject = ec.Store(test_config, test_storage_name, APPLICATION,
+                            cred_param, cadc_data_client, caom_repo_client,
+                            observable, transferrer)
+    test_subject.execute(None)
+    assert put_mock.called, 'expect a call'
+    args, kwargs = put_mock.call_args
+    assert args[2] == test_storage_name.file_name, 'wrong file name'
+    assert transferrer.get.called, 'expect a transfer call'
+    args, kwargs = transferrer.get.call_args
+    assert args[0] == test_url, 'wrong source parameter'
+    assert args[1] == f'/tmp/{test_storage_name.file_name}', \
+        'wrong destination parameter'
 
 
 def _cmd_direct_mock():
