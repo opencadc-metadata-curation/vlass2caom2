@@ -89,7 +89,8 @@ web_log_content = {}
 
 
 def make_date_time(from_str):
-    for fmt in ['%d%b%Y %H:%M', '%Y-%m-%d %H:%M', '%d-%b-%Y %H:%M']:
+    for fmt in ['%d%b%Y %H:%M', '%Y-%m-%d %H:%M', '%Y%m%d %H:%M',
+                '%d-%b-%Y %H:%M']:
         try:
             dt = datetime.strptime(from_str, fmt)
             break
