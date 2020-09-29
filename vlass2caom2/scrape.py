@@ -82,7 +82,8 @@ __all__ = ['build_good_todo', 'retrieve_obs_metadata',
            'list_files_on_page', 'build_file_url_list', 'build_url_list']
 
 
-PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
+# PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
+PAGE_TIME_FORMAT = '%Y-%m-%d %H:%M'
 QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
 QL_WEB_LOG_URL = 'https://archive-new.nrao.edu/vlass/weblog/quicklook/'
 
