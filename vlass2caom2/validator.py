@@ -130,8 +130,7 @@ def read_list_from_nrao(nrao_state_fqn):
     if os.path.exists(nrao_state_fqn):
         vlass_list = mc.read_as_yaml(nrao_state_fqn)
     else:
-        start_date = datetime.strptime('01Jan1990 00:00',
-                                       scrape.PAGE_TIME_FORMAT)
+        start_date = scrape.make_date_time('01Jan1990 00:00')
         vlass_list, vlass_date = scrape.build_file_url_list(start_date)
         mc.write_as_yaml(vlass_list, nrao_state_fqn)
     result = {}
@@ -148,8 +147,7 @@ def read_file_url_list_from_nrao(nrao_state_fqn):
     if os.path.exists(nrao_state_fqn):
         vlass_list = mc.read_as_yaml(nrao_state_fqn)
     else:
-        start_date = datetime.strptime('01Jan1990 00:00',
-                                       scrape.PAGE_TIME_FORMAT)
+        start_date = scrape.make_date_time('01Jan1990 00:00')
         vlass_list = scrape.build_url_list(start_date)
         mc.write_as_yaml(vlass_list, nrao_state_fqn)
     result = {}

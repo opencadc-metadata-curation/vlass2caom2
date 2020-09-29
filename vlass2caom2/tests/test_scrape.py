@@ -95,8 +95,7 @@ REJECT_INDEX = os.path.join(TEST_DATA_DIR, 'rejected_index.html')
 SPECIFIC_REJECTED = os.path.join(TEST_DATA_DIR, 'specific_rejected.html')
 SPECIFIC_NO_FILES = os.path.join(TEST_DATA_DIR, 'no_files.html')
 TEST_START_TIME_STR = '24Apr2019 12:34'
-TEST_START_TIME = datetime.strptime(TEST_START_TIME_STR,
-                                    scrape.PAGE_TIME_FORMAT)
+TEST_START_TIME = scrape.make_date_time(TEST_START_TIME_STR)
 STATE_FILE = '/usr/src/app/state.yml'
 TEST_OBS_ID = 'VLASS1.2.T07t14.J084202-123000'
 
@@ -154,8 +153,7 @@ def test_build_todo_good():
     with patch('caom2pipe.manage_composable.query_endpoint') as \
             query_endpoint_mock:
         query_endpoint_mock.side_effect = _query_endpoint
-        start_time = datetime.strptime('24Apr2019 12:34',
-                                       scrape.PAGE_TIME_FORMAT)
+        start_time = scrape.make_date_time('24Apr2019 12:34')
         test_result_list, test_result_date = scrape.build_good_todo(
             start_time)
         assert test_result_list is not None, 'expected list result'
@@ -526,7 +524,7 @@ def _query_endpoint(url, timeout=-1):
 
 
 def _write_state(start_time_str):
-    test_time = datetime.strptime(start_time_str, scrape.PAGE_TIME_FORMAT)
+    test_time = scrape.make_date_time(start_time_str)
     test_bookmark = {'bookmarks': {'vlass_timestamp':
                                         {'last_record': test_time}},
                      'context': {'vlass_context':
