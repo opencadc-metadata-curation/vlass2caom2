@@ -80,7 +80,7 @@ import test_main_app
 import test_scrape
 
 
-@patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd_direct')
+@patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd')
 @patch('caom2pipe.execute_composable.CAOM2RepoClient')
 @patch('caom2pipe.execute_composable.CadcDataClient')
 def test_run_by_builder(data_client_mock, repo_mock, exec_mock):

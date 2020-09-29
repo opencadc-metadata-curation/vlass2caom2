@@ -77,16 +77,27 @@ from bs4 import BeautifulSoup
 
 from caom2pipe import manage_composable as mc
 
-__all__ = ['build_good_todo', 'retrieve_obs_metadata',
-           'build_qa_rejected_todo', 'PAGE_TIME_FORMAT', 'query_top_page',
+__all__ = ['build_good_todo', 'make_date_time', 'retrieve_obs_metadata',
+           'build_qa_rejected_todo', 'query_top_page',
            'list_files_on_page', 'build_file_url_list', 'build_url_list']
 
 
-PAGE_TIME_FORMAT = '%d%b%Y %H:%M'
 QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
 QL_WEB_LOG_URL = 'https://archive-new.nrao.edu/vlass/weblog/quicklook/'
 
 web_log_content = {}
+
+
+def make_date_time(from_str):
+    for fmt in ['%d%b%Y %H:%M', '%Y-%m-%d %H:%M', '%d-%b-%Y %H:%M']:
+        try:
+            dt = datetime.strptime(from_str, fmt)
+            break
+        except ValueError:
+            dt = None
+    if dt is None:
+        raise mc.CadcException(f'Could not make datetime from {from_str}')
+    return dt
 
 
 def _parse_id_page(html_string, start_date):
@@ -99,7 +110,7 @@ def _parse_id_page(html_string, start_date):
     for ii in hrefs:
         y = ii.get('href')
         z = ii.next_element.next_element.string.replace('-', '').strip()
-        dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+        dt = make_date_time(z)
         if dt >= start_date:
             logging.info('Adding ID Page: {}'.format(y))
             result[y] = dt
@@ -119,7 +130,7 @@ def _parse_tile_page(html_string, start_date):
         y = ii.get('href')
         if y.startswith('T'):
             z = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+            dt = make_date_time(z)
             if dt >= start_date:
                 logging.info('Adding Tile Page: {}'.format(y))
                 result[y] = dt
@@ -139,7 +150,7 @@ def _parse_top_page(html_string, start_date):
         y = ii.get('href')
         if y.startswith('VLASS') and y.endswith('/'):
             z = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+            dt = make_date_time(z)
             if dt >= start_date:
                 logging.info('Adding epoch: {}'.format(y))
                 result[y] = dt
@@ -159,7 +170,7 @@ def _parse_top_page_no_date(html_string):
         y = ii.get('href')
         if y.startswith('VLASS') and y.endswith('/'):
             z = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+            dt = make_date_time(z)
             logging.info('Adding epoch: {}'.format(y))
             result[y] = dt
     return result
@@ -278,7 +289,7 @@ def _parse_rejected_page(html_string, epoch, start_date, url):
     rejected = soup.find_all('a', string=re.compile(epoch))
     for ii in rejected:
         temp = ii.next_element.next_element.string.replace('-', '').strip()
-        dt = datetime.strptime(temp, PAGE_TIME_FORMAT)
+        dt = make_date_time(temp)
         if dt >= start_date:
             new_url = '{}{}'.format(url, ii.get_text())
             logging.debug('Adding rejected {}'.format(new_url))
@@ -389,7 +400,7 @@ def _parse_page_for_hrefs(html_string, reference, start_date):
     for ii in hrefs:
         y = ii.get('href')
         z = ii.next_element.next_element.string.replace('-', '').strip()
-        dt = datetime.strptime(z, PAGE_TIME_FORMAT)
+        dt = make_date_time(z)
         if dt >= start_date:
             logging.info('Adding {}'.format(y))
             result[y] = dt
@@ -407,7 +418,8 @@ def _parse_specific_file_list_page(html_string, start_time):
         # looks like 16-Apr-2018 15:43   53M, make it into a datetime
         # for comparison
         temp = ii.next_element.next_element.string.split()
-        dt = datetime.strptime(f'{temp[0]} {temp[1]}', '%d-%b-%Y %H:%M')
+        # dt = datetime.strptime(f'{temp[0]} {temp[1]}', '%d-%b-%Y %H:%M')
+        dt = make_date_time(f'{temp[0]} {temp[1]}')
         if dt >= start_time:
             # the hrefs are fully-qualified URLS
             f_url = ii.get('href')
@@ -557,7 +569,7 @@ def build_url_list(start_date):
 def query_top_page():
     """Query the timestamp from the top page, for reporting.
     """
-    start_date = datetime.strptime('01Jan2017 12:00', PAGE_TIME_FORMAT)
+    start_date = make_date_time('01Jan2017 12:00')
     response = None
     max_date = None
 
@@ -569,8 +581,7 @@ def query_top_page():
         else:
             epochs = _parse_top_page(response.text, start_date)
             for key, value in epochs.items():
-                logging.info('{} {}'.format(
-                    key, datetime.strftime(value, PAGE_TIME_FORMAT)))
+                logging.info('{} {}'.format(key, make_date_time(value)))
                 if max_date is None:
                     max_date = value
                 else:
