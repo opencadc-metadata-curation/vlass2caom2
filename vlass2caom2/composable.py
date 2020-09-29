@@ -74,6 +74,7 @@ import traceback
 
 from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
+from caom2pipe import transfer_composable as tc
 from vlass2caom2 import VlassName, APPLICATION
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
@@ -142,6 +143,7 @@ def _run_by_state():
     work.init_web_log(state, config)
     source = data_source.NraoPage(todo_list)
     name_builder = builder.VlassInstanceBuilder(config)
+    transferrer = tc.HttpTransfer()
     return rc.run_by_state(config=config,
                            command_name=APPLICATION,
                            bookmark_name=VLASS_BOOKMARK,
@@ -149,7 +151,8 @@ def _run_by_state():
                            data_visitors=DATA_VISITORS,
                            name_builder=name_builder,
                            source=source,
-                           end_time=max_date)
+                           end_time=max_date,
+                           transferrer=transferrer)
 
 
 def run_by_state():
@@ -178,11 +181,13 @@ def _run():
     state = mc.State(config.state_fqn)
     work.init_web_log(state, config)
     name_builder = builder.VlassInstanceBuilder(config)
+    transferrer = tc.HttpTransfer()
     return rc.run_by_todo(config=config,
                           name_builder=name_builder,
                           command_name=APPLICATION,
                           meta_visitors=META_VISITORS,
-                          data_visitors=DATA_VISITORS)
+                          data_visitors=DATA_VISITORS,
+                          transferrer=transferrer)
 
 
 def run():
