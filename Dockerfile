@@ -27,8 +27,6 @@ RUN oldpath=`pwd` && cd /tmp && \
 
 WORKDIR /usr/src/app
 
-# RUN apk add --no-cache jpeg-dev
-
 RUN pip install bs4 \
     pillow
 
