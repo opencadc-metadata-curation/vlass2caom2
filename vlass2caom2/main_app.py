@@ -138,6 +138,7 @@ class VlassName(StorageName):
             self.file_id = VlassName.remove_extensions(self.file_name)
             self.obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
             self._url = url
+        self._version = VlassName.get_version(self.file_name)
 
     @property
     def epoch(self):
@@ -193,6 +194,10 @@ class VlassName(StorageName):
     def is_valid(self):
         return True
 
+    @property
+    def version(self):
+        return self._version
+
     @staticmethod
     def get_obs_id_from_file_name(file_name):
         """The obs id is made of the VLASS epoch, tile name, and image centre
@@ -210,11 +215,15 @@ class VlassName(StorageName):
         return '{}.quicklook'.format(obs_id)
 
     @staticmethod
-    def get_version(uri):
+    def get_version(entry):
+        """The parameter may be a URI, or just the file name."""
         # file name looks like:
         # 'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.
         #                'pbcor.tt0.rms.subim.fits'
-        bits = mc.CaomName(uri).file_name.split('.')
+        file_name = entry
+        if '/' in entry:
+            file_name = mc.CaomName(entry).file_name
+        bits = file_name.split('.')
         version_str = bits[7].replace('v', '')
         return mc.to_int(version_str)
 
