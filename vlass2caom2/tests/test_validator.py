@@ -69,8 +69,10 @@
 
 import os
 
+from datetime import datetime
+
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import validator
+from vlass2caom2 import validator, scrape
 
 from mock import patch, Mock
 import test_main_app, test_scrape
@@ -166,3 +168,39 @@ def test_validator(http_mock, caps_mock, post_mock):
         assert compare in test_cache, 'wrong cached result'
     finally:
         os.getcwd = getcwd_orig
+
+
+def test_multiple_versions():
+    with open(f'{test_main_app.TEST_DATA_DIR}/multiple_versions_tile.html',
+              'r') as f:
+        test_string = f.read()
+    test_start_date = datetime.strptime('2018-01-01', '%Y-%m-%d')
+    start_content = scrape._parse_id_page(test_string, test_start_date)
+    test_content = {}
+    for key, value in start_content.items():
+        test_key1 = f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
+                    f'T23t13{key}/{key.strip("/")}.I.iter1.image.pbcor.tt0.' \
+                    f'subim.fits'
+        test_key2 = f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
+                    f'T23t13{key}/{key.strip("/")}.I.iter1.image.pbcor.tt0.' \
+                    f'rms.subim.fits'
+        test_content[test_key1] = value.timestamp()
+        test_content[test_key2] = value.timestamp()
+    test_result, test_validate_dict_result = \
+        validator.get_file_url_list_max_versions(test_content)
+    assert test_result is not None, 'expect a test result'
+    assert test_validate_dict_result is not None, 'expect a test result'
+    assert len(test_result) == 82, 'wrong test result len'
+    assert len(test_validate_dict_result) == 82, \
+        'wrong test validate dict result len'
+
+    for multiple in ['VLASS1.1.ql.T23t13.J120259+483000.10.2048',
+                     'VLASS1.1.ql.T23t13.J125953+483000.10.2048']:
+        l1 = f'{multiple}.v1.I.iter1.image.pbcor.tt0.subim.fits'
+        l2 = f'{multiple}.v2.I.iter1.image.pbcor.tt0.subim.fits'
+        assert l1 not in test_result.keys(), f'{l1} in test_result keys'
+        assert l2 in test_result.keys(), f'{l2} not in test_result keys'
+        assert l1 not in test_validate_dict_result.keys(), \
+            f'{l1} in test_validate_dict_result keys'
+        assert l2 in test_validate_dict_result.keys(), \
+            f'{l2} not in test_validate_dict_result keys'

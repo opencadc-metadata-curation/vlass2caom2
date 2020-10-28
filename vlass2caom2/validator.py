@@ -72,7 +72,7 @@ import logging
 import os
 import traceback
 
-from datetime import datetime
+from collections import defaultdict
 from urllib import parse as parse
 
 from astropy.io.votable import parse_single_table
@@ -81,7 +81,7 @@ from cadcutils import net
 from cadctap import CadcTapClient
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import APPLICATION, scrape
+from vlass2caom2 import APPLICATION, scrape, VlassName
 
 __all__ = ['VlassValidator', 'validate']
 
@@ -144,22 +144,69 @@ def read_list_from_nrao(nrao_state_fqn):
 
 
 def read_file_url_list_from_nrao(nrao_state_fqn):
+    """
+    :param nrao_state_fqn: str cache file name
+    :return: result dict key is file_name, value is timestamp from NRAO site
+        of file
+        validate_dict key is file_name, value is NRAO URL of file
+    """
     if os.path.exists(nrao_state_fqn):
         vlass_list = mc.read_as_yaml(nrao_state_fqn)
     else:
         start_date = scrape.make_date_time('01Jan1990 00:00')
         vlass_list = scrape.build_url_list(start_date)
         mc.write_as_yaml(vlass_list, nrao_state_fqn)
+    result, validate_dict = get_file_url_list_max_versions(vlass_list)
+    return result, validate_dict
+
+
+def get_file_url_list_max_versions(nrao_dict):
+    """
+    SG - 22-10-20 - ignore old versions for validation
+
+    :param nrao_dict: dict, keys are NRAO URLs, values are seconds since epoch
+        timestamp of the URL at NRAO
+    :return:
+    """
+    obs_id_dict = defaultdict(list)
+    # Identify the observation IDs, which are version in-sensitive. This will
+    # have the effect of building up a list of URLs of all versions by
+    # observation ID
+    for key, value in nrao_dict.items():
+        storage_name = VlassName(url=key)
+        # 0 - url
+        # 1 - version
+        # 2 - dt
+        # 3 - f_name
+        obs_id_dict[storage_name.obs_id].append(
+            [key, storage_name.version, value, storage_name.file_name])
+
+    # now handle the URLs based on how many there are per observation ID
     result = {}
     validate_dict = {}
-    for url, dt in vlass_list.items():
-        # remove the fully-qualified path names from the validator list while
-        # creating a dictionary where the file name is the key, and the
-        # fully-qualified file name at NRAO is the value
-        f_name = url.split('/')[-1]
-        result[f_name] = dt
-        validate_dict[f_name] = url
+    for key, value in obs_id_dict.items():
+        if len(value) <= 2:
+            # remove the fully-qualified path names from the validator list
+            # while creating a dictionary where the file name is the key, and
+            # the fully-qualified file name at NRAO is the value
+            #
+            for entry in value:
+                result[entry[3]] = entry[2]
+                validate_dict[entry[3]] = entry[0]
+        else:
+            max_version = _get_max_version(value)
+            for entry in value:
+                if max_version == entry[1]:
+                    result[entry[3]] = entry[2]
+                    validate_dict[entry[3]] = entry[0]
     return result, validate_dict
+
+
+def _get_max_version(entries):
+    max_version = 1
+    for entry in entries:
+        max_version = max(max_version, entry[1])
+    return max_version
 
 
 class VlassValidator(mc.Validator):

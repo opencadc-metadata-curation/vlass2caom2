@@ -221,7 +221,8 @@ def test_store(put_mock):
     assert transferrer.get.called, 'expect a transfer call'
     args, kwargs = transferrer.get.call_args
     assert args[0] == test_url, 'wrong source parameter'
-    assert args[1] == f'/tmp/{test_storage_name.file_name}', \
+    assert args[1] == f'/tmp/{test_storage_name.obs_id}/' \
+                      f'{test_storage_name.file_name}',\
         'wrong destination parameter'
 
 
