@@ -178,7 +178,8 @@ def test_aug_visit_position_bounds():
                    'iter1.image.pbcor.tt0.subim'
     test_input_file = f'/test_files/{test_file_id}.fits'
     if not os.path.exists(test_input_file):
-        shutil.copy(f'/usr/src/app/test_files/{test_file_id}.fits',
+        shutil.copy(f'/usr/src/app/vlass2caom2/int_test/test_files/'
+                    f'{test_file_id}.fits',
                     test_input_file)
     test_file = os.path.join(TEST_DATA_DIR, 'fpf_start_obs.xml')
     test_obs = mc.read_obs_from_file(test_file)

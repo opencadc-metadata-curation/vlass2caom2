@@ -69,7 +69,6 @@
 
 import logging
 
-from astropy.table import Table
 from caom2pipe import data_source_composable as dsc
 
 
@@ -88,16 +87,14 @@ class NraoPage(dsc.DataSource):
         """
         Time-boxing the file url list returned from the site scrape.
 
-        :param prev_exec_time datetime start of the timestamp chunk
-        :param exec_time datetime end of the timestamp chunk
-        :return: an astropy Table of file names with time they were modified
+        :param prev_exec_time timestamp start of the timestamp chunk
+        :param exec_time timestamp end of the timestamp chunk
+        :return: a list of StateRunnerMeta instances, for file names with
+            time they were modified
         """
-        temp = Table(names=('fileName', 'modificationTimestamp'),
-                     dtype=('S384', 'i4'))
-        prev_ts = prev_exec_time.timestamp()
-        exec_ts = exec_time.timestamp()
+        temp = []
         for timestamp in self._todo_list.keys():
-            if prev_ts < timestamp <= exec_ts:
+            if prev_exec_time < timestamp <= exec_time:
                 for entry in self._todo_list[timestamp]:
-                    temp.add_row((entry, timestamp))
+                    temp.append(dsc.StateRunnerMeta(entry, timestamp))
         return temp

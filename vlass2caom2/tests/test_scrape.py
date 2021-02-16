@@ -392,7 +392,7 @@ def test_list_files_on_page():
                'image.pbcor.tt0.subim.fits' in test_list, 'wrong content'
 
 
-@patch('caom2pipe.execute_composable.OrganizeExecutesWithDoOne.do_one')
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 @patch('caom2pipe.manage_composable.query_endpoint')
 def test_run_state(query_endpoint_mock, run_mock):
     _write_state('23Apr2019 10:30')
@@ -418,7 +418,7 @@ def test_run_state(query_endpoint_mock, run_mock):
         os.getcwd = getcwd_orig
 
 
-@patch('caom2pipe.execute_composable.OrganizeExecutesWithDoOne.do_one')
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 @patch('caom2pipe.manage_composable.query_endpoint')
 def test_run_state_with_work(query_endpoint_mock, run_mock):
     _write_state('23Apr2019 10:30')
