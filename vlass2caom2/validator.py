@@ -74,6 +74,7 @@ import traceback
 
 from collections import defaultdict
 from dataclasses import dataclass
+from dateutil import tz
 from urllib import parse as parse
 
 from astropy.io.votable import parse_single_table
@@ -224,8 +225,8 @@ def _get_max_version(entries):
 
 class VlassValidator(mc.Validator):
     def __init__(self):
-        super(VlassValidator, self).__init__(source_name='NRAO',
-                                             source_tz='Canada/Eastern')
+        super(VlassValidator, self).__init__(
+            source_name='NRAO', source_tz=tz.gettz('Canada/Eastern'))
         # a dictionary where the file name is the key, and the fully-qualified
         # file name at the HTTP site is the value
         self._fully_qualified_list = None
@@ -246,7 +247,8 @@ class VlassValidator(mc.Validator):
                 f.write(f'{self._fully_qualified_list[entry]}\n')
 
     def _filter_result(self):
-        config = mc.Config().get_executors()
+        config = mc.Config()
+        config.get_executors()
         subject = mc.define_subject(config)
         caom_client = CAOM2RepoClient(subject)
         metrics = mc.Metrics(config)
