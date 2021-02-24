@@ -212,7 +212,7 @@ def get_file_url_list_max_versions(nrao_dict):
                     result[entry.f_name] = entry.dt
                     validate_dict[entry.f_name] = entry.url
                 else:
-                    logging.warning(f'Old version:: {entry.f_name}')
+                    logging.debug(f'Old version:: {entry.f_name}')
     return result, validate_dict
 
 
@@ -253,10 +253,12 @@ class VlassValidator(mc.Validator):
         caom_client = CAOM2RepoClient(subject)
         metrics = mc.Metrics(config)
         for entry in self._source:
-            if self._later_version_at_cadc(entry, caom_client, metrics):
+            if VlassValidator._later_version_at_cadc(
+                    entry, caom_client, metrics):
                 self._source.remove(entry)
 
-    def _later_version_at_cadc(self, entry, caom_client, metrics):
+    @staticmethod
+    def _later_version_at_cadc(entry, caom_client, metrics):
         later_version_found = False
         storage_name = VlassName(file_name=entry, entry=entry)
         caom_at_cadc = mc.repo_get(caom_client, COLLECTION,
