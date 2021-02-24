@@ -1,23 +1,22 @@
 FROM opencadc/matplotlib:3.8-slim
   
-RUN apt-get update -y && apt-get dist-upgrade -y
+RUN apt-get update -y && apt-get dist-upgrade -y && \
+    apt-get install -y build-essential git wget && \
+    rm -rf /var/lib/apt/lists/ /tmp/* /var/tmp/*
 
-RUN apt-get install -y build-essential \
-    git
-
-RUN pip install cadcdata \
+RUN pip install bs4 \
+    cadcdata \
     cadctap \
     caom2 \
     caom2repo \
     caom2utils \
     ftputil \
     importlib-metadata \
-    pytz \
+    pillow \
+    python-dateutil \
     PyYAML \
     spherical-geometry \
     vos
-
-RUN apt-get install -y wget
 
 RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
@@ -27,18 +26,14 @@ RUN oldpath=`pwd` && cd /tmp && \
 
 WORKDIR /usr/src/app
 
-RUN pip install bs4 \
-    pillow
-
+ARG OPENCADC_BRANCH=master
 ARG OPENCADC_REPO=opencadc
+ARG PIPE_BRANCH=master
+ARG PIPE_REPO=opencadc
 
-RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git && \
-  pip install ./caom2tools/caom2utils
+RUN pip install git+https://github.com/${PIPE_REPO}/caom2pipe@${PIPE_BRANCH}#egg=caom2pipe
 
-RUN git clone https://github.com/${OPENCADC_REPO}/caom2pipe.git && \
-  pip install ./caom2pipe
-
-RUN git clone https://github.com/${OPENCADC_REPO}/vlass2caom2.git && \
+RUN git clone https://github.com/${OPENCADC_REPO}/vlass2caom2.git --branch=${OPENCADC_BRANCH} && \
   cp ./vlass2caom2/data/ArchiveQuery-2018-08-15.csv /usr/src/ && \
   cp ./vlass2caom2/data/rejected_file_names-2018-09-05.csv /usr/src/ && \
   cp ./vlass2caom2/scripts/config.yml / && \

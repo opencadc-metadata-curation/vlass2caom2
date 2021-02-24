@@ -419,7 +419,6 @@ def _parse_specific_file_list_page(html_string, start_time):
         # looks like 16-Apr-2018 15:43   53M, make it into a datetime
         # for comparison
         temp = ii.next_element.next_element.string.split()
-        # dt = datetime.strptime(f'{temp[0]} {temp[1]}', '%d-%b-%Y %H:%M')
         dt = make_date_time(f'{temp[0]} {temp[1]}')
         if dt >= start_time:
             # the hrefs are fully-qualified URLS

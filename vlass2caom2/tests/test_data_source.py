@@ -76,8 +76,8 @@ def test_get_time_box_work():
     test_todo_list = {1585092104: ['a.fits'],
                       1585092204: ['b.fits'],
                       1585092304: ['c.fits']}
-    prev_exec_time = datetime.fromtimestamp(1585092199)
-    exec_time = datetime.fromtimestamp(1585092209)
+    prev_exec_time = datetime.fromtimestamp(1585092199).timestamp()
+    exec_time = datetime.fromtimestamp(1585092209).timestamp()
     test_subject = ds.NraoPage(test_todo_list)
     test_result = test_subject.get_time_box_work(prev_exec_time, exec_time)
     assert test_result is not None, 'expected a result'
@@ -85,5 +85,5 @@ def test_get_time_box_work():
     result = False
     for entry in test_result:
         result = True
-        assert 'b.fits' == entry[0], 'wrong result content'
+        assert 'b.fits' == entry.entry_name, 'wrong result content'
     assert result, 'make sure the for loop did something'

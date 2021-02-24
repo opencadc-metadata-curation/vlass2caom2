@@ -123,7 +123,7 @@ def test_run_by_builder(data_client_mock, repo_mock, exec_mock):
 
 @patch('caom2pipe.execute_composable.CadcDataClient')
 @patch('caom2pipe.manage_composable.query_endpoint')
-@patch('caom2pipe.execute_composable.OrganizeExecutesWithDoOne.do_one')
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 def test_run_state(run_mock, query_mock, data_client_mock):
     test_scrape._write_state('24Apr2019 12:34')
     query_mock.side_effect = test_scrape._query_endpoint

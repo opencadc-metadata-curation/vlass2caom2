@@ -69,7 +69,6 @@
 
 import logging
 import sys
-import tempfile
 import traceback
 
 from caom2pipe import manage_composable as mc
@@ -91,25 +90,21 @@ DATA_VISITORS = [position_bounds_augmentation, preview_augmentation]
 
 def _run_single():
     """expects a single file name on the command line"""
-    import sys
     config = mc.Config()
     config.get_executors()
-    file_name = sys.argv[1]
     if config.features.use_file_names:
-        vlass_name = VlassName(file_name=file_name)
+        vlass_name = VlassName(file_name=sys.argv[1], entry=sys.argv[1])
     elif config.features.use_urls:
-        vlass_name = VlassName(url=file_name)
+        vlass_name = VlassName(url=sys.argv[1], entry=sys.argv[1])
     else:
-        vlass_name = VlassName(obs_id=sys.argv[1])
-    if config.features.run_in_airflow:
-        temp = tempfile.NamedTemporaryFile()
-        mc.write_to_file(temp.name, sys.argv[2])
-        config.proxy_fqn = temp.name
-    else:
-        config.proxy_fqn = sys.argv[2]
-    return rc.run_single(config, vlass_name, APPLICATION,
+        vlass_name = VlassName(obs_id=sys.argv[1], entry=sys.argv[1])
+    logging.error(vlass_name)
+    return rc.run_single(config=config,
+                         storage_name=vlass_name,
+                         command_name=APPLICATION,
                          meta_visitors=META_VISITORS,
-                         data_visitors=DATA_VISITORS)
+                         data_visitors=DATA_VISITORS,
+                         store_transfer=tc.HttpTransfer())
 
 
 def run_single():
@@ -143,7 +138,6 @@ def _run_by_state():
     work.init_web_log(state, config)
     source = data_source.NraoPage(todo_list)
     name_builder = builder.VlassInstanceBuilder(config)
-    transferrer = tc.HttpTransfer()
     return rc.run_by_state(config=config,
                            command_name=APPLICATION,
                            bookmark_name=VLASS_BOOKMARK,
@@ -152,7 +146,7 @@ def _run_by_state():
                            name_builder=name_builder,
                            source=source,
                            end_time=max_date,
-                           transferrer=transferrer)
+                           store_transfer=tc.HttpTransfer())
 
 
 def run_by_state():
@@ -181,13 +175,12 @@ def _run():
     state = mc.State(config.state_fqn)
     work.init_web_log(state, config)
     name_builder = builder.VlassInstanceBuilder(config)
-    transferrer = tc.HttpTransfer()
     return rc.run_by_todo(config=config,
                           name_builder=name_builder,
                           command_name=APPLICATION,
                           meta_visitors=META_VISITORS,
                           data_visitors=DATA_VISITORS,
-                          transferrer=transferrer)
+                          store_transfer=tc.HttpTransfer())
 
 
 def run():

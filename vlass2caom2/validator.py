@@ -73,20 +73,35 @@ import os
 import traceback
 
 from collections import defaultdict
+from dataclasses import dataclass
+from dateutil import tz
 from urllib import parse as parse
 
 from astropy.io.votable import parse_single_table
 
 from cadcutils import net
 from cadctap import CadcTapClient
+from caom2repo import CAOM2RepoClient
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import APPLICATION, scrape, VlassName
+from vlass2caom2 import APPLICATION, scrape, VlassName, COLLECTION
 
 __all__ = ['VlassValidator', 'validate']
 
 NRAO_STATE = 'nrao_state.yml'
 ISO_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+
+
+@dataclass
+class FileMeta:
+    """
+    The information that is used to determine which version of a file
+    at NRAO to keep at CADC, since CADC keeps only the latest version.
+    """
+    url: str
+    version: str
+    dt: str
+    f_name: str
 
 
 def read_file_list_from_archive(config):
@@ -174,12 +189,9 @@ def get_file_url_list_max_versions(nrao_dict):
     # observation ID
     for key, value in nrao_dict.items():
         storage_name = VlassName(url=key)
-        # 0 - url
-        # 1 - version
-        # 2 - dt
-        # 3 - f_name
-        obs_id_dict[storage_name.obs_id].append(
-            [key, storage_name.version, value, storage_name.file_name])
+        file_meta = FileMeta(key, storage_name.version, value,
+                             storage_name.file_name)
+        obs_id_dict[storage_name.obs_id].append(file_meta)
 
     # now handle the URLs based on how many there are per observation ID
     result = {}
@@ -191,28 +203,30 @@ def get_file_url_list_max_versions(nrao_dict):
             # the fully-qualified file name at NRAO is the value
             #
             for entry in value:
-                result[entry[3]] = entry[2]
-                validate_dict[entry[3]] = entry[0]
+                result[entry.f_name] = entry.dt
+                validate_dict[entry.f_name] = entry.url
         else:
             max_version = _get_max_version(value)
             for entry in value:
-                if max_version == entry[1]:
-                    result[entry[3]] = entry[2]
-                    validate_dict[entry[3]] = entry[0]
+                if max_version == entry.version:
+                    result[entry.f_name] = entry.dt
+                    validate_dict[entry.f_name] = entry.url
+                else:
+                    logging.debug(f'Old version:: {entry.f_name}')
     return result, validate_dict
 
 
 def _get_max_version(entries):
     max_version = 1
     for entry in entries:
-        max_version = max(max_version, entry[1])
+        max_version = max(max_version, entry.version)
     return max_version
 
 
 class VlassValidator(mc.Validator):
     def __init__(self):
-        super(VlassValidator, self).__init__(source_name='NRAO',
-                                             source_tz='Canada/Eastern')
+        super(VlassValidator, self).__init__(
+            source_name='NRAO', source_tz=tz.gettz('Canada/Eastern'))
         # a dictionary where the file name is the key, and the fully-qualified
         # file name at the HTTP site is the value
         self._fully_qualified_list = None
@@ -231,6 +245,40 @@ class VlassValidator(mc.Validator):
                 f.write(f'{self._fully_qualified_list[entry]}\n')
             for entry in self._destination_data:
                 f.write(f'{self._fully_qualified_list[entry]}\n')
+
+    def _filter_result(self):
+        config = mc.Config()
+        config.get_executors()
+        subject = mc.define_subject(config)
+        caom_client = CAOM2RepoClient(subject)
+        metrics = mc.Metrics(config)
+        for entry in self._source:
+            if VlassValidator._later_version_at_cadc(
+                    entry, caom_client, metrics):
+                self._source.remove(entry)
+
+    @staticmethod
+    def _later_version_at_cadc(entry, caom_client, metrics):
+        later_version_found = False
+        storage_name = VlassName(file_name=entry, entry=entry)
+        caom_at_cadc = mc.repo_get(caom_client, COLLECTION,
+                                   storage_name.obs_id, metrics)
+        if caom_at_cadc is not None:
+            for plane in caom_at_cadc.planes.values():
+                for artifact in plane.artifacts.values():
+                    if 'jpg' in artifact.uri:
+                        continue
+                    ignore_scheme, ignore_collection, f_name = mc.decompose_uri(
+                        artifact.uri)
+                    vlass_name = VlassName(file_name=f_name)
+                    if vlass_name.version > storage_name.version:
+                        # there's a later version at CADC, everything is good
+                        # ignore the failure report
+                        later_version_found = True
+                        break
+                if later_version_found:
+                    break
+        return later_version_found
 
 
 def validate():
