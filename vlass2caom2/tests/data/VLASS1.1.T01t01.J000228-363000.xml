@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-9878-0305fa4e0070">
+<caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-9878-0305fa4e0070">
   <caom2:collection>VLASS</caom2:collection>
   <caom2:observationID>VLASS1.1.T01t01.J000228-363000</caom2:observationID>
   <caom2:metaRelease>2018-02-07T22:38:34.124</caom2:metaRelease>
@@ -39,7 +39,7 @@
         <caom2:producer>NRAO</caom2:producer>
         <caom2:runID>v1</caom2:runID>
         <caom2:lastExecuted>2018-04-13T23:05:31.738</caom2:lastExecuted>
-       </caom2:provenance>
+      </caom2:provenance>
       <caom2:artifacts>
         <caom2:artifact caom2:id="00000000-0000-0000-b591-27680bff6a4b">
           <caom2:uri>ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits</caom2:uri>
@@ -220,6 +220,24 @@
               </caom2:chunks>
             </caom2:part>
           </caom2:parts>
+        </caom2:artifact>
+        <caom2:artifact caom2:id="14b3816f-e5c1-47aa-957f-c0aae2525d3b">
+          <caom2:uri>ad:VLASS/VLASS1.1.T01t01.J000228-363000_prev.jpg</caom2:uri>
+          <caom2:productType>preview</caom2:productType>
+          <caom2:releaseType>meta</caom2:releaseType>
+          <caom2:contentType>image/jpeg</caom2:contentType>
+          <caom2:contentLength>444344</caom2:contentLength>
+          <caom2:contentChecksum>md5:45ede29c9b4d8fd7bc386cebd6dfde81</caom2:contentChecksum>
+          <caom2:parts/>
+        </caom2:artifact>
+        <caom2:artifact caom2:id="76ca50ab-606b-43d9-987c-46c5062df964">
+          <caom2:uri>ad:VLASS/VLASS1.1.T01t01.J000228-363000_prev_256.jpg</caom2:uri>
+          <caom2:productType>thumbnail</caom2:productType>
+          <caom2:releaseType>meta</caom2:releaseType>
+          <caom2:contentType>image/jpeg</caom2:contentType>
+          <caom2:contentLength>49450</caom2:contentLength>
+          <caom2:contentChecksum>md5:b71c0f04997e34240eb9c5e5bba4747f</caom2:contentChecksum>
+          <caom2:parts/>
         </caom2:artifact>
       </caom2:artifacts>
     </caom2:plane>

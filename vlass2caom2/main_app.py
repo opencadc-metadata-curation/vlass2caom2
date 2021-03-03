@@ -170,12 +170,20 @@ class VlassName(StorageName):
                f'{bits[5]}.{bits[6]}.{bits[7]}/'
 
     @property
+    def prev(self):
+        return f'{self.file_id}_prev.jpg'
+
+    @property
     def product_id(self):
         return self._product_id
 
     @property
     def rejected_url(self):
         return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
+
+    @property
+    def thumb(self):
+        return f'{self.file_id}_prev_256.jpg'
 
     @property
     def tile(self):
