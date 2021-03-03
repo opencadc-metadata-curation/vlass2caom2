@@ -138,7 +138,7 @@ def test_run_state(run_mock, query_mock, data_client_mock):
     test_obs_id = 'VLASS1.2.T07t13.J083838-153000'
     test_product_id = 'VLASS1.2.T07t13.J083838-153000.quicklook'
     test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
-                  'image.pbcor.tt0.subim.fits'
+                  'image.pbcor.tt0.rms.subim.fits'
     try:
         # execution
         test_result = composable._run_by_state()

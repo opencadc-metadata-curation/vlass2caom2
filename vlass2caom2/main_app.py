@@ -146,6 +146,11 @@ class VlassName(StorageName):
         return f'{bits[0]}.{bits[1]}'
 
     @property
+    def epoch(self):
+        bits = self._file_name.split('.')
+        return f'{bits[0]}.{bits[1]}'
+
+    @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
         return 'ad:{}/{}'.format(self.collection, self.file_name)
@@ -165,12 +170,20 @@ class VlassName(StorageName):
                f'{bits[5]}.{bits[6]}.{bits[7]}/'
 
     @property
+    def prev(self):
+        return f'{self.file_id}_prev.jpg'
+
+    @property
     def product_id(self):
         return self._product_id
 
     @property
     def rejected_url(self):
         return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
+
+    @property
+    def thumb(self):
+        return f'{self.file_id}_prev_256.jpg'
 
     @property
     def tile(self):
@@ -239,6 +252,12 @@ def accumulate_wcs(bp):
     bp.configure_position_axes((1, 2))
     bp.configure_energy_axis(3)
     bp.configure_polarization_axis(4)
+
+    meta_producer = mc.get_version(APPLICATION)
+    bp.set('Observation.metaProducer', meta_producer)
+    bp.set('Plane.metaProducer', meta_producer)
+    bp.set('Artifact.metaProducer', meta_producer)
+    bp.set('Chunk.metaProducer', meta_producer)
 
     # observation level
     bp.set('Observation.type', 'OBJECT')

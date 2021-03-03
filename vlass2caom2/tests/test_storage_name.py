@@ -67,7 +67,7 @@
 # ***********************************************************************
 #
 
-from vlass2caom2 import main_app
+from vlass2caom2 import main_app, COLLECTION
 
 
 def test_storage_name():
@@ -103,3 +103,10 @@ def test_storage_name():
                                         'VLASS1.2.ql.T23t09.J083851+483000.' \
                                         '10.2048.v1/', \
             'wrong image pointing url'
+        assert ts.prev == f'{test_bit}.subim_prev.jpg', 'wrong preview'
+        assert ts.thumb == f'{test_bit}.subim_prev_256.jpg', 'wrong thumbnail'
+        assert ts.prev_uri == f'ad:{COLLECTION}/{test_bit}.subim_prev.jpg', \
+            'wrong preview uri'
+        assert ts.thumb_uri == \
+               f'ad:{COLLECTION}/{test_bit}.subim_prev_256.jpg', \
+               'wrong thumbnail uri'
