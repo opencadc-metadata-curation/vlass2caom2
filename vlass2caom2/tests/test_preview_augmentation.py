@@ -74,7 +74,7 @@ from test_main_app import TEST_DATA_DIR
 
 
 def test_preview_augmentation():
-    test_fqn = f'{TEST_DATA_DIR}/VLASS1.1.T01t01.J000228-363000.xml'
+    test_fqn = f'{TEST_DATA_DIR}/preview_augmentation_start.xml'
     test_science_f_name = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.' \
                           'iter1.image.pbcor.tt0.rms.subim.fits'
     test_storage_name = VlassName(file_name=test_science_f_name)

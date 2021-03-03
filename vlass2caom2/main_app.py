@@ -253,6 +253,12 @@ def accumulate_wcs(bp):
     bp.configure_energy_axis(3)
     bp.configure_polarization_axis(4)
 
+    meta_producer = mc.get_version(APPLICATION)
+    bp.set('Observation.metaProducer', meta_producer)
+    bp.set('Plane.metaProducer', meta_producer)
+    bp.set('Artifact.metaProducer', meta_producer)
+    bp.set('Chunk.metaProducer', meta_producer)
+
     # observation level
     bp.set('Observation.type', 'OBJECT')
 
