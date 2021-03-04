@@ -109,6 +109,11 @@ class VlassPreview(mc.PreviewVisitor):
     def generate_plots(self, obs_id):
         """Make a preview for a VLASS image. Tested on random sample of 16
         VLASS 1.1, 1.2, 2.1 images."""
+        if '.rms.' in self._science_file:
+            # there's two files (artifacts) per plane, the non-rms one to
+            # generates 'more dense' preview/thumbnail images
+            return 0
+
         self._logger.debug(f'Begin generate_plots for {obs_id}')
         count = 0
         xsize = 200
