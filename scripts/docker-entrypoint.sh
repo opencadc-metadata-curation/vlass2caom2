@@ -5,7 +5,7 @@ then
   cp /usr/local/bin/config.yml ${PWD}
 fi
 
-if [[ ! -e ${PWD}/config.yml ]]
+if [[ ! -e ${PWD}/cache.yml ]]
 then
   cp /usr/local/bin/cache.yml ${PWD}
 fi
