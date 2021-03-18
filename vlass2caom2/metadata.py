@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2021.                            (c) 2021.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,73 +62,75 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  $Revision: 4 $
+#  : 4 $
 #
 # ***********************************************************************
 #
 
 import logging
 
-from caom2 import Observation
+from datetime import datetime, timezone
+from dateutil import tz
 from caom2pipe import manage_composable as mc
+from vlass2caom2 import scrape
 from vlass2caom2 import storage_name as sn
 
 
-def visit(observation, **kwargs):
-    """
-    NRAO reprocesses tile + image phase center files. This visitor ensures
-    the respective artifacts are removed from the observations if old versions
-    of those files are removed.
-    """
-    mc.check_param(observation, Observation)
-    url = kwargs.get('url')
-    if url is None:
-        logging.error(f'Require url for cleanup augmentation of '
-                      f'{observation.observation_id}')
-        return
+# keys in the cache:
+REFRESH_BOOKMARK = 'refresh_bookmark'
+QA_REJECTED_OBS_IDS = 'qa_rejected_obs_ids'
 
-    count = 0
-    for plane in observation.planes.values():
-        temp = []
-        # SG - 25-03-20 - later versions of files are replacements, so just
-        # automatically remove the 'older' artifacts.
-        #
-        # quicklook check is to cover the future case of having cubes in
-        # the collection
-        if len(plane.artifacts) > 2 and plane.product_id.endswith('quicklook'):
-            # first - get the newest version
-            max_version = 1
-            for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName.get_version(artifact.uri)
-                    max_version = max(max_version, version)
 
-            # now collect the list of artifacts not at the maximum version
-            for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName.get_version(artifact.uri)
-                    if version != max_version:
-                        temp.append(artifact.uri)
+class VLASSCache(mc.Cache):
+    def __init__(self, new_bookmark):
+        super(VLASSCache, self).__init__(rigorous_get=False)
+        self._refresh_bookmark = self.get_from(REFRESH_BOOKMARK)
+        self._qa_rejected_obs_ids = self.get_from(QA_REJECTED_OBS_IDS)
+        # keep track of whether or not the cache has been refreshed this
+        # run
+        self._tz = tz.gettz('US/Socorro')
+        self._new_bookmark = new_bookmark.replace(tzinfo=self._tz)
+        self._logger = logging.getLogger(__class__.__name__)
 
-                # SG - 03-02-21 - use the full fits filename plus
-                # _prev/_prev_256 for the preview/thumbnail file names, so
-                # need to clean up the preview obs_id-based artifact URIs.
-                # The observation IDs are missing '.ql', so it's a safe
-                # way to find the artifacts to be removed.
-                if (artifact.uri.startswith(
-                        f'ad:VLASS/{observation.observation_id}') and
-                        artifact.uri.endswith('.jpg')):
-                    temp.append(artifact.uri)
+    def _refresh(self):
+        start_date = self._refresh_bookmark
+        if self._refresh_bookmark == 'None':
+            start_date = datetime(year=2018, month=1, day=1, hour=0,
+                                  tzinfo=self._tz)
+            self._qa_rejected_obs_ids = []
+        todo_list, ignore_max_date = scrape.build_qa_rejected_todo(start_date)
+        if len(todo_list) == 0:
+            # something got removed, re-do from the beginning
+            self._logger.warning('Scrape all the QA REJECTED directories '
+                                 'because there was a removal.')
+            start_date = datetime(year=2018, month=1, day=1, hour=0,
+                                  tzinfo=self._tz)
+            todo_list, ignore_max_date = scrape.build_qa_rejected_todo(
+                start_date)
+            self._qa_rejected_obs_ids = []
 
-        delete_list = list(set(temp))
-        for entry in delete_list:
-            logging.warning(
-                f'Removing artifact {entry} from observation '
-                f'{observation.observation_id}, plane {plane.product_id}.')
-            count += 1
-            observation.planes[plane.product_id].artifacts.pop(entry)
+        for timestamp, urls in todo_list.items():
+            for url in urls:
+                # there are trailing slashes on the NRAO VLASS QL page
+                obs_id = sn.VlassName.get_obs_id_from_file_name(
+                    url.split('/')[-2])
+                self._logger.debug(f'Add QA REJECTED {obs_id}.')
+                self._qa_rejected_obs_ids.append(obs_id)
 
-    logging.info(
-        f'Completed cleanup augmentation for {observation.observation_id}. '
-        f'Remove {count} artifacts from the observation.')
-    return {'artifacts': count}
+        self.add_to(QA_REJECTED_OBS_IDS, self._qa_rejected_obs_ids)
+        self.add_to(REFRESH_BOOKMARK, self._new_bookmark)
+        self.save()
+        self._refresh_bookmark = self._new_bookmark
+
+    def is_qa_rejected(self, obs_id):
+        # if the cache has not been updated this run refresh the cache
+        if (self._refresh_bookmark == 'None' or
+                self._refresh_bookmark < self._new_bookmark):
+            self._logger.info('Refresh QA REJECTED cache.')
+            self._refresh()
+
+        # check the cache
+        return obs_id in self._qa_rejected_obs_ids
+
+
+cache = VLASSCache(datetime.now(tz=timezone.utc))

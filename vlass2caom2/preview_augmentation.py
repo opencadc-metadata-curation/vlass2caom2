@@ -79,7 +79,7 @@ from matplotlib.patches import ConnectionPatch, Rectangle
 
 from caom2 import ReleaseType, ProductType
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import main_app
+from vlass2caom2 import storage_name as sn
 
 
 class VlassPreview(mc.PreviewVisitor):
@@ -92,8 +92,8 @@ class VlassPreview(mc.PreviewVisitor):
 
     def __init__(self, observation, **kwargs):
         super(VlassPreview, self).__init__(
-            main_app.COLLECTION, ReleaseType.META, **kwargs)
-        self._storage_name = main_app.VlassName(file_name=self._science_file)
+            sn.COLLECTION, ReleaseType.META, **kwargs)
+        self._storage_name = sn.VlassName(file_name=self._science_file)
         self._science_fqn = os.path.join(self._working_dir,
                                          self._science_file)
         self._preview_fqn = os.path.join(

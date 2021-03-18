@@ -71,6 +71,7 @@ import os
 
 from datetime import datetime
 
+from caom2 import SimpleObservation, Algorithm
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import validator, scrape
 
@@ -78,10 +79,11 @@ from mock import patch, Mock
 import test_main_app, test_scrape
 
 
+@patch('caom2pipe.manage_composable.repo_get')
 @patch('cadcdata.core.net.BaseWsClient.post')
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.manage_composable.query_endpoint')
-def test_validator(http_mock, caps_mock, post_mock):
+def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
     caps_mock.return_value = 'https://sc2.canfar.net/sc2repo'
     response = Mock()
     response.status_code = 200
@@ -109,6 +111,8 @@ def test_validator(http_mock, caps_mock, post_mock):
 
     response.iter_content.side_effect = _mock_post
     post_mock.return_value.__enter__.return_value = response
+
+    repo_get_mock.side_effect = _mock_repo_read
 
     if not os.path.exists('/root/.ssl/cadcproxy.pem'):
         if not os.path.exists('/root/.ssl'):
@@ -204,3 +208,7 @@ def test_multiple_versions():
             f'{l1} in test_validate_dict_result keys'
         assert l2 in test_validate_dict_result.keys(), \
             f'{l2} not in test_validate_dict_result keys'
+
+
+def _mock_repo_read(ignore_client, collection, obs_id, ignore_metrics):
+    return SimpleObservation(obs_id, collection, Algorithm(name='exposure'))

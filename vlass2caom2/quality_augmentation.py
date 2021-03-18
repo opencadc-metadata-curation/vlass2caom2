@@ -71,6 +71,7 @@ import logging
 
 from caom2 import Observation, Requirements, Status
 from caom2pipe import manage_composable as mc
+from vlass2caom2 import metadata
 
 START_DATE = '2019-01-01'
 
@@ -82,44 +83,51 @@ def visit(observation, **kwargs):
     # data quality flag.
     #
     # There's no header information, so get the list of QA rejected files
-    # from here, and make a check against that static list
+    # from URLs that look like this:
     #
-    # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/QA_REJECTED/#
-    # https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/#
-    # etc
-    url = kwargs.get('url')
+    # https://archive-new.nrao.edu/vlass/quicklook/VLASS*/QA_REJECTED/#
+    #
+    # and compare against that list. Cache that list, and refresh by date. Make
+    # sure the cache looks for increasing dates. The list gets items
+    # added/removed over time.
 
     count = 0
-    for plane in observation.planes.values():
-        for artifact in plane.artifacts.values():
-            logging.debug(f'working on artifact {artifact.uri}')
-            count += _augment(observation, artifact, url)
+    if metadata.cache.is_qa_rejected(observation.observation_id):
+        _set_failed(observation)
+        count = 1
+    # for plane in observation.planes.values():
+    #     for artifact in plane.artifacts.values():
+    #         if '.jpg' in artifact.uri:
+    #             # ignore the previews
+    #             continue
+    #         logging.debug(f'working on artifact {artifact.uri}')
+    #         count += _augment(observation, artifact, url)
     logging.info(
         f'Completed quality augmentation for {observation.observation_id}')
     return {'observations': count}
 
 
-def _augment(observation, artifact, url):
-
-    # note the location of this file is hard-coded in the container
-    # structure, because so much about this is broken anyway
-    #
-    logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
-    csv_file = mc.read_csv_file(
-        '/usr/src/rejected_file_names-2018-09-05.csv')
-    file_name = mc.CaomName(artifact.uri).file_name
-    for row in csv_file:
-        for column in row:
-            if file_name in column:
-                logging.debug(f'Found QA Rejected file {file_name}')
-                _set_failed(observation)
-                return 1
-
-    if url is not None:
-        if 'QA_REJECTED' in url:
-            _set_failed(observation)
-            return 1
-    return 0
+# def _augment(observation):
+#
+#     # # note the location of this file is hard-coded in the container
+#     # # structure, because so much about this is broken anyway
+#     # #
+#     # logging.debug('get listing of QA Rejected VLASS files from 2018-09-05')
+#     # csv_file = mc.read_csv_file(
+#     #     '/usr/src/rejected_file_names-2018-09-05.csv')
+#     # file_name = mc.CaomName(artifact.uri).file_name
+#     # for row in csv_file:
+#     #     for column in row:
+#     #         if file_name in column:
+#     #             logging.debug(f'Found QA Rejected file {file_name}')
+#     #             _set_failed(observation)
+#     #             return 1
+#
+#     if url is not None:
+#         if 'QA_REJECTED' in url:
+#             _set_failed(observation)
+#             return 1
+#     return 0
 
 
 def _set_failed(observation):

@@ -76,178 +76,12 @@ from math import sqrt
 
 from caom2 import Observation, ProductType
 from caom2utils import ObsBlueprint, get_gen_proc_arg_parser, gen_proc
-from caom2pipe import StorageName
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import scrape
+from vlass2caom2 import storage_name as sn
 
 
-__all__ = ['vlass_main', 'update', 'VlassName', 'VlassCardinality',
-           'COLLECTION', 'APPLICATION', 'to_caom2']
-
-COLLECTION = 'VLASS'
-APPLICATION = 'vlass2caom2'
-COLLECTION_PATTERN = '*'  # TODO what are acceptable naming patterns?
-
-
-class VlassName(StorageName):
-    """Isolate the relationship between the observation id and the
-    file names.
-
-    Isolate the zipped/unzipped nature of the file names.
-
-    While tempting, it's not possible to recreate URLs from file names,
-    because some of the URLs are from the QA_REJECTED directories, hence
-    the absence of that functionality in this class.
-    """
-    def __init__(self, obs_id=None, file_name=None, fname_on_disk=None,
-                 url=None, entry=None):
-        if obs_id is None:
-            if file_name is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(file_name)
-            elif fname_on_disk is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(fname_on_disk)
-            elif url is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(
-                    url.split('/')[-1])
-        super(VlassName, self).__init__(
-            obs_id, COLLECTION, COLLECTION_PATTERN, entry=entry)
-        product_id = None
-        if file_name is not None:
-            product_id = VlassName.get_product_id_from_file_name(file_name)
-        elif fname_on_disk is not None:
-            product_id = VlassName.get_product_id_from_file_name(fname_on_disk)
-        elif url is not None:
-            product_id = VlassName.get_product_id_from_file_name(
-                url.split('/')[-1])
-        self._product_id = product_id
-        self.file_name = file_name
-        if file_name is None:
-            self.file_id = None
-        else:
-            self.file_id = VlassName.remove_extensions(file_name)
-            self.fname_on_disk = file_name
-        self.obs_id = obs_id
-        if fname_on_disk is not None:
-            self.file_id = VlassName.remove_extensions(fname_on_disk)
-            self.fname_on_disk = fname_on_disk
-            self.file_name = self.fname_on_disk.replace('.header', '')
-        if url is not None:
-            self.file_name = url.strip('/').split('/')[-1]
-            self.fname_on_disk = self.file_name
-            self.file_id = VlassName.remove_extensions(self.file_name)
-            self.obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
-            self._url = url
-        self._version = VlassName.get_version(self.file_name)
-
-    @property
-    def epoch(self):
-        bits = self._file_name.split('.')
-        return f'{bits[0]}.{bits[1]}'
-
-    @property
-    def epoch(self):
-        bits = self._file_name.split('.')
-        return f'{bits[0]}.{bits[1]}'
-
-    @property
-    def epoch(self):
-        bits = self._file_name.split('.')
-        return f'{bits[0]}.{bits[1]}'
-
-    @property
-    def file_uri(self):
-        """No .gz extension, unlike the default implementation."""
-        return 'ad:{}/{}'.format(self.collection, self.file_name)
-
-    @property
-    def file_name(self):
-        return self._file_name
-
-    @file_name.setter
-    def file_name(self, value):
-        self._file_name = value
-
-    @property
-    def image_pointing_url(self):
-        bits = self._file_name.split('.')
-        return f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.' \
-               f'{bits[5]}.{bits[6]}.{bits[7]}/'
-
-    @property
-    def prev(self):
-        return f'{self.file_id}_prev.jpg'
-
-    @property
-    def product_id(self):
-        return self._product_id
-
-    @property
-    def rejected_url(self):
-        return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
-
-    @property
-    def thumb(self):
-        return f'{self.file_id}_prev_256.jpg'
-
-    @property
-    def tile(self):
-        return self._file_name.split('.')[3]
-
-    @property
-    def tile_url(self):
-        return f'{scrape.QL_URL}{self.epoch}/{self.tile}/'
-
-    @property
-    def url(self):
-        return self._url
-
-    @url.setter
-    def url(self, value):
-        self._url = value
-
-    def _get_file_id(self):
-        return self.file_id
-
-    def is_valid(self):
-        return True
-
-    @property
-    def version(self):
-        return self._version
-
-    @staticmethod
-    def get_obs_id_from_file_name(file_name):
-        """The obs id is made of the VLASS epoch, tile name, and image centre
-        from the file name.
-        """
-        bits = file_name.split('.')
-        obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
-        return obs_id
-
-    @staticmethod
-    def get_product_id_from_file_name(file_name):
-        """The product id is made of the obs id plus the string 'quicklook'.
-        """
-        obs_id = VlassName.get_obs_id_from_file_name(file_name)
-        return '{}.quicklook'.format(obs_id)
-
-    @staticmethod
-    def get_version(entry):
-        """The parameter may be a URI, or just the file name."""
-        # file name looks like:
-        # 'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.
-        #                'pbcor.tt0.rms.subim.fits'
-        file_name = entry
-        if '/' in entry:
-            file_name = mc.CaomName(entry).file_name
-        bits = file_name.split('.')
-        version_str = bits[7].replace('v', '')
-        return mc.to_int(version_str)
-
-    @staticmethod
-    def remove_extensions(file_name):
-        return file_name.replace('.fits', '').replace('.header', '')
+__all__ = ['vlass_main', 'update', 'VlassCardinality', 'to_caom2']
 
 
 def accumulate_wcs(bp):
@@ -258,7 +92,7 @@ def accumulate_wcs(bp):
     bp.configure_energy_axis(3)
     bp.configure_polarization_axis(4)
 
-    meta_producer = mc.get_version(APPLICATION)
+    meta_producer = mc.get_version(sn.APPLICATION)
     bp.set('Observation.metaProducer', meta_producer)
     bp.set('Plane.metaProducer', meta_producer)
     bp.set('Artifact.metaProducer', meta_producer)
@@ -400,7 +234,7 @@ def update(observation, **kwargs):
 class VlassCardinality(object):
 
     def __init__(self):
-        self.collection = COLLECTION
+        self.collection = sn.COLLECTION
 
     @staticmethod
     def build_blueprints(args):
@@ -436,10 +270,10 @@ def to_caom2():
 def vlass_main():
     try:
         result = to_caom2()
-        logging.debug('Done {} processing.'.format(APPLICATION))
+        logging.debug('Done {} processing.'.format(sn.APPLICATION))
         sys.exit(result)
     except Exception as e:
-        logging.error('Failed {} execution.'.format(APPLICATION))
+        logging.error('Failed {} execution.'.format(sn.APPLICATION))
         logging.error(e)
         tb = traceback.format_exc()
         logging.error(tb)

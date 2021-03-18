@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2021.                            (c) 2021.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,73 +62,46 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  $Revision: 4 $
+#  : 4 $
 #
 # ***********************************************************************
 #
 
-import logging
+from mock import patch
 
-from caom2 import Observation
-from caom2pipe import manage_composable as mc
-from vlass2caom2 import storage_name as sn
+from datetime import datetime
+from vlass2caom2 import metadata
+
+import test_scrape
 
 
-def visit(observation, **kwargs):
-    """
-    NRAO reprocesses tile + image phase center files. This visitor ensures
-    the respective artifacts are removed from the observations if old versions
-    of those files are removed.
-    """
-    mc.check_param(observation, Observation)
-    url = kwargs.get('url')
-    if url is None:
-        logging.error(f'Require url for cleanup augmentation of '
-                      f'{observation.observation_id}')
-        return
+@patch('caom2pipe.manage_composable.query_endpoint')
+def test_cache(query_endpoint_mock):
+    query_endpoint_mock.side_effect = test_scrape._query_endpoint
 
-    count = 0
-    for plane in observation.planes.values():
-        temp = []
-        # SG - 25-03-20 - later versions of files are replacements, so just
-        # automatically remove the 'older' artifacts.
-        #
-        # quicklook check is to cover the future case of having cubes in
-        # the collection
-        if len(plane.artifacts) > 2 and plane.product_id.endswith('quicklook'):
-            # first - get the newest version
-            max_version = 1
-            for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName.get_version(artifact.uri)
-                    max_version = max(max_version, version)
+    # preconditions
+    # because 'cache' is globally declared in metadata.py, this test requires
+    # a config.yml file in the test working directory, just based on the
+    # import statement
+    test_subject = metadata.cache
+    assert test_subject is not None, 'expect a test subject'
+    test_subject._refresh_bookmark = 'None'
+    test_subject._qa_rejected_obs_ids = []
+    try:
+        test_obs_id = 'VLASS1.2.T21t15.J141833+413000'
+        test_result = test_subject.is_qa_rejected(test_obs_id)
+        assert test_result is True, 'expected qa rejected obs id'
+        assert type(test_subject._refresh_bookmark) is datetime, \
+            f'post-condition 1 {test_subject._refresh_bookmark}'
+        assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'
 
-            # now collect the list of artifacts not at the maximum version
-            for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName.get_version(artifact.uri)
-                    if version != max_version:
-                        temp.append(artifact.uri)
+        test_obs_id = 'VLASS1.1.T03t13.J080215-283000'
+        test_result = test_subject.is_qa_rejected(test_obs_id)
+        assert test_result is False, 'expected obs id to not be qa rejected'
+        assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'
 
-                # SG - 03-02-21 - use the full fits filename plus
-                # _prev/_prev_256 for the preview/thumbnail file names, so
-                # need to clean up the preview obs_id-based artifact URIs.
-                # The observation IDs are missing '.ql', so it's a safe
-                # way to find the artifacts to be removed.
-                if (artifact.uri.startswith(
-                        f'ad:VLASS/{observation.observation_id}') and
-                        artifact.uri.endswith('.jpg')):
-                    temp.append(artifact.uri)
-
-        delete_list = list(set(temp))
-        for entry in delete_list:
-            logging.warning(
-                f'Removing artifact {entry} from observation '
-                f'{observation.observation_id}, plane {plane.product_id}.')
-            count += 1
-            observation.planes[plane.product_id].artifacts.pop(entry)
-
-    logging.info(
-        f'Completed cleanup augmentation for {observation.observation_id}. '
-        f'Remove {count} artifacts from the observation.')
-    return {'artifacts': count}
+    finally:
+        # cleanup
+        test_subject.add_to(metadata.REFRESH_BOOKMARK, 'None')
+        test_subject.add_to(metadata.QA_REJECTED_OBS_IDS, None)
+        test_subject.save()

@@ -1,4 +1,4 @@
-FROM opencadc/matplotlib
+FROM opencadc/matplotlib:3.8-slim
 
 RUN apt-get update -y && apt-get dist-upgrade -y && \
     apt-get install -y build-essential git wget && \
@@ -16,7 +16,6 @@ RUN pip install bs4 \
     caom2 \
     caom2repo \
     caom2utils \
-    ftputil \
     importlib-metadata \
     pillow \
     python-dateutil \
@@ -31,13 +30,8 @@ ARG OPENCADC_REPO=opencadc
 ARG PIPE_BRANCH=master
 ARG PIPE_REPO=opencadc
 
-RUN pip install git+https://github.com/${PIPE_REPO}/caom2pipe@${PIPE_BRANCH}#egg=caom2pipe
+RUN pip install git+https://github.com/${OPENCADC_REPO}/caom2pipe@${OPENCADC_BRANCH}#egg=caom2pipe
 
-RUN git clone https://github.com/${OPENCADC_REPO}/vlass2caom2.git --branch=${OPENCADC_BRANCH} && \
-  cp ./vlass2caom2/data/ArchiveQuery-2018-08-15.csv /usr/src/ && \
-  cp ./vlass2caom2/data/rejected_file_names-2018-09-05.csv /usr/src/ && \
-  cp ./vlass2caom2/scripts/config.yml / && \
-  cp ./vlass2caom2/scripts/docker-entrypoint.sh / && \
-  pip install ./vlass2caom2
+RUN pip install git+https://github.com/${PIPE_REPO}/vlass2caom2@${PIPE_BRANCH}#egg=vlass2caom2
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

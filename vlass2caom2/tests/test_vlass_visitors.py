@@ -71,13 +71,14 @@ import os
 import pytest
 import shutil
 
-from mock import Mock
+from mock import Mock, patch
 
 from caom2 import Status
 from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
-from vlass2caom2 import position_bounds_augmentation
+from vlass2caom2 import position_bounds_augmentation, metadata
+import test_scrape
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
@@ -119,58 +120,28 @@ def test_aug_visit_works():
     mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
 
 
-def test_aug_visit_quality_works():
-    rejected_uri = 'ad:VLASS/VLASS1.1.ql.T10t12.J075402-033000.10.2048.v1' \
-                   '.I.iter1.image.pbcor.tt0.subim.fits'
-    test_file = os.path.join(
-        TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
-    test_obs = mc.read_obs_from_file(test_file)
-    assert test_obs is not None, 'unexpected None'
+@patch('caom2pipe.manage_composable.query_endpoint')
+def test_aug_visit_quality_works(query_endpoint_mock):
+    try:
+        query_endpoint_mock.side_effect = test_scrape._query_endpoint
+        test_file = os.path.join(
+            TEST_DATA_DIR, 'VLASS1.2.T08t19.J123816-103000.xml')
+        test_obs = mc.read_obs_from_file(test_file)
+        assert test_obs is not None, 'unexpected None'
 
-    data_dir = os.path.join(THIS_DIR, '../../data')
-    kwargs = {'working_directory': data_dir}
-    test_result = quality_augmentation.visit(test_obs, **kwargs)
-    assert test_obs is not None, 'unexpected modification'
-    assert test_result is not None, 'should have a result status'
-    assert len(test_result) == 1, 'modified artifacts count'
-    assert test_result['observations'] == 0, 'observation count'
-    assert test_obs.requirements is None, 'status value should not be set'
-
-    for plane in test_obs.planes:
-        for artifact in test_obs.planes[plane].artifacts:
-            test_obs.planes[plane].artifacts[artifact].uri = rejected_uri
-    test_result = quality_augmentation.visit(test_obs, **kwargs)
-    assert test_obs is not None, 'unexpected modification'
-    assert test_result is not None, 'should have a result status'
-    assert len(test_result) == 1, 'modified artifacts count'
-    assert test_result['observations'] == 2, 'observation count'
-    assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
-
-    mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
-
-
-def test_aug_visit_quality_works_uri():
-    rejected_uri = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
-                   'QA_REJECTED/VLASS1.1.ql.T01t09.J040228-363000.10.2048.v1/' \
-                   'VLASS1.1.ql.T01t09.J040228-363000.10.2048.v1.I.iter1.' \
-                   'image.pbcor.tt0.rms.subim.fits'
-    test_file = os.path.join(
-        TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
-    test_obs = mc.read_obs_from_file(test_file)
-    assert test_obs is not None, 'unexpected None'
-
-    kwargs = {'uri': rejected_uri}
-    for plane in test_obs.planes:
-        for artifact in test_obs.planes[plane].artifacts:
-            test_obs.planes[plane].artifacts[artifact].uri = rejected_uri
-    test_result = quality_augmentation.visit(test_obs, **kwargs)
-    assert test_obs is not None, 'unexpected modification'
-    assert test_result is not None, 'should have a result status'
-    assert len(test_result) == 1, 'modified artifacts count'
-    assert test_result['observations'] == 2, 'observation count'
-    assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
-
-    mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
+        kwargs = {}
+        test_result = quality_augmentation.visit(test_obs, **kwargs)
+        assert test_obs is not None, 'unexpected modification'
+        assert test_result is not None, 'should have a result status'
+        assert len(test_result) == 1, 'modified artifacts count'
+        assert test_result['observations'] == 1, 'observation count'
+        assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
+    finally:
+        # cleanup
+        test_subject = metadata.cache
+        test_subject.add_to(metadata.REFRESH_BOOKMARK, 'None')
+        test_subject.add_to(metadata.QA_REJECTED_OBS_IDS, None)
+        test_subject.save()
 
 
 def test_aug_visit_position_bounds():

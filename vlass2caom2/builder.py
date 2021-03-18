@@ -70,7 +70,7 @@
 import logging
 
 from caom2pipe import name_builder_composable as nbc
-from vlass2caom2 import VlassName
+from vlass2caom2 import storage_name as sn
 
 __all__ = ['VlassInstanceBuilder']
 
@@ -86,9 +86,9 @@ class VlassInstanceBuilder(nbc.StorageNameBuilder):
         """An entry may be a URL, a file name or an obs id."""
         self._logger.debug(f'Build StorageName instance for {entry}.')
         if self._config.features.use_urls:
-            result = VlassName(url=entry, entry=entry)
+            result = sn.VlassName(url=entry, entry=entry)
         elif self._config.features.use_file_names:
-            result = VlassName(file_name=entry, entry=entry)
+            result = sn.VlassName(file_name=entry, entry=entry)
         else:
-            result = VlassName(obs_id=entry, entry=entry)
+            result = sn.VlassName(obs_id=entry, entry=entry)
         return result
