@@ -102,7 +102,7 @@ def visit(observation, **kwargs):
             for artifact in plane.artifacts.values():
                 if len(artifact.parts) > 0:
                     logging.debug(f'working on artifact {artifact.uri}')
-                    version, reference = _augment(
+                    version, reference = _augment_artifact(
                         observation.observation_id, artifact)
                     if version is not None:
                         plane.provenance.version = version
@@ -116,49 +116,27 @@ def visit(observation, **kwargs):
     return {'artifacts': count}
 
 
-def _augment(obs_id, artifact):
-
-    # note the location of this file is hard-coded in the container
-    # structure, because so much about this is broken anyway
-    #
-    logging.debug('get content of all the VLASS observations from 2018-08-08')
-    csv_file = mc.read_csv_file('/usr/src/ArchiveQuery-2018-08-15.csv')
-
-    logging.debug('build time bounds information from measurement set info')
-    version, reference = _augment_artifact(obs_id, artifact, csv_file)
-    return version, reference
-
-
-def _augment_artifact(obs_id, artifact, csv_file):
+def _augment_artifact(obs_id, artifact):
     chunk = artifact.parts['0'].chunks[0]
     bounds = None
     exposure = None
     version = None
     reference = None
     found = False
-    for ii in csv_file:
-        if obs_id in ii:
-            bounds, exposure = _build_from_row(ii)
-            version = ii[1].strip()
-            reference = ii[2].strip()
-            found = True
-            break
-
-    if not found:
-        logging.debug(f'Fall back to scraping for time metadata for {obs_id}')
-        global obs_metadata
-        if obs_metadata is None:
-            obs_metadata = scrape.retrieve_obs_metadata(obs_id)
-        if obs_metadata is not None and len(obs_metadata) > 0:
-            bounds, exposure = _build_time(
-                obs_metadata.get('Observation Start'),
-                obs_metadata.get('Observation End'),
-                obs_metadata.get('On Source'))
-            version = obs_metadata.get('Pipeline Version')
-            reference = obs_metadata.get('reference')
-            found = True
-        else:
-            logging.warning(f'Found no time metadata for {obs_id}')
+    logging.debug(f'Fall back to scraping for time metadata for {obs_id}')
+    global obs_metadata
+    if obs_metadata is None:
+        obs_metadata = scrape.retrieve_obs_metadata(obs_id)
+    if obs_metadata is not None and len(obs_metadata) > 0:
+        bounds, exposure = _build_time(
+            obs_metadata.get('Observation Start'),
+            obs_metadata.get('Observation End'),
+            obs_metadata.get('On Source'))
+        version = obs_metadata.get('Pipeline Version')
+        reference = obs_metadata.get('reference')
+        found = True
+    else:
+        logging.warning(f'Found no time metadata for {obs_id}')
 
     if found:
         time_axis = CoordAxis1D(Axis('TIME', 'd'))
@@ -169,10 +147,6 @@ def _augment_artifact(obs_id, artifact, csv_file):
         return version, reference
     else:
         return None, None
-
-
-def _build_from_row(row):
-    return _build_time(row[3].strip(), row[4].strip(), row[5].strip())
 
 
 def _build_time(start, end, tos):
