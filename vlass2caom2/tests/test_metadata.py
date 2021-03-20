@@ -80,28 +80,21 @@ def test_cache(query_endpoint_mock):
     query_endpoint_mock.side_effect = test_scrape._query_endpoint
 
     # preconditions
-    # because 'cache' is globally declared in metadata.py, this test requires
-    # a config.yml file in the test working directory, just based on the
-    # import statement
+    # depending on the order of test execution, the cache may already have
+    # been filled, so clear it for the purpose of this test
     test_subject = metadata.cache
     assert test_subject is not None, 'expect a test subject'
-    test_subject._refresh_bookmark = 'None'
+    test_subject._refresh_bookmark = None
     test_subject._qa_rejected_obs_ids = []
-    try:
-        test_obs_id = 'VLASS1.2.T21t15.J141833+413000'
-        test_result = test_subject.is_qa_rejected(test_obs_id)
-        assert test_result is True, 'expected qa rejected obs id'
-        assert type(test_subject._refresh_bookmark) is datetime, \
-            f'post-condition 1 {test_subject._refresh_bookmark}'
-        assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'
 
-        test_obs_id = 'VLASS1.1.T03t13.J080215-283000'
-        test_result = test_subject.is_qa_rejected(test_obs_id)
-        assert test_result is False, 'expected obs id to not be qa rejected'
-        assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'
+    test_obs_id = 'VLASS1.2.T21t15.J141833+413000'
+    test_result = test_subject.is_qa_rejected(test_obs_id)
+    assert test_result is True, 'expected qa rejected obs id'
+    assert type(test_subject._refresh_bookmark) is datetime, \
+        f'post-condition 1 {test_subject._refresh_bookmark}'
+    assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'
 
-    finally:
-        # cleanup
-        test_subject.add_to(metadata.REFRESH_BOOKMARK, 'None')
-        test_subject.add_to(metadata.QA_REJECTED_OBS_IDS, None)
-        test_subject.save()
+    test_obs_id = 'VLASS1.1.T03t13.J080215-283000'
+    test_result = test_subject.is_qa_rejected(test_obs_id)
+    assert test_result is False, 'expected obs id to not be qa rejected'
+    assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'

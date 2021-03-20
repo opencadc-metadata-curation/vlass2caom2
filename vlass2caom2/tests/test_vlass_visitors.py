@@ -129,26 +129,19 @@ def test_aug_visit_works(query_endpoint_mock):
 
 @patch('caom2pipe.manage_composable.query_endpoint')
 def test_aug_visit_quality_works(query_endpoint_mock):
-    try:
-        query_endpoint_mock.side_effect = test_scrape._query_endpoint
-        test_file = os.path.join(
-            TEST_DATA_DIR, 'VLASS1.2.T08t19.J123816-103000.xml')
-        test_obs = mc.read_obs_from_file(test_file)
-        assert test_obs is not None, 'unexpected None'
+    query_endpoint_mock.side_effect = test_scrape._query_endpoint
+    test_file = os.path.join(
+        TEST_DATA_DIR, 'VLASS1.2.T08t19.J123816-103000.xml')
+    test_obs = mc.read_obs_from_file(test_file)
+    assert test_obs is not None, 'unexpected None'
 
-        kwargs = {}
-        test_result = quality_augmentation.visit(test_obs, **kwargs)
-        assert test_obs is not None, 'unexpected modification'
-        assert test_result is not None, 'should have a result status'
-        assert len(test_result) == 1, 'modified artifacts count'
-        assert test_result['observations'] == 1, 'observation count'
-        assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
-    finally:
-        # cleanup
-        test_subject = metadata.cache
-        test_subject.add_to(metadata.REFRESH_BOOKMARK, 'None')
-        test_subject.add_to(metadata.QA_REJECTED_OBS_IDS, None)
-        test_subject.save()
+    kwargs = {}
+    test_result = quality_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'unexpected modification'
+    assert test_result is not None, 'should have a result status'
+    assert len(test_result) == 1, 'modified artifacts count'
+    assert test_result['observations'] == 1, 'observation count'
+    assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
 
 
 def test_aug_visit_position_bounds():

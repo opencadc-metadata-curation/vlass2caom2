@@ -71,43 +71,25 @@ import logging
 
 from datetime import datetime, timezone
 from dateutil import tz
-from caom2pipe import manage_composable as mc
 from vlass2caom2 import scrape
 from vlass2caom2 import storage_name as sn
 
 
-# keys in the cache:
-REFRESH_BOOKMARK = 'refresh_bookmark'
-QA_REJECTED_OBS_IDS = 'qa_rejected_obs_ids'
-
-
-class VLASSCache(mc.Cache):
-    def __init__(self, new_bookmark):
-        super(VLASSCache, self).__init__(rigorous_get=False)
-        self._refresh_bookmark = self.get_from(REFRESH_BOOKMARK)
-        self._qa_rejected_obs_ids = self.get_from(QA_REJECTED_OBS_IDS)
-        # keep track of whether or not the cache has been refreshed this
-        # run
+class VLASSCache(object):
+    def __init__(self):
+        # if None, refresh the cache
+        self._refresh_bookmark = None
+        self._qa_rejected_obs_ids = []
         self._tz = tz.gettz('US/Socorro')
-        self._new_bookmark = new_bookmark.replace(tzinfo=self._tz)
+        self._new_bookmark = datetime.now(tz=timezone.utc)
         self._logger = logging.getLogger(__class__.__name__)
 
     def _refresh(self):
         start_date = self._refresh_bookmark
-        if self._refresh_bookmark == 'None':
+        if self._refresh_bookmark is None:
             start_date = datetime(year=2018, month=1, day=1, hour=0,
                                   tzinfo=self._tz)
-            self._qa_rejected_obs_ids = []
         todo_list, ignore_max_date = scrape.build_qa_rejected_todo(start_date)
-        if len(todo_list) == 0:
-            # something got removed, re-do from the beginning
-            self._logger.warning('Scrape all the QA REJECTED directories '
-                                 'because there was a removal.')
-            start_date = datetime(year=2018, month=1, day=1, hour=0,
-                                  tzinfo=self._tz)
-            todo_list, ignore_max_date = scrape.build_qa_rejected_todo(
-                start_date)
-            self._qa_rejected_obs_ids = []
 
         for timestamp, urls in todo_list.items():
             for url in urls:
@@ -116,16 +98,11 @@ class VLASSCache(mc.Cache):
                     url.split('/')[-2])
                 self._logger.debug(f'Add QA REJECTED {obs_id}.')
                 self._qa_rejected_obs_ids.append(obs_id)
-
-        self.add_to(QA_REJECTED_OBS_IDS, self._qa_rejected_obs_ids)
-        self.add_to(REFRESH_BOOKMARK, self._new_bookmark)
-        self.save()
         self._refresh_bookmark = self._new_bookmark
 
     def is_qa_rejected(self, obs_id):
         # if the cache has not been updated this run refresh the cache
-        if (self._refresh_bookmark == 'None' or
-                self._refresh_bookmark < self._new_bookmark):
+        if self._refresh_bookmark is None:
             self._logger.info('Refresh QA REJECTED cache.')
             self._refresh()
 
@@ -133,4 +110,4 @@ class VLASSCache(mc.Cache):
         return obs_id in self._qa_rejected_obs_ids
 
 
-cache = VLASSCache(datetime.now(tz=timezone.utc))
+cache = VLASSCache()

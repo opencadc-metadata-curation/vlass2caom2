@@ -87,16 +87,19 @@ def visit(observation, **kwargs):
     #
     # https://archive-new.nrao.edu/vlass/quicklook/VLASS*/QA_REJECTED/#
     #
-    # and compare against that list. Cache that list, and refresh by date. Make
-    # sure the cache looks for increasing dates. The list gets items
-    # added/removed over time.
+    # and compare against that list. The list gets items added/removed over
+    # time.
 
     count = 0
+    original = observation.requirements
     if metadata.cache.is_qa_rejected(observation.observation_id):
-        _set_failed(observation)
-        count = 1
+        observation.requirements = Requirements(Status.FAIL)
+    else:
+        observation.requirements = None
     logging.info(
         f'Completed quality augmentation for {observation.observation_id}')
+    if observation.requirements != original:
+        count = 1
     return {'observations': count}
 
 
