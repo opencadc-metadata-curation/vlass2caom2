@@ -96,12 +96,12 @@ def visit(observation, **kwargs):
         observation.requirements = Requirements(Status.FAIL)
     else:
         observation.requirements = None
-    logging.info(
-        f'Completed quality augmentation for {observation.observation_id}')
     if observation.requirements != original:
         logging.warning(f'Changed requirements to {observation.requirements} '
                         f'for {observation.observation_id}.')
         count = 1
+    logging.info(
+        f'Completed quality augmentation for {observation.observation_id}')
     return {'observations': count}
 
 

@@ -87,7 +87,7 @@ class VLASSCache(object):
     def _refresh(self):
         start_date = self._refresh_bookmark
         if self._refresh_bookmark is None:
-            start_date = datetime(year=2018, month=1, day=1, hour=0,
+            start_date = datetime(year=2017, month=1, day=1, hour=0,
                                   tzinfo=self._tz)
         todo_list, ignore_max_date = scrape.build_qa_rejected_todo(start_date)
 

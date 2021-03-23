@@ -93,9 +93,6 @@ def visit(observation, **kwargs):
         # observations as retrieved on this date from:
         #
         # https://archive-new.nrao.edu/vlass/weblog/quicklook/*
-        #
-        # The lowest-level index.html files are scraped to create a csv file
-        # with observation ID, start time, end time, and exposure time.
 
         count = 0
         for plane in observation.planes.values():
@@ -123,7 +120,7 @@ def _augment_artifact(obs_id, artifact):
     version = None
     reference = None
     found = False
-    logging.debug(f'Fall back to scraping for time metadata for {obs_id}')
+    logging.debug(f'Scrape for time metadata for {obs_id}')
     global obs_metadata
     if obs_metadata is None:
         obs_metadata = scrape.retrieve_obs_metadata(obs_id)
