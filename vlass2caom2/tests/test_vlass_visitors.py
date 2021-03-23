@@ -71,13 +71,15 @@ import os
 import pytest
 import shutil
 
-from mock import Mock
+from mock import Mock, patch
 
 from caom2 import Status
 from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
-from vlass2caom2 import position_bounds_augmentation
+from vlass2caom2 import position_bounds_augmentation, work
+from vlass2caom2 import storage_name as sn
+import test_scrape
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
@@ -92,9 +94,19 @@ def test_aug_visit():
         quality_augmentation.visit(None)
 
 
-def test_aug_visit_works():
-    test_file = os.path.join(
-        TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
+@patch('caom2pipe.manage_composable.query_endpoint')
+def test_aug_visit_works(query_endpoint_mock):
+    query_endpoint_mock.side_effect = test_scrape._query_endpoint
+    test_config = mc.Config()
+    test_config.get_executors()
+    test_state = mc.State(test_config.state_fqn)
+    work.init_web_log(test_state, test_config)
+    test_name = sn.VlassName(
+        file_name='VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
+                  'image.pbcor.tt0.subim.fits',
+        entry='VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
+              'image.pbcor.tt0.subim.fits')
+    test_file = os.path.join(TEST_DATA_DIR, f'{test_name.obs_id}.xml')
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
@@ -106,71 +118,32 @@ def test_aug_visit_works():
     assert test_result is not None, 'should have a result status'
     assert len(test_result) == 1, 'modified artifacts count'
     assert test_result['artifacts'] == 2, 'artifact count'
-    plane = test_obs.planes['VLASS1.1.T01t01.J000228-363000.quicklook']
-    chunk = plane.artifacts[TEST_URI].parts['0'].chunks[0]
+    plane = test_obs.planes[test_name.product_id]
+    chunk = plane.artifacts[test_name.file_uri].parts['0'].chunks[0]
     assert chunk is not None
     assert chunk.time is not None, 'no time information'
     assert chunk.time.axis is not None, 'no axis information'
     assert chunk.time.axis.bounds is not None, 'no bounds information'
     assert len(chunk.time.axis.bounds.samples) == 1, \
         'wrong amount of bounds info'
-    assert chunk.time.exposure == 401.0, \
-        'wrong exposure value'
-    mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
+    assert chunk.time.exposure == 234.0, 'wrong exposure value'
 
 
-def test_aug_visit_quality_works():
-    rejected_uri = 'ad:VLASS/VLASS1.1.ql.T10t12.J075402-033000.10.2048.v1' \
-                   '.I.iter1.image.pbcor.tt0.subim.fits'
+@patch('caom2pipe.manage_composable.query_endpoint')
+def test_aug_visit_quality_works(query_endpoint_mock):
+    query_endpoint_mock.side_effect = test_scrape._query_endpoint
     test_file = os.path.join(
-        TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
+        TEST_DATA_DIR, 'VLASS1.2.T08t19.J123816-103000.xml')
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
-    data_dir = os.path.join(THIS_DIR, '../../data')
-    kwargs = {'working_directory': data_dir}
+    kwargs = {}
     test_result = quality_augmentation.visit(test_obs, **kwargs)
     assert test_obs is not None, 'unexpected modification'
     assert test_result is not None, 'should have a result status'
     assert len(test_result) == 1, 'modified artifacts count'
-    assert test_result['observations'] == 0, 'observation count'
-    assert test_obs.requirements is None, 'status value should not be set'
-
-    for plane in test_obs.planes:
-        for artifact in test_obs.planes[plane].artifacts:
-            test_obs.planes[plane].artifacts[artifact].uri = rejected_uri
-    test_result = quality_augmentation.visit(test_obs, **kwargs)
-    assert test_obs is not None, 'unexpected modification'
-    assert test_result is not None, 'should have a result status'
-    assert len(test_result) == 1, 'modified artifacts count'
-    assert test_result['observations'] == 2, 'observation count'
+    assert test_result['observations'] == 1, 'observation count'
     assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
-
-    mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
-
-
-def test_aug_visit_quality_works_uri():
-    rejected_uri = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
-                   'QA_REJECTED/VLASS1.1.ql.T01t09.J040228-363000.10.2048.v1/' \
-                   'VLASS1.1.ql.T01t09.J040228-363000.10.2048.v1.I.iter1.' \
-                   'image.pbcor.tt0.rms.subim.fits'
-    test_file = os.path.join(
-        TEST_DATA_DIR, 'VLASS1.1.T01t01.J000228-363000.xml')
-    test_obs = mc.read_obs_from_file(test_file)
-    assert test_obs is not None, 'unexpected None'
-
-    kwargs = {'uri': rejected_uri}
-    for plane in test_obs.planes:
-        for artifact in test_obs.planes[plane].artifacts:
-            test_obs.planes[plane].artifacts[artifact].uri = rejected_uri
-    test_result = quality_augmentation.visit(test_obs, **kwargs)
-    assert test_obs is not None, 'unexpected modification'
-    assert test_result is not None, 'should have a result status'
-    assert len(test_result) == 1, 'modified artifacts count'
-    assert test_result['observations'] == 2, 'observation count'
-    assert test_obs.requirements.flag == Status.FAIL, 'wrong status value'
-
-    mc.write_obs_to_file(test_obs, os.path.join(TEST_DATA_DIR, 'x.xml'))
 
 
 def test_aug_visit_position_bounds():

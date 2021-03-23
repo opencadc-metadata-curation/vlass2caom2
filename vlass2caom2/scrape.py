@@ -72,6 +72,7 @@ import logging
 import re
 
 from datetime import datetime
+from dateutil import tz
 
 from bs4 import BeautifulSoup
 
@@ -90,7 +91,7 @@ web_log_content = {}
 
 def make_date_time(from_str):
     for fmt in ['%d%b%Y %H:%M', '%Y-%m-%d %H:%M', '%Y%m%d %H:%M',
-                '%d-%b-%Y %H:%M']:
+                '%d-%b-%Y %H:%M', '%Y_%m_%dT%H_%M_%S.%f']:
         try:
             dt = datetime.strptime(from_str, fmt)
             break
@@ -485,39 +486,56 @@ def retrieve_obs_metadata(obs_id):
     global web_log_content
     if len(web_log_content) == 0:
         raise mc.CadcException('Must initialize weblog content.')
+    latest_key = None
+    max_ts = None
+    tz_info = tz.gettz('US/Socorro')
+    # there may be multiple processing runs for a single obs id, use the
+    # most recent
     for key in web_log_content.keys():
         if key.startswith(mod_obs_id):
-            obs_url = '{}{}'.format(QL_WEB_LOG_URL, key)
-            logging.debug('Querying {}'.format(obs_url))
-            response = None
-            try:
-                response = mc.query_endpoint(obs_url)
-                if response is None:
-                    logging.error('Could not query {}'.format(obs_url))
+            dt_bits = '_'.join(ii for ii in
+                               key.replace('/', '').split('_')[3:])
+            dt_tz = make_date_time(dt_bits).replace(tzinfo=tz_info)
+            if max_ts is None:
+                max_ts = dt_tz
+                latest_key = key
+            else:
+                if max_ts < dt_tz:
+                    max_ts = dt_tz
+                    latest_key = key
+
+    if latest_key is not None:
+        obs_url = '{}{}'.format(QL_WEB_LOG_URL, latest_key)
+        logging.debug('Querying {}'.format(obs_url))
+        response = None
+        try:
+            response = mc.query_endpoint(obs_url)
+            if response is None:
+                logging.error('Could not query {}'.format(obs_url))
+            else:
+                pipeline_bit = _parse_for_reference(response.text,
+                                                    'pipeline-')
+                response.close()
+                if pipeline_bit is None:
+                    logging.error(
+                        'Did not find pipeline on {}'.format(obs_url))
                 else:
-                    pipeline_bit = _parse_for_reference(response.text,
-                                                        'pipeline-')
-                    response.close()
-                    if pipeline_bit is None:
+                    pipeline_url = '{}{}html/index.html'.format(
+                        obs_url, pipeline_bit.strip())
+                    logging.debug('Querying {}'.format(pipeline_url))
+                    response = mc.query_endpoint(pipeline_url)
+                    if response is None:
                         logging.error(
-                            'Did not find pipeline on {}'.format(obs_url))
+                            'Could not query {}'.format(pipeline_url))
                     else:
-                        pipeline_url = '{}{}html/index.html'.format(
-                            obs_url, pipeline_bit.strip())
-                        logging.debug('Querying {}'.format(pipeline_url))
-                        response = mc.query_endpoint(pipeline_url)
-                        if response is None:
-                            logging.error(
-                                'Could not query {}'.format(pipeline_url))
-                        else:
-                            metadata = _parse_single_field(response.text)
-                            metadata['reference'] = pipeline_url
-                            logging.debug(
-                                'Setting reference to {}'.format(pipeline_url))
-                        response.close()
-            finally:
-                if response is not None:
+                        metadata = _parse_single_field(response.text)
+                        metadata['reference'] = pipeline_url
+                        logging.debug(
+                            'Setting reference to {}'.format(pipeline_url))
                     response.close()
+        finally:
+            if response is not None:
+                response.close()
     return metadata
 
 

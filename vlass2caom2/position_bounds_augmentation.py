@@ -74,7 +74,7 @@ from caom2 import Observation
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import VlassName
+from vlass2caom2 import storage_name as sn
 
 
 __all__ = ['visit']
@@ -105,7 +105,7 @@ def visit(observation, **kwargs):
                     # -t 10 provides a margin of up to 10 pixels
                     cc.exec_footprintfinder(
                         chunk, science_fqn, log_file_directory,
-                        VlassName.remove_extensions(science_file), '-t 10')
+                        sn.VlassName.remove_extensions(science_file), '-t 10')
                     count += 1
 
     logging.info('Completed footprint augmentation for {}'.format(

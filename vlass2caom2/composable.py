@@ -74,7 +74,7 @@ import traceback
 from caom2pipe import manage_composable as mc
 from caom2pipe import run_composable as rc
 from caom2pipe import transfer_composable as tc
-from vlass2caom2 import VlassName, APPLICATION
+from vlass2caom2 import storage_name as sn
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
 from vlass2caom2 import work, data_source, scrape, builder
@@ -93,15 +93,15 @@ def _run_single():
     config = mc.Config()
     config.get_executors()
     if config.features.use_file_names:
-        vlass_name = VlassName(file_name=sys.argv[1], entry=sys.argv[1])
+        vlass_name = sn.VlassName(file_name=sys.argv[1], entry=sys.argv[1])
     elif config.features.use_urls:
-        vlass_name = VlassName(url=sys.argv[1], entry=sys.argv[1])
+        vlass_name = sn.VlassName(url=sys.argv[1], entry=sys.argv[1])
     else:
-        vlass_name = VlassName(obs_id=sys.argv[1], entry=sys.argv[1])
+        vlass_name = sn.VlassName(obs_id=sys.argv[1], entry=sys.argv[1])
     logging.error(vlass_name)
     return rc.run_single(config=config,
                          storage_name=vlass_name,
-                         command_name=APPLICATION,
+                         command_name=sn.APPLICATION,
                          meta_visitors=META_VISITORS,
                          data_visitors=DATA_VISITORS,
                          store_transfer=tc.HttpTransfer())
@@ -139,7 +139,7 @@ def _run_by_state():
     source = data_source.NraoPage(todo_list)
     name_builder = builder.VlassInstanceBuilder(config)
     return rc.run_by_state(config=config,
-                           command_name=APPLICATION,
+                           command_name=sn.APPLICATION,
                            bookmark_name=VLASS_BOOKMARK,
                            meta_visitors=META_VISITORS,
                            data_visitors=DATA_VISITORS,
@@ -177,7 +177,7 @@ def _run():
     name_builder = builder.VlassInstanceBuilder(config)
     return rc.run_by_todo(config=config,
                           name_builder=name_builder,
-                          command_name=APPLICATION,
+                          command_name=sn.APPLICATION,
                           meta_visitors=META_VISITORS,
                           data_visitors=DATA_VISITORS,
                           store_transfer=tc.HttpTransfer())

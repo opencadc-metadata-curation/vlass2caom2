@@ -67,7 +67,7 @@
 # ***********************************************************************
 #
 
-from vlass2caom2 import main_app, COLLECTION
+from vlass2caom2 import storage_name as sn
 
 
 def test_storage_name():
@@ -76,8 +76,8 @@ def test_storage_name():
     test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
                'T23t09/VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/' \
                '{}.subim.fits'.format(test_bit)
-    ts1 = main_app.VlassName(url=test_url)
-    ts2 = main_app.VlassName(file_name='{}.subim.fits'.format(test_bit))
+    ts1 = sn.VlassName(url=test_url)
+    ts2 = sn.VlassName(file_name='{}.subim.fits'.format(test_bit))
     for ts in [ts1, ts2]:
         assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
         assert ts.fname_on_disk == '{}.subim.fits'.format(test_bit), \
@@ -90,7 +90,7 @@ def test_storage_name():
             'VLASS1.2.T23t09.J083851+483000.fits.xml', 'wrong model name'
         assert ts.log_file == 'VLASS1.2.T23t09.J083851+483000.log', \
             'wrong log file'
-        assert main_app.VlassName.remove_extensions(ts.file_name) == \
+        assert sn.VlassName.remove_extensions(ts.file_name) == \
             '{}.subim'.format(test_bit), 'wrong extensions'
         assert ts.epoch == 'VLASS1.2', 'wrong epoch'
         assert ts.tile_url == 'https://archive-new.nrao.edu/vlass/quicklook/' \
@@ -105,8 +105,8 @@ def test_storage_name():
             'wrong image pointing url'
         assert ts.prev == f'{test_bit}.subim_prev.jpg', 'wrong preview'
         assert ts.thumb == f'{test_bit}.subim_prev_256.jpg', 'wrong thumbnail'
-        assert ts.prev_uri == f'ad:{COLLECTION}/{test_bit}.subim_prev.jpg', \
+        assert ts.prev_uri == f'ad:{sn.COLLECTION}/{test_bit}.subim_prev.jpg', \
             'wrong preview uri'
         assert ts.thumb_uri == \
-               f'ad:{COLLECTION}/{test_bit}.subim_prev_256.jpg', \
+               f'ad:{sn.COLLECTION}/{test_bit}.subim_prev_256.jpg', \
                'wrong thumbnail uri'

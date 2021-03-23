@@ -71,7 +71,7 @@ import logging
 
 from caom2 import Observation
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import VlassName
+from vlass2caom2 import storage_name as sn
 
 
 def visit(observation, **kwargs):
@@ -83,8 +83,9 @@ def visit(observation, **kwargs):
     mc.check_param(observation, Observation)
     url = kwargs.get('url')
     if url is None:
-        raise mc.CadcException(f'Require url for cleanup augmentation of '
-                               f'{observation.observation_id}')
+        logging.error(f'Require url for cleanup augmentation of '
+                      f'{observation.observation_id}')
+        return
 
     count = 0
     for plane in observation.planes.values():
@@ -99,13 +100,13 @@ def visit(observation, **kwargs):
             max_version = 1
             for artifact in plane.artifacts.values():
                 if len(artifact.parts) > 0:  # check only fits uris
-                    version = VlassName.get_version(artifact.uri)
+                    version = sn.VlassName.get_version(artifact.uri)
                     max_version = max(max_version, version)
 
             # now collect the list of artifacts not at the maximum version
             for artifact in plane.artifacts.values():
                 if len(artifact.parts) > 0:  # check only fits uris
-                    version = VlassName.get_version(artifact.uri)
+                    version = sn.VlassName.get_version(artifact.uri)
                     if version != max_version:
                         temp.append(artifact.uri)
 

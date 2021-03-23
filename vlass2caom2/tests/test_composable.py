@@ -81,10 +81,13 @@ import test_main_app
 import test_scrape
 
 
+@patch('caom2pipe.manage_composable.query_endpoint')
 @patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd')
 @patch('caom2pipe.execute_composable.CAOM2RepoClient')
 @patch('caom2pipe.execute_composable.CadcDataClient')
-def test_run_by_builder(data_client_mock, repo_mock, exec_mock):
+def test_run_by_builder(data_client_mock, repo_mock, exec_mock,
+                        query_endpoint_mock):
+    query_endpoint_mock.side_effect = test_scrape._query_endpoint
     repo_mock.return_value.read.side_effect = _mock_repo_read
     repo_mock.return_value.create.side_effect = Mock()
     repo_mock.return_value.update.side_effect = _mock_repo_update
@@ -138,7 +141,7 @@ def test_run_state(run_mock, query_mock, data_client_mock):
     test_obs_id = 'VLASS1.2.T07t13.J083838-153000'
     test_product_id = 'VLASS1.2.T07t13.J083838-153000.quicklook'
     test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
-                  'image.pbcor.tt0.rms.subim.fits'
+                  'image.pbcor.tt0.subim.fits'
     try:
         # execution
         test_result = composable._run_by_state()
