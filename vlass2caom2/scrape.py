@@ -178,7 +178,7 @@ def _parse_top_page_no_date(html_string):
     return result
 
 
-def build_good_todo(start_date):
+def build_good_todo(start_date, session):
     """Create the list of work, based on timestamps from the NRAO
     Quicklook page.
 
@@ -192,7 +192,7 @@ def build_good_todo(start_date):
 
     try:
         # get the last modified date on the quicklook images listing
-        response = mc.query_endpoint(QL_URL)
+        response = mc.query_endpoint_session(QL_URL, session)
         if response is None:
             logging.warning('Could not query {}'.format(QL_URL))
         else:
@@ -204,7 +204,7 @@ def build_good_todo(start_date):
                 logging.info(
                     'Checking epoch {} on date {}'.format(
                         epoch, epochs[epoch]))
-                response = mc.query_endpoint(epoch_url)
+                response = mc.query_endpoint_session(epoch_url, session)
                 if response is None:
                     logging.warning(
                         'Could not query epoch {}'.format(epoch_url))
@@ -217,7 +217,7 @@ def build_good_todo(start_date):
                         logging.info('Checking tile {} with date {}'.format(
                             tile, tiles[tile]))
                         tile_url = '{}{}'.format(epoch_url, tile)
-                        response = mc.query_endpoint(tile_url)
+                        response = mc.query_endpoint_session(tile_url, session)
                         if response is None:
                             logging.warning(
                                 'Could not query {}'.format(tile_url))
@@ -312,7 +312,7 @@ def _parse_specific_rejected_page(html_string):
     return temp
 
 
-def build_qa_rejected_todo(start_date):
+def build_qa_rejected_todo(start_date, session):
     """
     :return a dict, where keys are timestamps, and values are lists
        of URLs.
@@ -323,7 +323,7 @@ def build_qa_rejected_todo(start_date):
     response = None
     try:
         # get the last modified date on the quicklook images listing
-        response = mc.query_endpoint(QL_URL)
+        response = mc.query_endpoint_session(QL_URL, session)
         if response is None:
             logging.warning('Could not query {}'.format(QL_URL))
         else:
@@ -337,7 +337,9 @@ def build_qa_rejected_todo(start_date):
                     'Checking epoch {} on date {}'.format(
                         epoch_name, epochs[epoch]))
                 try:
-                    response = mc.query_endpoint(epoch_rejected_url)
+                    response = mc.query_endpoint_session(
+                        epoch_rejected_url, session
+                    )
                     if response is None:
                         logging.warning(
                             'Could not query epoch {}'.format(epoch_rejected_url))
@@ -369,9 +371,10 @@ def build_todo(start_date):
        of URLs.
     """
     logging.debug('Begin build_todo with date {}'.format(start_date))
-    good, good_date = build_good_todo(start_date)
+    session = mc.get_endpoint_session()
+    good, good_date = build_good_todo(start_date, session)
     logging.info('{} good records to process.'.format(len(good)))
-    rejected, rejected_date = build_qa_rejected_todo(start_date)
+    rejected, rejected_date = build_qa_rejected_todo(start_date, session)
     logging.info(
         '{} rejected records to process, date will be {}'.format(
             len(rejected), rejected_date))
@@ -429,13 +432,13 @@ def _parse_specific_file_list_page(html_string, start_time):
     return result
 
 
-def list_files_on_page(url, start_time):
+def list_files_on_page(url, start_time, session):
     """:return a dict, where keys are URLS, and values are timestamps, from
     a specific page listing at NRAO."""
     response = None
     try:
         logging.debug('Querying {}'.format(url))
-        response = mc.query_endpoint(url)
+        response = mc.query_endpoint_session(url, session)
         if response is None:
             raise mc.CadcException('Could not query {}'.format(url))
         else:
@@ -461,7 +464,10 @@ def init_web_log_content(epochs):
         logging.info('Initializing weblog content.')
         response = None
         try:
-            response = mc.query_endpoint(QL_WEB_LOG_URL, timeout=360)
+            session = mc.get_endpoint_session()
+            response = mc.query_endpoint_session(
+                QL_WEB_LOG_URL, session, timeout=360
+            )
             if response is None:
                 raise mc.CadcException(
                     'Need access to {}'.format(QL_WEB_LOG_URL))
@@ -470,6 +476,47 @@ def init_web_log_content(epochs):
                 temp = _parse_page_for_hrefs(response.text, ii, epochs[ii])
                 web_log_content = {**temp_orig, **temp}
             response.close()
+        finally:
+            if response is not None:
+                response.close()
+    else:
+        logging.debug('weblog listing already cached.')
+
+
+def init_web_log_content_2(epochs):
+    """
+    Cache the listing of weblog processing, because it's really long, and
+    takes a long time to read.
+
+    :param epochs: A dict with key == epoch name (e.g. 'VLASS1.1') and
+        value = date after which entries are of interest
+    """
+    global web_log_content
+    if len(web_log_content) == 0:
+        logging.info('Initializing weblog content.')
+        import requests
+        from requests.adapters import HTTPAdapter
+        from urllib3 import Retry
+
+        session = requests.Session()
+        retries = 10
+        retry = Retry(total=retries, read=retries, connect=retries,
+                      backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        response = None
+        try:
+            response = session.get(QL_WEB_LOG_URL, timeout=360, stream=True)
+            for line in response.iter_lines():
+            # if response is None:
+            #     raise mc.CadcException(
+            #         'Need access to {}'.format(QL_WEB_LOG_URL))
+                if line:
+                    for ii in epochs:
+                        temp_orig = web_log_content
+                        temp = _parse_page_for_hrefs(line, ii, epochs[ii])
+                        web_log_content = {**temp_orig, **temp}
         finally:
             if response is not None:
                 response.close()
@@ -504,12 +551,13 @@ def retrieve_obs_metadata(obs_id):
                     max_ts = dt_tz
                     latest_key = key
 
+    session = mc.get_endpoint_session()
     if latest_key is not None:
         obs_url = '{}{}'.format(QL_WEB_LOG_URL, latest_key)
         logging.debug('Querying {}'.format(obs_url))
         response = None
         try:
-            response = mc.query_endpoint(obs_url)
+            response = mc.query_endpoint_session(obs_url, session)
             if response is None:
                 logging.error('Could not query {}'.format(obs_url))
             else:
@@ -523,7 +571,7 @@ def retrieve_obs_metadata(obs_id):
                     pipeline_url = '{}{}html/index.html'.format(
                         obs_url, pipeline_bit.strip())
                     logging.debug('Querying {}'.format(pipeline_url))
-                    response = mc.query_endpoint(pipeline_url)
+                    response = mc.query_endpoint_session(pipeline_url, session)
                     if response is None:
                         logging.error(
                             'Could not query {}'.format(pipeline_url))
@@ -569,13 +617,14 @@ def build_url_list(start_date):
     :return a dict, where keys are URLs, and values are timestamps
     """
     result = {}
-    todo_list, ignore_date = build_good_todo(start_date)
-    rejected, ignore_date = build_qa_rejected_todo(start_date)
+    session = mc.get_endpoint_session()
+    todo_list, ignore_date = build_good_todo(start_date, session)
+    rejected, ignore_date = build_qa_rejected_todo(start_date, session)
     for coll in [todo_list, rejected]:
         if len(coll) > 0:
             for timestamp, urls in coll.items():
                 for url in urls:
-                    temp = list_files_on_page(url, start_date)
+                    temp = list_files_on_page(url, start_date, session)
                     for key, value in temp.items():
                         # key f_name
                         # value timestamp
@@ -593,7 +642,8 @@ def query_top_page():
 
     try:
         # get the last modified date on the quicklook images listing
-        response = mc.query_endpoint(QL_URL)
+        session = mc.get_endpoint_session()
+        response = mc.query_endpoint_session(QL_URL, session)
         if response is None:
             logging.warning('Could not query {}'.format(QL_URL))
         else:
