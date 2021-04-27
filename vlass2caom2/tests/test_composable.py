@@ -81,7 +81,7 @@ import test_main_app
 import test_scrape
 
 
-@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 @patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd')
 @patch('caom2pipe.execute_composable.CAOM2RepoClient')
 @patch('caom2pipe.execute_composable.CadcDataClient')
@@ -125,7 +125,7 @@ def test_run_by_builder(data_client_mock, repo_mock, exec_mock,
 
 
 @patch('caom2pipe.execute_composable.CadcDataClient')
-@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 def test_run_state(run_mock, query_mock, data_client_mock):
     test_scrape._write_state('24Apr2019 12:34')
@@ -141,7 +141,7 @@ def test_run_state(run_mock, query_mock, data_client_mock):
     test_obs_id = 'VLASS1.2.T07t13.J083838-153000'
     test_product_id = 'VLASS1.2.T07t13.J083838-153000.quicklook'
     test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
-                  'image.pbcor.tt0.subim.fits'
+                  'image.pbcor.tt0.rms.subim.fits'
     try:
         # execution
         test_result = composable._run_by_state()
@@ -171,7 +171,7 @@ def test_run_state(run_mock, query_mock, data_client_mock):
 
 
 @patch('vlass2caom2.to_caom2')
-@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 @patch('caom2pipe.execute_composable.CAOM2RepoClient')
 @patch('caom2pipe.execute_composable.CadcDataClient')
 @patch('cadcdata.CadcDataClient.get_file_info')

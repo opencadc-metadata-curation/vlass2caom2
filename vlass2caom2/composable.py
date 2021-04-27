@@ -98,7 +98,6 @@ def _run_single():
         vlass_name = sn.VlassName(url=sys.argv[1], entry=sys.argv[1])
     else:
         vlass_name = sn.VlassName(obs_id=sys.argv[1], entry=sys.argv[1])
-    logging.error(vlass_name)
     return rc.run_single(config=config,
                          storage_name=vlass_name,
                          command_name=sn.APPLICATION,
@@ -134,8 +133,10 @@ def _run_by_state():
     # on the execution environment
     start_time = mc.increment_time(state.get_bookmark(VLASS_BOOKMARK), 0)
     todo_list, max_date = scrape.build_file_url_list(start_time)
-    state = mc.State(config.state_fqn)
-    work.init_web_log(state, config)
+    if len(todo_list) > 0:
+        state = mc.State(config.state_fqn)
+        work.init_web_log(state, config)
+    # still make all subsequent calls if len == 0, for consistent reporting
     source = data_source.NraoPage(todo_list)
     name_builder = builder.VlassInstanceBuilder(config)
     return rc.run_by_state(config=config,

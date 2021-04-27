@@ -94,7 +94,7 @@ def test_aug_visit():
         quality_augmentation.visit(None)
 
 
-@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_aug_visit_works(query_endpoint_mock):
     query_endpoint_mock.side_effect = test_scrape._query_endpoint
     test_config = mc.Config()
