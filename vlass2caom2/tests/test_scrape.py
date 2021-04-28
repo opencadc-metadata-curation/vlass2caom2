@@ -178,12 +178,13 @@ def test_augment_bits():
 
     with open(WL_INDEX) as f:
         test_content = f.read()
-        test_result = scrape._parse_for_reference(test_content,
-                                                  TEST_OBS_ID)
+        test_result = scrape._parse_for_reference(
+            test_content, 'VLASS1.2.T07t13.J083453-133000'
+        )
         assert test_result is not None, 'expected a result'
         assert test_result == \
-            'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_' \
-            '04.128/', 'wrong result'
+            'VLASS1.2_T07t13.J083453-133000_P42511v1_2019_04_26T16_17_56.' \
+            '882/', 'wrong result'
 
     with open(SINGLE_FIELD_DETAIL) as f:
         test_content = f.read()
@@ -242,8 +243,10 @@ def test_qa_rejected_bits():
                'pbcor.tt0.rms.subim.fits' in test_result, 'wrong content'
 
 
+@patch('vlass2caom2.scrape.requests.get')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
-def test_visit(query_endpoint_mock):
+def test_visit(query_endpoint_mock, get_mock):
+    get_mock.return_value.__enter__.return_value.raw = WL_INDEX
     test_id = 'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.' \
               '128/'
     query_endpoint_mock.side_effect = _query_endpoint
@@ -328,19 +331,25 @@ def test_init_web_log_content(get_mock):
         scrape.web_log_content = {}
     scrape.init_web_log_content({'VLASS1.2': TEST_START_TIME})
     assert scrape.web_log_content is not None, 'should be initialized'
-    assert len(scrape.web_log_content) == 8, 'wrong record count'
+    assert len(scrape.web_log_content) == 15, 'wrong record count'
     test_subject = scrape.web_log_content.popitem()
     assert isinstance(test_subject, tuple), \
         'wrong return type {}'.format(type(test_subject))
     assert test_subject[0] == \
-        'VLASS1.2_T07t13.J083828-133000_P42512v1_2019_04_26T16_18_18.' \
-        '714/', 'wrong first record'
-    assert test_subject[1] == datetime(2019, 4, 28, 17, 37), \
+        'VLASS1.2_T07t13.J081828-133000_P42507v1_2019_04_24T15_09_10.579/', \
+        'wrong first record'
+    assert test_subject[1] == datetime(2019, 4, 25, 21, 53), \
         'wrong date result'
 
 
+@patch('vlass2caom2.scrape.requests.get')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
-def test_retrieve_metadata(query_endpoint_mock):
+def test_retrieve_metadata(query_endpoint_mock, get_mock):
+    get_mock.return_value.__enter__.return_value.raw = WL_INDEX
+    if len(scrape.web_log_content) > 0:
+        scrape.web_log_content = {}
+    scrape.init_web_log_content({'VLASS1.2': TEST_START_TIME})
+
     query_endpoint_mock.side_effect = _query_endpoint
     test_result = scrape.retrieve_obs_metadata(
         'VLASS1.2.T07t13.J083453-133000')

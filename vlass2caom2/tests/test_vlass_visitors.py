@@ -94,8 +94,10 @@ def test_aug_visit():
         quality_augmentation.visit(None)
 
 
+@patch('vlass2caom2.scrape.requests.get')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
-def test_aug_visit_works(query_endpoint_mock):
+def test_aug_visit_works(query_endpoint_mock, get_mock):
+    get_mock.return_value.__enter__.return_value.raw = test_scrape.WL_INDEX
     query_endpoint_mock.side_effect = test_scrape._query_endpoint
     test_config = mc.Config()
     test_config.get_executors()

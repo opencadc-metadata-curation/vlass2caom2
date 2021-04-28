@@ -467,19 +467,22 @@ def init_web_log_content(epochs):
         # start with no timeout value due to the large number of entries on
         # the page
         with requests.get(QL_WEB_LOG_URL, stream=True) as r:
-            ctx = etree.iterparse(r.raw, html=True, tag='a')
+            ctx = etree.iterparse(r.raw, html=True)
             for event, elem in ctx:
-                href = elem.attrib.get('href')
-                for epoch, start_date in epochs.items():
-                    if href.startswith(epoch):
-                        if elem.tail is not None:
-                            dt = make_date_time(
-                                elem.tail.replace('-', '').strip()
-                            )
-                            if dt >= start_date:
-                                web_log_content[href] = dt
-                            break
+                if elem.tag == 'a':
+                    href = elem.attrib.get('href')
+                    for epoch, start_date in epochs.items():
+                        if href.startswith(epoch):
+                            next_elem = elem.getparent().getnext()
+                            if next_elem is not None:
+                                dt_str = next_elem.text
+                                if dt_str is not None:
+                                    dt = make_date_time(dt_str.strip())
+                                    if dt >= start_date:
+                                        web_log_content[href] = dt
+                                    break
                 elem.clear()
+            del ctx
     else:
         logging.debug('weblog listing already cached.')
 
