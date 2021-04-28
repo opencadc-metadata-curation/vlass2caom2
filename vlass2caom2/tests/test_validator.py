@@ -82,7 +82,7 @@ import test_main_app, test_scrape
 @patch('caom2pipe.manage_composable.repo_get')
 @patch('cadcdata.core.net.BaseWsClient.post')
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
-@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
     caps_mock.return_value = 'https://sc2.canfar.net/sc2repo'
     response = Mock()

@@ -70,9 +70,11 @@
 import collections
 import logging
 import re
+import requests
 
 from datetime import datetime
 from dateutil import tz
+from lxml import etree
 
 from bs4 import BeautifulSoup
 
@@ -114,7 +116,7 @@ def _parse_id_page(html_string, start_date):
         z = ii.next_element.next_element.string.replace('-', '').strip()
         dt = make_date_time(z)
         if dt >= start_date:
-            logging.info('Adding ID Page: {}'.format(y))
+            logging.info(f'Adding ID Page: {y}')
             result[y] = dt
     return result
 
@@ -134,7 +136,7 @@ def _parse_tile_page(html_string, start_date):
             z = ii.next_element.next_element.string.replace('-', '').strip()
             dt = make_date_time(z)
             if dt >= start_date:
-                logging.info('Adding Tile Page: {}'.format(y))
+                logging.info(f'Adding Tile Page: {y}')
                 result[y] = dt
     return result
 
@@ -154,7 +156,7 @@ def _parse_top_page(html_string, start_date):
             z = ii.next_element.next_element.string.replace('-', '').strip()
             dt = make_date_time(z)
             if dt >= start_date:
-                logging.info('Adding epoch: {}'.format(y))
+                logging.info(f'Adding epoch: {y}')
                 result[y] = dt
     return result
 
@@ -173,12 +175,12 @@ def _parse_top_page_no_date(html_string):
         if y.startswith('VLASS') and y.endswith('/'):
             z = ii.next_element.next_element.string.replace('-', '').strip()
             dt = make_date_time(z)
-            logging.info('Adding epoch: {}'.format(y))
+            logging.info(f'Adding epoch: {y}')
             result[y] = dt
     return result
 
 
-def build_good_todo(start_date):
+def build_good_todo(start_date, session):
     """Create the list of work, based on timestamps from the NRAO
     Quicklook page.
 
@@ -192,35 +194,32 @@ def build_good_todo(start_date):
 
     try:
         # get the last modified date on the quicklook images listing
-        response = mc.query_endpoint(QL_URL)
+        response = mc.query_endpoint_session(QL_URL, session)
         if response is None:
-            logging.warning('Could not query {}'.format(QL_URL))
+            logging.warning(f'Could not query {QL_URL}')
         else:
             epochs = _parse_top_page_no_date(response.text)
             response.close()
 
             for epoch in epochs:
-                epoch_url = '{}{}'.format(QL_URL, epoch)
-                logging.info(
-                    'Checking epoch {} on date {}'.format(
-                        epoch, epochs[epoch]))
-                response = mc.query_endpoint(epoch_url)
+                epoch_url = f'{QL_URL}{epoch}'
+                logging.info(f'Checking epoch {epoch} on date {epochs[epoch]}')
+                response = mc.query_endpoint_session(epoch_url, session)
                 if response is None:
-                    logging.warning(
-                        'Could not query epoch {}'.format(epoch_url))
+                    logging.warning(f'Could not query epoch {epoch_url}')
                 else:
                     tiles = _parse_tile_page(response.text, start_date)
                     response.close()
 
                     # get the list of tiles
                     for tile in tiles:
-                        logging.info('Checking tile {} with date {}'.format(
-                            tile, tiles[tile]))
-                        tile_url = '{}{}'.format(epoch_url, tile)
-                        response = mc.query_endpoint(tile_url)
+                        logging.info(
+                            f'Checking tile {tile} with date {tiles[tile]}'
+                        )
+                        tile_url = f'{epoch_url}{tile}'
+                        response = mc.query_endpoint_session(tile_url, session)
                         if response is None:
-                            logging.warning(
-                                'Could not query {}'.format(tile_url))
+                            logging.warning(f'Could not query {tile_url}')
                         else:
                             observations = _parse_id_page(
                                 response.text, start_date)
@@ -228,7 +227,7 @@ def build_good_todo(start_date):
 
                             # for each tile, get the list of observations
                             for observation in observations:
-                                obs_url = '{}{}'.format(tile_url, observation)
+                                obs_url = f'{tile_url}{observation}'
                                 dt_as_s = observations[observation].timestamp()
                                 max_date = max(
                                     max_date, observations[observation])
@@ -266,13 +265,13 @@ def _parse_single_field(html_string):
     for ii in ['Pipeline Version', 'Observation Start', 'Observation End']:
         temp = soup.find(string=re.compile(ii)).next_element.next_element
         result[ii] = temp.get_text().strip()
-        logging.debug('Setting {} to {}'.format(ii, result[ii]))
+        logging.debug(f'Setting {ii} to {result[ii]}')
 
     sums = soup.find_all(summary=re.compile('Measurement Set Summaries'))
     if len(sums) == 1:
         tds = sums[0].find_all('td')
         if len(tds) > 7:
-            logging.debug('Setting On Source to {}'.format(tds[7].string))
+            logging.debug(f'Setting On Source to {tds[7].string}')
             result['On Source'] = tds[7].string
     # there must be a better way to do this
     result['Observation Start'] = result['Observation Start'].split('\xa0')[0]
@@ -293,8 +292,8 @@ def _parse_rejected_page(html_string, epoch, start_date, url):
         temp = ii.next_element.next_element.string.replace('-', '').strip()
         dt = make_date_time(temp)
         if dt >= start_date:
-            new_url = '{}{}'.format(url, ii.get_text())
-            logging.debug('Adding rejected {}'.format(new_url))
+            new_url = f'{url}{ii.get_text()}'
+            logging.debug(f'Adding rejected {new_url}')
             if dt.timestamp() in result:
                 result[dt.timestamp()].append(new_url)
             else:
@@ -312,7 +311,7 @@ def _parse_specific_rejected_page(html_string):
     return temp
 
 
-def build_qa_rejected_todo(start_date):
+def build_qa_rejected_todo(start_date, session):
     """
     :return a dict, where keys are timestamps, and values are lists
        of URLs.
@@ -323,24 +322,27 @@ def build_qa_rejected_todo(start_date):
     response = None
     try:
         # get the last modified date on the quicklook images listing
-        response = mc.query_endpoint(QL_URL)
+        response = mc.query_endpoint_session(QL_URL, session)
         if response is None:
-            logging.warning('Could not query {}'.format(QL_URL))
+            logging.warning(f'Could not query {QL_URL}')
         else:
             epochs = _parse_top_page_no_date(response.text)
             response.close()
 
             for epoch in epochs:
                 epoch_name = epoch.split('/')[-2]
-                epoch_rejected_url = '{}{}QA_REJECTED/'.format(QL_URL, epoch)
+                epoch_rejected_url = f'{QL_URL}{epoch}QA_REJECTED/'
                 logging.info(
-                    'Checking epoch {} on date {}'.format(
-                        epoch_name, epochs[epoch]))
+                    f'Checking epoch {epoch_name} on date {epochs[epoch]}'
+                )
                 try:
-                    response = mc.query_endpoint(epoch_rejected_url)
+                    response = mc.query_endpoint_session(
+                        epoch_rejected_url, session
+                    )
                     if response is None:
                         logging.warning(
-                            'Could not query epoch {}'.format(epoch_rejected_url))
+                            f'Could not query epoch {epoch_rejected_url}'
+                        )
                     else:
                         temp, rejected_max = _parse_rejected_page(
                             response.text, epoch_name, start_date,
@@ -368,13 +370,15 @@ def build_todo(start_date):
     :return a dict, where keys are timestamps, and values are lists
        of URLs.
     """
-    logging.debug('Begin build_todo with date {}'.format(start_date))
-    good, good_date = build_good_todo(start_date)
-    logging.info('{} good records to process.'.format(len(good)))
-    rejected, rejected_date = build_qa_rejected_todo(start_date)
+    logging.debug(f'Begin build_todo with date {start_date}')
+    session = mc.get_endpoint_session()
+    good, good_date = build_good_todo(start_date, session)
+    logging.info(f'{len(good)} good records to process. Check for rejected.')
+    rejected, rejected_date = build_qa_rejected_todo(start_date, session)
     logging.info(
-        '{} rejected records to process, date will be {}'.format(
-            len(rejected), rejected_date))
+        f'{len(rejected)} rejected records to process, date will be '
+        f'{rejected_date}'
+    )
     result = collections.OrderedDict()
     for k, v in sorted(sorted(good.items()) + sorted(rejected.items())):
         temp = result.setdefault(k, [])
@@ -387,8 +391,9 @@ def build_todo(start_date):
         return_date = min(good_date, rejected_date)
     else:
         return_date = max(good_date, rejected_date)
-    logging.debug('End build_todo with {} records, date {}'.format(
-        len(result), return_date))
+    logging.debug(
+        f'End build_todo with {len(result)} records, date {return_date}'
+    )
     return result, return_date
 
 
@@ -404,7 +409,7 @@ def _parse_page_for_hrefs(html_string, reference, start_date):
         z = ii.next_element.next_element.string.replace('-', '').strip()
         dt = make_date_time(z)
         if dt >= start_date:
-            logging.info('Adding {}'.format(y))
+            logging.info(f'Adding {y}')
             result[y] = dt
     return result
 
@@ -429,15 +434,15 @@ def _parse_specific_file_list_page(html_string, start_time):
     return result
 
 
-def list_files_on_page(url, start_time):
+def list_files_on_page(url, start_time, session):
     """:return a dict, where keys are URLS, and values are timestamps, from
     a specific page listing at NRAO."""
     response = None
     try:
-        logging.debug('Querying {}'.format(url))
-        response = mc.query_endpoint(url)
+        logging.debug(f'Querying {url}')
+        response = mc.query_endpoint_session(url, session)
         if response is None:
-            raise mc.CadcException('Could not query {}'.format(url))
+            raise mc.CadcException(f'Could not query {url}')
         else:
             result = _parse_specific_file_list_page(response.text,
                                                     start_time)
@@ -459,20 +464,22 @@ def init_web_log_content(epochs):
     global web_log_content
     if len(web_log_content) == 0:
         logging.info('Initializing weblog content.')
-        response = None
-        try:
-            response = mc.query_endpoint(QL_WEB_LOG_URL, timeout=360)
-            if response is None:
-                raise mc.CadcException(
-                    'Need access to {}'.format(QL_WEB_LOG_URL))
-            for ii in epochs:
-                temp_orig = web_log_content
-                temp = _parse_page_for_hrefs(response.text, ii, epochs[ii])
-                web_log_content = {**temp_orig, **temp}
-            response.close()
-        finally:
-            if response is not None:
-                response.close()
+        # start with no timeout value due to the large number of entries on
+        # the page
+        with requests.get(QL_WEB_LOG_URL, stream=True) as r:
+            ctx = etree.iterparse(r.raw, html=True, tag='a')
+            for event, elem in ctx:
+                href = elem.attrib.get('href')
+                for epoch, start_date in epochs.items():
+                    if href.startswith(epoch):
+                        if elem.tail is not None:
+                            dt = make_date_time(
+                                elem.tail.replace('-', '').strip()
+                            )
+                            if dt >= start_date:
+                                web_log_content[href] = dt
+                            break
+                elem.clear()
     else:
         logging.debug('weblog listing already cached.')
 
@@ -504,34 +511,32 @@ def retrieve_obs_metadata(obs_id):
                     max_ts = dt_tz
                     latest_key = key
 
+    session = mc.get_endpoint_session()
     if latest_key is not None:
-        obs_url = '{}{}'.format(QL_WEB_LOG_URL, latest_key)
-        logging.debug('Querying {}'.format(obs_url))
+        obs_url = f'{QL_WEB_LOG_URL}{latest_key}'
+        logging.debug(f'Querying {obs_url}')
         response = None
         try:
-            response = mc.query_endpoint(obs_url)
+            response = mc.query_endpoint_session(obs_url, session)
             if response is None:
-                logging.error('Could not query {}'.format(obs_url))
+                logging.error(f'Could not query {obs_url}')
             else:
                 pipeline_bit = _parse_for_reference(response.text,
                                                     'pipeline-')
                 response.close()
                 if pipeline_bit is None:
-                    logging.error(
-                        'Did not find pipeline on {}'.format(obs_url))
+                    logging.error(f'Did not find pipeline on {obs_url}')
                 else:
-                    pipeline_url = '{}{}html/index.html'.format(
-                        obs_url, pipeline_bit.strip())
-                    logging.debug('Querying {}'.format(pipeline_url))
-                    response = mc.query_endpoint(pipeline_url)
+                    pipeline_url = \
+                        f'{obs_url}{pipeline_bit.strip()}html/index.html'
+                    logging.debug(f'Querying {pipeline_url}')
+                    response = mc.query_endpoint_session(pipeline_url, session)
                     if response is None:
-                        logging.error(
-                            'Could not query {}'.format(pipeline_url))
+                        logging.error(f'Could not query {pipeline_url}')
                     else:
                         metadata = _parse_single_field(response.text)
                         metadata['reference'] = pipeline_url
-                        logging.debug(
-                            'Setting reference to {}'.format(pipeline_url))
+                        logging.debug(f'Setting reference to {pipeline_url}')
                     response.close()
         finally:
             if response is not None:
@@ -551,10 +556,8 @@ def build_file_url_list(start_time):
             for url in urls:
                 # -2 because NRAO URLs always end in /
                 f_prefix = url.split('/')[-2]
-                f1 = '{}{}.I.iter1.image.pbcor.tt0.rms.subim.fits'.format(
-                        url, f_prefix)
-                f2 = '{}{}.I.iter1.image.pbcor.tt0.subim.fits'.format(
-                        url, f_prefix)
+                f1 = f'{url}{f_prefix}.I.iter1.image.pbcor.tt0.rms.subim.fits'
+                f2 = f'{url}{f_prefix}.I.iter1.image.pbcor.tt0.subim.fits'
                 result[timestamp].append(f1)
                 result[timestamp].append(f2)
     return result, max_date
@@ -569,13 +572,14 @@ def build_url_list(start_date):
     :return a dict, where keys are URLs, and values are timestamps
     """
     result = {}
-    todo_list, ignore_date = build_good_todo(start_date)
-    rejected, ignore_date = build_qa_rejected_todo(start_date)
+    session = mc.get_endpoint_session()
+    todo_list, ignore_date = build_good_todo(start_date, session)
+    rejected, ignore_date = build_qa_rejected_todo(start_date, session)
     for coll in [todo_list, rejected]:
         if len(coll) > 0:
             for timestamp, urls in coll.items():
                 for url in urls:
-                    temp = list_files_on_page(url, start_date)
+                    temp = list_files_on_page(url, start_date, session)
                     for key, value in temp.items():
                         # key f_name
                         # value timestamp
@@ -593,13 +597,14 @@ def query_top_page():
 
     try:
         # get the last modified date on the quicklook images listing
-        response = mc.query_endpoint(QL_URL)
+        session = mc.get_endpoint_session()
+        response = mc.query_endpoint_session(QL_URL, session)
         if response is None:
-            logging.warning('Could not query {}'.format(QL_URL))
+            logging.warning(f'Could not query {QL_URL}')
         else:
             epochs = _parse_top_page(response.text, start_date)
             for key, value in epochs.items():
-                logging.info('{} {}'.format(key, make_date_time(value)))
+                logging.info(f'{key} {make_date_time(value)}')
                 if max_date is None:
                     max_date = value
                 else:

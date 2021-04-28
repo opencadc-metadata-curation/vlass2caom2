@@ -75,7 +75,7 @@ from vlass2caom2 import metadata
 import test_scrape
 
 
-@patch('caom2pipe.manage_composable.query_endpoint')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_cache(query_endpoint_mock):
     query_endpoint_mock.side_effect = test_scrape._query_endpoint
 

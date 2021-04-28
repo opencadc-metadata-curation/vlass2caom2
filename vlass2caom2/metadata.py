@@ -69,6 +69,7 @@
 
 import logging
 
+from caom2pipe import manage_composable as mc
 from datetime import datetime, timezone
 from dateutil import tz
 from vlass2caom2 import scrape
@@ -89,7 +90,10 @@ class VLASSCache(object):
         if self._refresh_bookmark is None:
             start_date = datetime(year=2017, month=1, day=1, hour=0,
                                   tzinfo=self._tz)
-        todo_list, ignore_max_date = scrape.build_qa_rejected_todo(start_date)
+        session = mc.get_endpoint_session()
+        todo_list, ignore_max_date = scrape.build_qa_rejected_todo(
+            start_date, session
+        )
 
         for timestamp, urls in todo_list.items():
             for url in urls:
