@@ -70,9 +70,11 @@
 import collections
 import logging
 import re
+import requests
 
 from datetime import datetime
 from dateutil import tz
+from lxml import etree
 
 from bs4 import BeautifulSoup
 
@@ -371,7 +373,7 @@ def build_todo(start_date):
     logging.debug(f'Begin build_todo with date {start_date}')
     session = mc.get_endpoint_session()
     good, good_date = build_good_todo(start_date, session)
-    logging.info(f'{len(good)} good records to process.')
+    logging.info(f'{len(good)} good records to process. Check for rejected.')
     rejected, rejected_date = build_qa_rejected_todo(start_date, session)
     logging.info(
         f'{len(rejected)} rejected records to process, date will be '
@@ -462,22 +464,22 @@ def init_web_log_content(epochs):
     global web_log_content
     if len(web_log_content) == 0:
         logging.info('Initializing weblog content.')
-        response = None
-        try:
-            session = mc.get_endpoint_session()
-            response = mc.query_endpoint_session(
-                QL_WEB_LOG_URL, session, timeout=360
-            )
-            if response is None:
-                raise mc.CadcException(f'Need access to {QL_WEB_LOG_URL}')
-            for ii in epochs:
-                temp_orig = web_log_content
-                temp = _parse_page_for_hrefs(response.text, ii, epochs[ii])
-                web_log_content = {**temp_orig, **temp}
-            response.close()
-        finally:
-            if response is not None:
-                response.close()
+        # start with no timeout value due to the large number of entries on
+        # the page
+        with requests.get(QL_WEB_LOG_URL, stream=True) as r:
+            ctx = etree.iterparse(r.raw, html=True, tag='a')
+            for event, elem in ctx:
+                href = elem.attrib.get('href')
+                for epoch, start_date in epochs.items():
+                    if href.startswith(epoch):
+                        if elem.tail is not None:
+                            dt = make_date_time(
+                                elem.tail.replace('-', '').strip()
+                            )
+                            if dt >= start_date:
+                                web_log_content[href] = dt
+                            break
+                elem.clear()
     else:
         logging.debug('weblog listing already cached.')
 

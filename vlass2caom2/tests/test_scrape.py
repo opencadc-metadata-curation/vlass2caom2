@@ -321,9 +321,9 @@ def test_run_state_file_modify(run_mock, query_endpoint_mock):
         os.getcwd = getcwd_orig
 
 
-@patch('caom2pipe.manage_composable.query_endpoint_session')
-def test_init_web_log_content(query_endpoint_mock):
-    query_endpoint_mock.side_effect = _query_endpoint
+@patch('vlass2caom2.scrape.requests.get')
+def test_init_web_log_content(get_mock):
+    get_mock.return_value.__enter__.return_value.raw = WL_INDEX
     if len(scrape.web_log_content) > 0:
         scrape.web_log_content = {}
     scrape.init_web_log_content({'VLASS1.2': TEST_START_TIME})
@@ -475,10 +475,7 @@ def _query_endpoint(url, session, timeout=-1):
     result = Object()
     result.text = None
 
-    if url == scrape.QL_WEB_LOG_URL:
-        with open(WL_INDEX) as f:
-            result.text = f.read()
-    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+    if url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
                 'T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/':
         with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
             result.text = f.read()
