@@ -1,6 +1,6 @@
 FROM opencadc/matplotlib
 
-RUN apt-get update -y && apt-get dist-upgrade -y && \
+RUN apt-get update --no-install-recommends && \
     apt-get install -y build-essential git wget && \
     rm -rf /var/lib/apt/lists/ /tmp/* /var/tmp/*
 
