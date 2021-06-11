@@ -79,7 +79,7 @@ from mock import patch, Mock
 import test_main_app, test_scrape
 
 
-@patch('caom2pipe.manage_composable.repo_get')
+@patch('caom2pipe.client_composable.repo_get')
 @patch('cadcdata.core.net.BaseWsClient.post')
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.manage_composable.query_endpoint_session')

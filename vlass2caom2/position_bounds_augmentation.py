@@ -67,6 +67,13 @@
 # ***********************************************************************
 #
 
+"""
+
+VLASS2.1.T05t02.J011933-233000 is an example of an observation where the
+footprint benefits from footprintfinder.py.
+
+
+"""
 import logging
 import os
 

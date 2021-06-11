@@ -82,6 +82,7 @@ from astropy.io.votable import parse_single_table
 from cadcutils import net
 from cadctap import CadcTapClient
 from caom2repo import CAOM2RepoClient
+from caom2pipe import client_composable as clc
 from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import APPLICATION, scrape, VlassName, COLLECTION
@@ -249,7 +250,7 @@ class VlassValidator(mc.Validator):
     def _filter_result(self):
         config = mc.Config()
         config.get_executors()
-        subject = mc.define_subject(config)
+        subject = clc.define_subject(config)
         caom_client = CAOM2RepoClient(subject)
         metrics = mc.Metrics(config)
         for entry in self._source:
@@ -261,8 +262,8 @@ class VlassValidator(mc.Validator):
     def _later_version_at_cadc(entry, caom_client, metrics):
         later_version_found = False
         storage_name = VlassName(file_name=entry, entry=entry)
-        caom_at_cadc = mc.repo_get(caom_client, COLLECTION,
-                                   storage_name.obs_id, metrics)
+        caom_at_cadc = clc.repo_get(caom_client, COLLECTION,
+                                    storage_name.obs_id, metrics)
         if caom_at_cadc is not None:
             for plane in caom_at_cadc.planes.values():
                 for artifact in plane.artifacts.values():

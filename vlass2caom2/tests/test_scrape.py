@@ -96,7 +96,7 @@ SPECIFIC_REJECTED = os.path.join(TEST_DATA_DIR, 'specific_rejected.html')
 SPECIFIC_NO_FILES = os.path.join(TEST_DATA_DIR, 'no_files.html')
 TEST_START_TIME_STR = '24Apr2019 12:34'
 TEST_START_TIME = scrape.make_date_time(TEST_START_TIME_STR)
-STATE_FILE = '/usr/src/app/state.yml'
+STATE_FILE = os.path.join(TEST_DATA_DIR, 'state.yml')
 TEST_OBS_ID = 'VLASS1.2.T07t14.J084202-123000'
 
 
@@ -310,6 +310,9 @@ def test_run_state_file_modify(run_mock, query_endpoint_mock):
                  'image.pbcor.tt0.subim.fits'
     # preconditions
     _write_state(TEST_START_TIME_STR)
+
+    # the equivalent of calling work.init_web_log()
+    scrape.web_log_content['abc'] = 123
 
     run_mock.side_effect = _run_mock
     getcwd_orig = os.getcwd
@@ -542,9 +545,9 @@ def _run_mock(**kwargs):
     assert kwargs.get('end_time') == datetime(2019, 4, 28, 15, 18)
     test_config = kwargs.get('config')
     assert isinstance(test_config, mc.Config), type(test_config)
-    assert test_config.work_fqn == '/usr/src/app/todo.txt', \
+    assert test_config.work_fqn == os.path.join(TEST_DATA_DIR, 'todo.txt'), \
         'wrong todo file'
-    assert test_config.state_fqn == '/usr/src/app/state.yml', \
+    assert test_config.state_fqn == os.path.join(TEST_DATA_DIR, 'state.yml'), \
         'wrong state file'
     test_builder = kwargs.get('name_builder')
     assert isinstance(test_builder, builder.VlassInstanceBuilder)

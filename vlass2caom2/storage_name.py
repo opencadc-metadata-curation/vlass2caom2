@@ -127,15 +127,17 @@ class VlassName(mc.StorageName):
             self._url = url
         self._version = VlassName.get_version(self.file_name)
 
-    @property
-    def epoch(self):
-        bits = self._file_name.split('.')
-        return f'{bits[0]}.{bits[1]}'
-
-    @property
-    def epoch(self):
-        bits = self._file_name.split('.')
-        return f'{bits[0]}.{bits[1]}'
+    def __str__(self):
+        return (
+            f'\n'
+            f'      obs_id: {self.obs_id}\n'
+            f'     file_id: {self.file_id}\n'
+            f'   file_name: {self.file_name}\n'
+            f'source_names: {self.source_names}\n'
+            f'    file_uri: {self.file_uri}\n'
+            f'     lineage: {self.lineage}\n'
+            f'         url: {self.url}\n'
+        )
 
     @property
     def epoch(self):
@@ -172,6 +174,10 @@ class VlassName(mc.StorageName):
     @property
     def rejected_url(self):
         return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
+
+    @property
+    def source_names(self):
+        return [self.url]
 
     @property
     def thumb(self):

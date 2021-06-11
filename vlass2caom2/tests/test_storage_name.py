@@ -87,7 +87,7 @@ def test_storage_name():
         assert ts.file_uri == \
             'ad:VLASS/{}.subim.fits'.format(test_bit), 'wrong uri'
         assert ts.model_file_name == \
-            'VLASS1.2.T23t09.J083851+483000.fits.xml', 'wrong model name'
+            'VLASS1.2.T23t09.J083851+483000.xml', 'wrong model name'
         assert ts.log_file == 'VLASS1.2.T23t09.J083851+483000.log', \
             'wrong log file'
         assert sn.VlassName.remove_extensions(ts.file_name) == \

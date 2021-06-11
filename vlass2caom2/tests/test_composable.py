@@ -69,6 +69,7 @@
 
 import os
 
+from datetime import datetime, timezone
 from mock import patch, Mock
 
 from cadctap import CadcTapClient
@@ -83,8 +84,8 @@ import test_scrape
 
 @patch('caom2pipe.manage_composable.query_endpoint_session')
 @patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd')
-@patch('caom2pipe.execute_composable.CAOM2RepoClient')
-@patch('caom2pipe.execute_composable.CadcDataClient')
+@patch('caom2pipe.client_composable.CAOM2RepoClient')
+@patch('caom2pipe.client_composable.CadcDataClient')
 def test_run_by_builder(data_client_mock, repo_mock, exec_mock,
                         query_endpoint_mock):
     query_endpoint_mock.side_effect = test_scrape._query_endpoint
@@ -116,20 +117,51 @@ def test_run_by_builder(data_client_mock, repo_mock, exec_mock,
         assert test_result == 0, 'wrong result'
     finally:
         os.getcwd = getcwd_orig
+        if os.path.exists(test_config.work_fqn):
+            os.unlink(test_config.work_fqn)
 
     assert repo_mock.return_value.read.called, 'repo read not called'
     assert repo_mock.return_value.create.called, 'repo create not called'
     assert exec_mock.called, 'expect to be called'
-    if os.path.exists(test_config.work_fqn):
-        os.unlink(test_config.work_fqn)
 
 
-@patch('caom2pipe.execute_composable.CadcDataClient')
-@patch('caom2pipe.manage_composable.query_endpoint_session')
+@patch('caom2pipe.client_composable.CadcDataClient')
+@patch('vlass2caom2.scrape.build_file_url_list')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 def test_run_state(run_mock, query_mock, data_client_mock):
+    def _mock_file_url_list(ignore_start_time):
+        a = {
+            # 2019-04-24 12:34:00 UTC
+            1556109240.0: [
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
+                'T07t13/VLASS1.1.ql.T07t13.J083838-153000.10.2048.v1.I.'
+                'iter1.image.pbcor.tt0.rms.subim.fits',
+            ],
+            1556175640.0: [
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+                'T07t13/VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.'
+                'iter1.image.pbcor.tt0.rms.subim.fits',
+            ],
+            # 2019-04-25 12:34:00 UTC
+            1556195640.0: [
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
+                'T07t13/VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1.I.'
+                'iter1.image.pbcor.tt0.rms.subim.fits',
+            ],
+        }
+        b = datetime(
+            year=2019,
+            month=4,
+            day=25,
+            hour=12,
+            minute=34,
+            second=0,
+            tzinfo=timezone.utc,
+        )
+        return a, b
+
     test_scrape._write_state('24Apr2019 12:34')
-    query_mock.side_effect = test_scrape._query_endpoint
+    query_mock.side_effect = _mock_file_url_list
     run_mock.return_value = 0
     data_client_mock.return_value.get_file_info.side_effect = \
         _mock_get_file_info
@@ -138,9 +170,12 @@ def test_run_state(run_mock, query_mock, data_client_mock):
     orig_client = CadcTapClient.__init__
     CadcTapClient.__init__ = Mock(return_value=None)
 
-    test_obs_id = 'VLASS1.2.T07t13.J083838-153000'
-    test_product_id = 'VLASS1.2.T07t13.J083838-153000.quicklook'
-    test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
+    # the equivalent of calling work.init_web_log()
+    scrape.web_log_content['abc'] = 123
+
+    test_obs_id = 'VLASS2.1.T07t13.J083838-153000'
+    test_product_id = 'VLASS2.1.T07t13.J083838-153000.quicklook'
+    test_f_name = 'VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
                   'image.pbcor.tt0.rms.subim.fits'
     try:
         # execution
@@ -172,8 +207,8 @@ def test_run_state(run_mock, query_mock, data_client_mock):
 
 @patch('vlass2caom2.to_caom2')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
-@patch('caom2pipe.execute_composable.CAOM2RepoClient')
-@patch('caom2pipe.execute_composable.CadcDataClient')
+@patch('caom2pipe.client_composable.CAOM2RepoClient')
+@patch('caom2pipe.client_composable.CadcDataClient')
 @patch('cadcdata.CadcDataClient.get_file_info')
 def test_run_state_rc(get_file_info_mock, data_client_mock,
                       repo_client_mock, query_mock, to_caom2_mock):
@@ -198,7 +233,7 @@ def test_run_state_rc(get_file_info_mock, data_client_mock,
         os.getcwd = getcwd_orig
 
 
-@patch('caom2pipe.manage_composable.data_put')
+@patch('caom2pipe.client_composable.data_put_fqn')
 def test_store(put_mock):
     test_config = mc.Config()
     test_config.logging_level = 'ERROR'
@@ -208,19 +243,18 @@ def test_store(put_mock):
                'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.image.' \
                'pbcor.tt0.rms.subim.fits'
     test_storage_name = VlassName(url=test_url, entry=test_url)
+    import logging
+    logging.error(test_storage_name)
     transferrer = Mock()
-    cred_param = Mock()
     cadc_data_client = Mock()
-    caom_repo_client = Mock()
     observable = mc.Observable(
         mc.Rejected('/tmp/rejected.yml'), mc.Metrics(test_config))
     test_subject = ec.Store(test_config, test_storage_name, APPLICATION,
-                            cred_param, cadc_data_client, caom_repo_client,
-                            observable, transferrer)
+                            cadc_data_client, observable, transferrer)
     test_subject.execute(None)
     assert put_mock.called, 'expect a call'
     args, kwargs = put_mock.call_args
-    assert args[2] == test_storage_name.file_name, 'wrong file name'
+    assert args[2].file_name == test_storage_name.file_name, 'wrong file name'
     assert transferrer.get.called, 'expect a transfer call'
     args, kwargs = transferrer.get.call_args
     assert args[0] == test_url, 'wrong source parameter'
@@ -235,7 +269,12 @@ def _cmd_direct_mock():
                             collection=COLLECTION,
                             algorithm=Algorithm(name='testing'))
     mc.write_obs_to_file(
-        obs, '/usr/src/app/logs/VLASS1.2.T07t13.J083838-153000.fits.xml')
+        obs,
+        os.path.join(
+            test_main_app.TEST_DATA_DIR,
+            'logs/VLASS1.2.T07t13.J083838-153000.xml'
+        )
+    )
 
 
 def _mock_service_query():
