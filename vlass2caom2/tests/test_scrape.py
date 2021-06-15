@@ -115,8 +115,7 @@ class Object(object):
 def test_build_bits():
     with open(ALL_FIELDS) as f:
         test_content = f.read()
-        test_result = scrape._parse_tile_page(test_content,
-                                              TEST_START_TIME)
+        test_result = scrape._parse_tile_page(test_content, TEST_START_TIME)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 4, 'wrong number of results'
         first_answer = next(iter(test_result.items()))
@@ -126,8 +125,7 @@ def test_build_bits():
 
     with open(SINGLE_TILE) as f:
         test_content = f.read()
-        test_result = scrape._parse_id_page(test_content,
-                                            TEST_START_TIME)
+        test_result = scrape._parse_id_page(test_content, TEST_START_TIME)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 3, 'wrong number of results'
         first_answer = next(iter(test_result.items()))
@@ -138,8 +136,7 @@ def test_build_bits():
 
     with open(CROSS_EPOCH) as f:
         test_content = f.read()
-        test_result = scrape._parse_id_page(test_content,
-                                            TEST_START_TIME)
+        test_result = scrape._parse_id_page(test_content, TEST_START_TIME)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 5, 'wrong number of results'
         first_answer = next(iter(test_result.items()))
@@ -160,19 +157,19 @@ def test_build_todo_good(query_endpoint_mock):
     assert test_result_date is not None, 'expected date result'
     assert len(test_result_list) == 3, 'wrong number of results'
     temp = test_result_list.popitem()
-    assert temp[1][0] == \
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-        'T07t13/VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/', \
-        temp[1][0]
+    assert (
+        temp[1][0] == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+        'T07t13/VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/'
+    ), temp[1][0]
     assert test_result_date == datetime(
-        2019, 4, 28, 15, 18), 'wrong date result'
+        2019, 4, 28, 15, 18
+    ), 'wrong date result'
 
 
 def test_augment_bits():
     with open(PIPELINE_INDEX) as f:
         test_content = f.read()
-        test_result = scrape._parse_for_reference(test_content,
-                                                  'pipeline-')
+        test_result = scrape._parse_for_reference(test_content, 'pipeline-')
         assert test_result is not None, 'expected a result'
         assert test_result == 'pipeline-20190422T202821/', 'wrong result'
 
@@ -182,9 +179,10 @@ def test_augment_bits():
             test_content, 'VLASS1.2.T07t13.J083453-133000'
         )
         assert test_result is not None, 'expected a result'
-        assert test_result == \
-            'VLASS1.2_T07t13.J083453-133000_P42511v1_2019_04_26T16_17_56.' \
-            '882/', 'wrong result'
+        assert (
+            test_result == 'VLASS1.2_T07t13.J083453-133000_P42511v1_2019_04_'
+            '26T16_17_56.882/'
+        ), 'wrong result'
 
     with open(SINGLE_FIELD_DETAIL) as f:
         test_content = f.read()
@@ -203,19 +201,18 @@ def test_augment_bits():
 @patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_retrieve_qa_rejected(query_endpoint_mock):
     query_endpoint_mock.side_effect = _query_endpoint
-    test_result_list, test_max_date = \
-        scrape.build_qa_rejected_todo(
-            TEST_START_TIME, session=Mock()
-        )
+    test_result_list, test_max_date = scrape.build_qa_rejected_todo(
+        TEST_START_TIME, session=Mock()
+    )
     assert test_result_list is not None, 'expected dict result'
     assert len(test_result_list) == 1, 'wrong size results'
     temp = test_result_list.popitem()
     assert temp[1][0].startswith(
         'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
-        'QA_REJECTED/VLASS1.2.ql.T'), 'wrong reference'
+        'QA_REJECTED/VLASS1.2.ql.T'
+    ), 'wrong reference'
     assert test_max_date is not None, 'expected date result'
-    assert test_max_date == datetime(
-        2019, 5, 1, 10, 30), 'wrong date result'
+    assert test_max_date == datetime(2019, 5, 1, 10, 30), 'wrong date result'
 
 
 def test_qa_rejected_bits():
@@ -230,12 +227,13 @@ def test_qa_rejected_bits():
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 1, 'wrong number of results'
         temp = test_result.popitem()
-        assert temp[1][0] == \
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-            'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
+        assert (
+            temp[1][0] == 'https://archive-new.nrao.edu/vlass/quicklook/'
+            'VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t15.'
+            'J141833+413000.10.2048.v1/'
+        )
         assert test_max is not None, 'expected max result'
-        assert test_max == datetime(
-            2019, 5, 1, 10, 30), 'wrong date result'
+        assert test_max == datetime(2019, 5, 1, 10, 30), 'wrong date result'
 
     with open(SPECIFIC_REJECTED) as f:
         test_content = f.read()
@@ -278,32 +276,30 @@ def test_build_todo(query_endpoint_mock):
     assert test_result is not None, 'expected dict result'
     assert len(test_result) == 4, 'wrong size results'
     assert test_max_date is not None, 'expected date result'
-    assert test_max_date == datetime(
-        2019, 4, 28, 15, 18), 'wrong date result'
+    assert test_max_date == datetime(2019, 4, 28, 15, 18), 'wrong date result'
     temp = test_result.popitem()
-    assert temp[1][0] == \
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-        'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/', \
-        'wrong result'
+    assert (
+        temp[1][0] == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+        'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.'
+        'v1/'
+    ), 'wrong result'
 
 
 @patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_build_file_url_list(query_endpoint_mock):
     query_endpoint_mock.side_effect = _query_endpoint
-    test_result, test_max_date = scrape.build_file_url_list(
-        TEST_START_TIME)
+    test_result, test_max_date = scrape.build_file_url_list(TEST_START_TIME)
     assert test_result is not None, 'expected dict result'
     assert len(test_result) == 4, 'wrong size results'
     assert test_max_date is not None, 'expected date result'
-    assert test_max_date == datetime(
-        2019, 4, 28, 15, 18), 'wrong date result'
+    assert test_max_date == datetime(2019, 4, 28, 15, 18), 'wrong date result'
     temp = test_result.popitem()
-    assert temp[1][0] == \
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-        'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/' \
-        'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.' \
-        'pbcor.tt0.rms.subim.fits', \
-        temp[1][0]
+    assert (
+        temp[1][0] == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+        'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.'
+        '2048.v1/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.'
+        'I.iter1.image.pbcor.tt0.rms.subim.fits'
+    ), temp[1][0]
 
 
 @patch('caom2pipe.manage_composable.query_endpoint_session')
@@ -339,13 +335,16 @@ def test_init_web_log_content(get_mock):
     assert scrape.web_log_content is not None, 'should be initialized'
     assert len(scrape.web_log_content) == 15, 'wrong record count'
     test_subject = scrape.web_log_content.popitem()
-    assert isinstance(test_subject, tuple), \
-        'wrong return type {}'.format(type(test_subject))
-    assert test_subject[0] == \
-        'VLASS1.2_T07t13.J081828-133000_P42507v1_2019_04_24T15_09_10.579/', \
-        'wrong first record'
-    assert test_subject[1] == datetime(2019, 4, 25, 21, 53), \
-        'wrong date result'
+    assert isinstance(
+        test_subject, tuple
+    ), f'wrong return type {type(test_subject)}'
+    assert (
+        test_subject[0]
+        == 'VLASS1.2_T07t13.J081828-133000_P42507v1_2019_04_24T15_09_10.579/'
+    ), 'wrong first record'
+    assert test_subject[1] == datetime(
+        2019, 4, 25, 21, 53
+    ), 'wrong date result'
 
 
 @patch('vlass2caom2.scrape.requests.get')
@@ -361,11 +360,13 @@ def test_retrieve_metadata(query_endpoint_mock, get_mock):
         'VLASS1.2.T07t13.J083453-133000')
     assert test_result is not None, 'expected dict result'
     assert len(test_result) == 5, 'wrong size results'
-    assert test_result['reference'] == \
-        'https://archive-new.nrao.edu/vlass/weblog/quicklook/' \
-        'VLASS1.2_T07t13.J083453-133000_P42511v1_2019_04_26T16_17_56' \
-        '.882/pipeline-20190422T202821/html/index.html', \
-        'wrong reference'
+    assert (
+        test_result['reference'] == 'https://archive-new.nrao.edu/vlass/'
+        'weblog/quicklook/VLASS1.2_T07t13.'
+        'J083453-133000_'
+        'P42511v1_2019_04_26T16_17_56.882/'
+        'pipeline-20190422T202821/html/index.html'
+    ), 'wrong reference'
 
 
 @patch('caom2pipe.manage_composable.query_endpoint_session')
@@ -490,14 +491,19 @@ def _query_endpoint(url, session, timeout=-1):
     result = Object()
     result.text = None
 
-    if url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-                'T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/':
+    if (
+        url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+        'T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+    ):
         with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
             result.text = f.read()
-    elif (url.startswith(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/') and
-          url.endswith('.10.2048.v1/') and
-          'QA_REJECTED' not in url):
+    elif (
+        url.startswith(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+        )
+        and url.endswith('.10.2048.v1/')
+        and 'QA_REJECTED' not in url
+    ):
         with open(SPECIFIC_NO_FILES) as f:
             result.text = f.read()
     elif url.endswith('index.html'):
@@ -532,12 +538,18 @@ def _query_endpoint(url, session, timeout=-1):
 
 def _write_state(start_time_str):
     test_time = scrape.make_date_time(start_time_str)
-    test_bookmark = {'bookmarks': {'vlass_timestamp':
-                                        {'last_record': test_time}},
-                     'context': {'vlass_context':
-                                     {'VLASS1.1': '01-Jan-2018 00:00',
-                                      'VLASS1.2': '01-Nov-2018 00:00',
-                                      'VLASS2.1': '01-Jul-2020 00:00'}}}
+    test_bookmark = {
+        'bookmarks': {
+            'vlass_timestamp': {'last_record': test_time},
+        },
+        'context': {
+            'vlass_context': {
+                'VLASS1.1': '01-Jan-2018 00:00',
+                'VLASS1.2': '01-Nov-2018 00:00',
+                'VLASS2.1': '01-Jul-2020 00:00',
+            },
+        },
+    }
     mc.write_as_yaml(test_bookmark, STATE_FILE)
 
 
@@ -548,10 +560,12 @@ def _run_mock(**kwargs):
     assert kwargs.get('end_time') == datetime(2019, 4, 28, 15, 18)
     test_config = kwargs.get('config')
     assert isinstance(test_config, mc.Config), type(test_config)
-    assert test_config.work_fqn == os.path.join(TEST_DATA_DIR, 'todo.txt'), \
-        'wrong todo file'
-    assert test_config.state_fqn == os.path.join(TEST_DATA_DIR, 'state.yml'), \
-        'wrong state file'
+    assert test_config.work_fqn == os.path.join(
+        TEST_DATA_DIR, 'todo.txt'
+    ), 'wrong todo file'
+    assert test_config.state_fqn == os.path.join(
+        TEST_DATA_DIR, 'state.yml'
+    ), 'wrong state file'
     test_builder = kwargs.get('name_builder')
     assert isinstance(test_builder, builder.VlassInstanceBuilder)
     test_source = kwargs.get('source')

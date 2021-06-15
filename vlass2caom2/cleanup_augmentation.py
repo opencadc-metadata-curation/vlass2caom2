@@ -115,9 +115,9 @@ def visit(observation, **kwargs):
                 # need to clean up the preview obs_id-based artifact URIs.
                 # The observation IDs are missing '.ql', so it's a safe
                 # way to find the artifacts to be removed.
-                if (artifact.uri.startswith(
-                        f'ad:VLASS/{observation.observation_id}') and
-                        artifact.uri.endswith('.jpg')):
+                if artifact.uri.startswith(
+                    f'ad:VLASS/{observation.observation_id}'
+                ) and artifact.uri.endswith('.jpg'):
                     temp.append(artifact.uri)
 
         delete_list = list(set(temp))

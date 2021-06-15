@@ -87,8 +87,15 @@ class VlassName(mc.StorageName):
     because some of the URLs are from the QA_REJECTED directories, hence
     the absence of that functionality in this class.
     """
-    def __init__(self, obs_id=None, file_name=None, fname_on_disk=None,
-                 url=None, entry=None):
+
+    def __init__(
+        self,
+        obs_id=None,
+        file_name=None,
+        fname_on_disk=None,
+        url=None,
+        entry=None,
+    ):
         if obs_id is None:
             if file_name is not None:
                 obs_id = VlassName.get_obs_id_from_file_name(file_name)
@@ -96,7 +103,8 @@ class VlassName(mc.StorageName):
                 obs_id = VlassName.get_obs_id_from_file_name(fname_on_disk)
             elif url is not None:
                 obs_id = VlassName.get_obs_id_from_file_name(
-                    url.split('/')[-1])
+                    url.split('/')[-1]
+                )
         super(VlassName, self).__init__(
             obs_id, COLLECTION, COLLECTION_PATTERN, entry=entry)
         product_id = None
@@ -220,8 +228,7 @@ class VlassName(mc.StorageName):
 
     @staticmethod
     def get_product_id_from_file_name(file_name):
-        """The product id is made of the obs id plus the string 'quicklook'.
-        """
+        """The product id is made of the obs id plus the string 'quicklook'."""
         obs_id = VlassName.get_obs_id_from_file_name(file_name)
         return f'{obs_id}.quicklook'
 

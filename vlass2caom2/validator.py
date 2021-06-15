@@ -99,6 +99,7 @@ class FileMeta:
     The information that is used to determine which version of a file
     at NRAO to keep at CADC, since CADC keeps only the latest version.
     """
+
     url: str
     version: str
     dt: str
@@ -239,14 +240,16 @@ def _get_max_version(entries):
 class VlassValidator(mc.Validator):
     def __init__(self):
         super(VlassValidator, self).__init__(
-            source_name='NRAO', source_tz=tz.gettz('Canada/Eastern'))
+            source_name='NRAO', source_tz=tz.gettz('Canada/Eastern')
+        )
         # a dictionary where the file name is the key, and the fully-qualified
         # file name at the HTTP site is the value
         self._fully_qualified_list = None
 
     def read_from_source(self):
         nrao_state_fqn = os.path.join(
-            self._config.working_directory, NRAO_STATE)
+            self._config.working_directory, NRAO_STATE
+        )
         validator_list, fully_qualified_list = read_file_url_list_from_nrao(
             nrao_state_fqn)
         self._fully_qualified_list = fully_qualified_list
@@ -267,7 +270,8 @@ class VlassValidator(mc.Validator):
         metrics = mc.Metrics(config)
         for entry in self._source:
             if VlassValidator._later_version_at_cadc(
-                    entry, caom_client, metrics):
+                entry, caom_client, metrics
+            ):
                 self._source.remove(entry)
 
     @staticmethod
@@ -281,8 +285,11 @@ class VlassValidator(mc.Validator):
                 for artifact in plane.artifacts.values():
                     if 'jpg' in artifact.uri:
                         continue
-                    ignore_scheme, ignore_collection, f_name = mc.decompose_uri(
-                        artifact.uri)
+                    (
+                        ignore_scheme,
+                        ignore_collection,
+                        f_name,
+                    ) = mc.decompose_uri(artifact.uri)
                     vlass_name = VlassName(file_name=f_name)
                     if vlass_name.version > storage_name.version:
                         # there's a later version at CADC, everything is good
@@ -302,6 +309,7 @@ def validate():
 
 if __name__ == '__main__':
     import sys
+
     try:
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)

@@ -160,7 +160,7 @@ def get_position_resolution(header):
     # From
     # https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
     # Clare Chandler via JJK - 21-08-18
-    return 3600.0 * sqrt(bmaj*bmin)
+    return 3600.0 * sqrt(bmaj * bmin)
 
 
 def get_product_type(uri):
@@ -204,8 +204,9 @@ def update(observation, **kwargs):
                     for chunk in part.chunks:
                         if 'headers' in kwargs:
                             headers = kwargs['headers']
-                            chunk.position.resolution = \
+                            chunk.position.resolution = (
                                 get_position_resolution(headers)
+                            )
                             if chunk.energy is not None:
                                 # A value of None per Chris, 2018-07-26
                                 # Set the value to None here, because the
@@ -233,7 +234,6 @@ def update(observation, **kwargs):
 
 
 class VlassCardinality(object):
-
     def __init__(self):
         self.collection = sn.COLLECTION
 
@@ -247,7 +247,7 @@ class VlassCardinality(object):
         The blueprint handles the mapping of values with cardinality of 1:1
         between the blueprint entries and the model attributes.
 
-        :param args """
+        :param args"""
         module = importlib.import_module(__name__)
         blueprints = {}
         for ii in args.lineage:

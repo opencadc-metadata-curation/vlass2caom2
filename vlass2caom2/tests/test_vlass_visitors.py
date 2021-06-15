@@ -105,9 +105,10 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
     work.init_web_log(test_state, test_config)
     test_name = sn.VlassName(
         file_name='VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
-                  'image.pbcor.tt0.subim.fits',
+        'image.pbcor.tt0.subim.fits',
         entry='VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
-              'image.pbcor.tt0.subim.fits')
+        'image.pbcor.tt0.subim.fits',
+    )
     test_file = os.path.join(TEST_DATA_DIR, f'{test_name.obs_id}.xml')
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'

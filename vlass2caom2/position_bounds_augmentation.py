@@ -89,8 +89,9 @@ __all__ = ['visit']
 
 def visit(observation, **kwargs):
     assert observation is not None, 'Input parameter must have a value.'
-    assert isinstance(observation, Observation), \
-        'Input parameter must be an Observation'
+    assert isinstance(
+        observation, Observation
+    ), 'Input parameter must be an Observation'
 
     working_dir = kwargs.get('working_directory', './')
     science_file = kwargs.get('science_file')

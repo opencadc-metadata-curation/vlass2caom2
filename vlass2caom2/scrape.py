@@ -92,8 +92,13 @@ web_log_content = {}
 
 
 def make_date_time(from_str):
-    for fmt in ['%d%b%Y %H:%M', '%Y-%m-%d %H:%M', '%Y%m%d %H:%M',
-                '%d-%b-%Y %H:%M', '%Y_%m_%dT%H_%M_%S.%f']:
+    for fmt in [
+        '%d%b%Y %H:%M',
+        '%Y-%m-%d %H:%M',
+        '%Y%m%d %H:%M',
+        '%d-%b-%Y %H:%M',
+        '%Y_%m_%dT%H_%M_%S.%f',
+    ]:
         try:
             dt = datetime.strptime(from_str, fmt)
             break
@@ -222,7 +227,8 @@ def build_good_todo(start_date, session):
                             logging.warning(f'Could not query {tile_url}')
                         else:
                             observations = _parse_id_page(
-                                response.text, start_date)
+                                response.text, start_date
+                            )
                             response.close()
 
                             # for each tile, get the list of observations
@@ -230,7 +236,8 @@ def build_good_todo(start_date, session):
                                 obs_url = f'{tile_url}{observation}'
                                 dt_as_s = observations[observation].timestamp()
                                 max_date = max(
-                                    max_date, observations[observation])
+                                    max_date, observations[observation]
+                                )
                                 if dt_as_s in temp:
                                     temp[dt_as_s].append(obs_url)
                                 else:
@@ -444,8 +451,7 @@ def list_files_on_page(url, start_time, session):
         if response is None:
             raise mc.CadcException(f'Could not query {url}')
         else:
-            result = _parse_specific_file_list_page(response.text,
-                                                    start_time)
+            result = _parse_specific_file_list_page(response.text, start_time)
             response.close()
             return result
     finally:
@@ -503,8 +509,9 @@ def retrieve_obs_metadata(obs_id):
     # most recent
     for key in web_log_content.keys():
         if key.startswith(mod_obs_id):
-            dt_bits = '_'.join(ii for ii in
-                               key.replace('/', '').split('_')[3:])
+            dt_bits = '_'.join(
+                ii for ii in key.replace('/', '').split('_')[3:]
+            )
             dt_tz = make_date_time(dt_bits).replace(tzinfo=tz_info)
             if max_ts is None:
                 max_ts = dt_tz
@@ -524,14 +531,14 @@ def retrieve_obs_metadata(obs_id):
             if response is None:
                 logging.error(f'Could not query {obs_url}')
             else:
-                pipeline_bit = _parse_for_reference(response.text,
-                                                    'pipeline-')
+                pipeline_bit = _parse_for_reference(response.text, 'pipeline-')
                 response.close()
                 if pipeline_bit is None:
                     logging.error(f'Did not find pipeline on {obs_url}')
                 else:
-                    pipeline_url = \
+                    pipeline_url = (
                         f'{obs_url}{pipeline_bit.strip()}html/index.html'
+                    )
                     logging.debug(f'Querying {pipeline_url}')
                     response = mc.query_endpoint_session(pipeline_url, session)
                     if response is None:
@@ -592,8 +599,7 @@ def build_url_list(start_date):
 
 
 def query_top_page():
-    """Query the timestamp from the top page, for reporting.
-    """
+    """Query the timestamp from the top page, for reporting."""
     start_date = make_date_time('01Jan2017 12:00')
     response = None
     max_date = None

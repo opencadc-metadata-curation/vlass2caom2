@@ -83,8 +83,11 @@ from vlass2caom2 import preview_augmentation
 
 VLASS_BOOKMARK = 'vlass_timestamp'
 
-META_VISITORS = [time_bounds_augmentation, quality_augmentation,
-                 cleanup_augmentation]
+META_VISITORS = [
+    time_bounds_augmentation,
+    quality_augmentation,
+    cleanup_augmentation,
+]
 DATA_VISITORS = [position_bounds_augmentation, preview_augmentation]
 
 

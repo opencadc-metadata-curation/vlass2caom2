@@ -76,7 +76,6 @@ __all__ = ['VlassInstanceBuilder']
 
 
 class VlassInstanceBuilder(nbc.StorageNameBuilder):
-
     def __init__(self, config):
         super(VlassInstanceBuilder, self).__init__()
         self._config = config

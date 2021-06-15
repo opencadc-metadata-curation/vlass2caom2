@@ -100,7 +100,8 @@ def visit(observation, **kwargs):
                 if len(artifact.parts) > 0:
                     logging.debug(f'working on artifact {artifact.uri}')
                     version, reference = _augment_artifact(
-                        observation.observation_id, artifact)
+                        observation.observation_id, artifact
+                    )
                     if version is not None:
                         plane.provenance.version = version
                     if reference is not None:
@@ -155,8 +156,7 @@ def _build_time(start, end, tos):
         end_date.format = 'mjd'
         start_ref_coord = RefCoord(0.5, start_date.value)
         end_ref_coord = RefCoord(1.5, end_date.value)
-        bounds.samples.append(CoordRange1D(start_ref_coord,
-                                           end_ref_coord))
+        bounds.samples.append(CoordRange1D(start_ref_coord, end_ref_coord))
     exposure = None
     if tos is not None:
         exposure = float(ac.get_timedelta_in_s(tos))
