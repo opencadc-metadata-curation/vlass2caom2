@@ -147,7 +147,7 @@ class VlassName(mc.StorageName):
     @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
-        return 'ad:{}/{}'.format(self.collection, self.file_name)
+        return f'ad:{self.collection}/{self.file_name}'
 
     @property
     def file_name(self):
@@ -215,7 +215,7 @@ class VlassName(mc.StorageName):
         from the file name.
         """
         bits = file_name.split('.')
-        obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
+        obs_id = f'{bits[0]}.{bits[1]}.{bits[3]}.{bits[4]}'
         return obs_id
 
     @staticmethod
@@ -223,7 +223,7 @@ class VlassName(mc.StorageName):
         """The product id is made of the obs id plus the string 'quicklook'.
         """
         obs_id = VlassName.get_obs_id_from_file_name(file_name)
-        return '{}.quicklook'.format(obs_id)
+        return f'{obs_id}.quicklook'
 
     @staticmethod
     def get_version(entry):

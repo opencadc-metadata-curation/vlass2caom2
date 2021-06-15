@@ -107,39 +107,51 @@ class FileMeta:
 
 def read_file_list_from_archive(config):
     ad_resource_id = 'ivo://cadc.nrc.ca/ad'
-    agent = '{}/{}'.format(APPLICATION, '1.0')
+    agent = f'{APPLICATION}/1.0'
     subject = net.Subject(certificate=config.proxy_fqn)
-    client = net.BaseWsClient(resource_id=ad_resource_id,
-                              subject=subject, agent=agent, retry=True)
-    query_meta = "SELECT fileName FROM archive_files WHERE " \
-                 "archiveName = '{}'".format(config.archive)
+    client = net.BaseWsClient(
+        resource_id=ad_resource_id,
+        subject=subject,
+        agent=agent,
+        retry=True,
+    )
+    query_meta = (
+        f"SELECT fileName FROM archive_files WHERE archiveName = "
+        f"'{config.archive}'"
+    )
     data = {'QUERY': query_meta, 'LANG': 'ADQL', 'FORMAT': 'csv'}
-    logging.debug('Query is {}'.format(query_meta))
+    logging.debug(f'Query is {query_meta}')
     try:
-        response = client.get('https://{}/ad/sync?{}'.format(
-            client.host, parse.urlencode(data)), cert=config.proxy_fqn)
+        response = client.get(
+            f'https://{client.host}/ad/sync?{parse.urlencode((data))}',
+            cert=config.proxy_fqn,
+        )
         if response.status_code == 200:
             # ignore the column name as the first part of the response
             artifact_files_list = response.text.split()[1:]
             return artifact_files_list
         else:
-            raise mc.CadcException('Query failure {!r}'.format(response))
+            raise mc.CadcException(f'Query failure {response}')
     except Exception as e:
-        raise mc.CadcException('Failed ad content query: {}'.format(e))
+        raise mc.CadcException(f'Failed ad content query: {e}')
 
 
 def read_list_from_caom(config):
-    query = "SELECT A.uri FROM caom2.Observation AS O " \
-            "JOIN caom2.Plane AS P ON O.obsID = P.obsID " \
-            "JOIN caom2.Artifact AS A ON P.planeID = A.planeID " \
-            "WHERE O.collection='{}'".format(config.archive)
+    query = (
+        f"SELECT A.uri FROM caom2.Observation AS O "
+        f"JOIN caom2.Plane AS P ON O.obsID = P.obsID "
+        f"JOIN caom2.Artifact AS A ON P.planeID = A.planeID "
+        f"WHERE O.collection='{config.archive}'"
+    )
     subject = net.Subject(certificate=config.proxy_fqn)
     tap_client = CadcTapClient(subject, resource_id=config.tap_id)
     buffer = io.BytesIO()
     tap_client.query(query, output_file=buffer)
     temp = parse_single_table(buffer).to_table()
-    return [ii.decode().replace('ad:{}/'.format(config.archive), '').strip()
-            for ii in temp['uri']]
+    return [
+        ii.decode().replace(f'ad:{config.archive}/', '').strip()
+        for ii in temp['uri']
+    ]
 
 
 def read_list_from_nrao(nrao_state_fqn):
