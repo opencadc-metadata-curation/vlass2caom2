@@ -180,8 +180,11 @@ def _get_local(test_files):
 
 def _get_lineage(obs_id, test_files):
     if obs_id in [obs_id_a, obs_id_c, obs_id_c + 'r', obs_id_f]:
-        return ' '.join(VlassName(fname_on_disk=ii).lineage for ii in
-                        test_files[1:])
+        return ' '.join(
+            VlassName(
+                ii.replace('.header', '')
+            ).lineage for ii in test_files[1:]
+        )
     else:
         ql_pid = f'{obs_id}.quicklook'
         cat_pid = f'{obs_id}.catalog'

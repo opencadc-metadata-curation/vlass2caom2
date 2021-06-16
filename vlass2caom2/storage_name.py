@@ -67,6 +67,8 @@
 # ***********************************************************************
 #
 
+from urllib.parse import urlparse
+from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import scrape
 
@@ -90,50 +92,25 @@ class VlassName(mc.StorageName):
 
     def __init__(
         self,
-        obs_id=None,
-        file_name=None,
-        fname_on_disk=None,
-        url=None,
         entry=None,
     ):
-        if obs_id is None:
-            if file_name is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(file_name)
-            elif fname_on_disk is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(fname_on_disk)
-            elif url is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(
-                    url.split('/')[-1]
-                )
-        super(VlassName, self).__init__(
-            obs_id, COLLECTION, COLLECTION_PATTERN, entry=entry)
-        product_id = None
-        if file_name is not None:
-            product_id = VlassName.get_product_id_from_file_name(file_name)
-        elif fname_on_disk is not None:
-            product_id = VlassName.get_product_id_from_file_name(fname_on_disk)
-        elif url is not None:
-            product_id = VlassName.get_product_id_from_file_name(
-                url.split('/')[-1])
-        self._product_id = product_id
-        self.file_name = file_name
-        if file_name is None:
-            self.file_id = None
+        self._collection = COLLECTION
+        self._entry = entry
+        temp = urlparse(entry)
+        if temp.scheme == '':
+            self._url = None
+            self._file_name = entry
         else:
-            self.file_id = VlassName.remove_extensions(file_name)
-            self.fname_on_disk = file_name
-        self.obs_id = obs_id
-        if fname_on_disk is not None:
-            self.file_id = VlassName.remove_extensions(fname_on_disk)
-            self.fname_on_disk = fname_on_disk
-            self.file_name = self.fname_on_disk.replace('.header', '')
-        if url is not None:
-            self.file_name = url.strip('/').split('/')[-1]
-            self.fname_on_disk = self.file_name
-            self.file_id = VlassName.remove_extensions(self.file_name)
-            self.obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
-            self._url = url
-        self._version = VlassName.get_version(self.file_name)
+            self._url = entry
+            self._file_name = temp.path.split('/')[-1]
+        self._obs_id = VlassName.get_obs_id_from_file_name(self._file_name)
+        self._product_id = VlassName.get_product_id_from_file_name(
+            self._file_name
+        )
+        self._file_id = VlassName.remove_extensions(self._file_name)
+        self._version = VlassName.get_version(self._file_name)
+        self._scheme = 'ad'  # for now
+        self._archive = COLLECTION
 
     def __str__(self):
         return (
@@ -148,22 +125,32 @@ class VlassName(mc.StorageName):
         )
 
     @property
+    def archive(self):
+        return self._archive
+
+    @property
     def epoch(self):
         bits = self._file_name.split('.')
         return f'{bits[0]}.{bits[1]}'
 
     @property
+    def file_id(self):
+        return self._file_id
+
+    @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
-        return f'ad:{self.collection}/{self.file_name}'
+        return cc.build_artifact_uri(
+            self._file_name, self._collection, self._scheme
+        )
 
     @property
     def file_name(self):
         return self._file_name
 
-    @file_name.setter
-    def file_name(self, value):
-        self._file_name = value
+    # @file_name.setter
+    # def file_name(self, value):
+    #     self._file_name = value
 
     @property
     def image_pointing_url(self):
@@ -173,7 +160,7 @@ class VlassName(mc.StorageName):
 
     @property
     def prev(self):
-        return f'{self.file_id}_prev.jpg'
+        return f'{self._file_id}_prev.jpg'
 
     @property
     def product_id(self):
@@ -184,12 +171,16 @@ class VlassName(mc.StorageName):
         return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
 
     @property
+    def scheme(self):
+        return self._scheme
+
+    @property
     def source_names(self):
-        return [self.url]
+        return [self.entry]
 
     @property
     def thumb(self):
-        return f'{self.file_id}_prev_256.jpg'
+        return f'{self._file_id}_prev_256.jpg'
 
     @property
     def tile(self):
@@ -202,13 +193,6 @@ class VlassName(mc.StorageName):
     @property
     def url(self):
         return self._url
-
-    @url.setter
-    def url(self, value):
-        self._url = value
-
-    def _get_file_id(self):
-        return self.file_id
 
     def is_valid(self):
         return True

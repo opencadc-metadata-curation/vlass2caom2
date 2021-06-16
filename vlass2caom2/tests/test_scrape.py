@@ -75,10 +75,11 @@ from datetime import timedelta
 from mock import patch, Mock, ANY
 
 from caom2pipe import manage_composable as mc
+from caom2pipe import name_builder_composable as nbc
 from caom2.diff import get_differences
 
 from vlass2caom2 import scrape, time_bounds_augmentation, composable
-from vlass2caom2 import validator, VlassName, builder, data_source
+from vlass2caom2 import validator, VlassName, data_source
 
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -422,8 +423,6 @@ def test_run_state(query_endpoint_mock, run_mock):
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
             test_storage.url
         assert test_storage.url.endswith('.fits'), test_storage.url
-        assert test_storage.file_name == test_storage.fname_on_disk, \
-            'wrong fname on disk'
         assert run_mock.call_count == 40, 'wrong call count'
     finally:
         os.getcwd = getcwd_orig
@@ -459,8 +458,6 @@ def test_run_state_with_work(query_endpoint_mock, run_mock):
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
             test_storage.url
         assert test_storage.url.endswith('.fits'), test_storage.url
-        assert test_storage.file_name == test_storage.fname_on_disk, \
-            'wrong fname'
 
         # the second time through, the build_todo method will
         # use the MAXIMUM of the good_date and the rejected_date,
@@ -567,6 +564,6 @@ def _run_mock(**kwargs):
         TEST_DATA_DIR, 'state.yml'
     ), 'wrong state file'
     test_builder = kwargs.get('name_builder')
-    assert isinstance(test_builder, builder.VlassInstanceBuilder)
+    assert isinstance(test_builder, nbc.EntryBuilder)
     test_source = kwargs.get('source')
     assert isinstance(test_source, data_source.NraoPage)

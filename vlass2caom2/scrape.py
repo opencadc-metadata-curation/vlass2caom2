@@ -253,19 +253,6 @@ def _parse_for_reference(html_string, reference):
     return soup.find(string=re.compile(reference))
 
 
-def _parse_image_phase_centre_list_page(html_string):
-    """
-    :param html_string:
-    :return: a list of all hrefs on the page
-    """
-    result = []
-    soup = BeautifulSoup(html_string, features='lxml')
-    hrefs = soup.find_all('a', string=re.compile('^VLASS[123]\\.[123]'))
-    for href in hrefs:
-        result.append(href.get('href'))
-    return result
-
-
 def _parse_single_field(html_string):
     result = {}
     soup = BeautifulSoup(html_string, features='lxml')
@@ -402,23 +389,6 @@ def build_todo(start_date):
         f'End build_todo with {len(result)} records, date {return_date}'
     )
     return result, return_date
-
-
-def _parse_page_for_hrefs(html_string, reference, start_date):
-    """
-    :return a dict, where keys are URLs, and values are timestamps
-    """
-    result = {}
-    soup = BeautifulSoup(html_string, features='lxml')
-    hrefs = soup.find_all('a', string=re.compile(reference))
-    for ii in hrefs:
-        y = ii.get('href')
-        z = ii.next_element.next_element.string.replace('-', '').strip()
-        dt = make_date_time(z)
-        if dt >= start_date:
-            logging.info(f'Adding {y}')
-            result[y] = dt
-    return result
 
 
 def _parse_specific_file_list_page(html_string, start_time):

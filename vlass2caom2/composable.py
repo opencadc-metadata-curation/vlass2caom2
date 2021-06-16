@@ -72,12 +72,13 @@ import sys
 import traceback
 
 from caom2pipe import manage_composable as mc
+from caom2pipe import name_builder_composable as nbc
 from caom2pipe import run_composable as rc
 from caom2pipe import transfer_composable as tc
 from vlass2caom2 import storage_name as sn
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
-from vlass2caom2 import work, data_source, scrape, builder
+from vlass2caom2 import work, data_source, scrape, storage_name
 from vlass2caom2 import preview_augmentation
 
 
@@ -93,20 +94,15 @@ DATA_VISITORS = [position_bounds_augmentation, preview_augmentation]
 
 def _run_single():
     """expects a single file name on the command line"""
-    config = mc.Config()
-    config.get_executors()
-    if config.features.use_file_names:
-        vlass_name = sn.VlassName(file_name=sys.argv[1], entry=sys.argv[1])
-    elif config.features.use_urls:
-        vlass_name = sn.VlassName(url=sys.argv[1], entry=sys.argv[1])
-    else:
-        vlass_name = sn.VlassName(obs_id=sys.argv[1], entry=sys.argv[1])
-    return rc.run_single(config=config,
-                         storage_name=vlass_name,
-                         command_name=sn.APPLICATION,
-                         meta_visitors=META_VISITORS,
-                         data_visitors=DATA_VISITORS,
-                         store_transfer=tc.HttpTransfer())
+    builder = nbc.EntryBuilder(storage_name.VlassName)
+    vlass_name = builder.build(sys.argv[1])
+    return rc.run_single(
+        storage_name=vlass_name,
+        command_name=sn.APPLICATION,
+        meta_visitors=META_VISITORS,
+        data_visitors=DATA_VISITORS,
+        store_transfer=tc.HttpTransfer(),
+    )
 
 
 def run_single():
@@ -141,16 +137,18 @@ def _run_by_state():
         work.init_web_log(state, config)
     # still make all subsequent calls if len == 0, for consistent reporting
     source = data_source.NraoPage(todo_list)
-    name_builder = builder.VlassInstanceBuilder(config)
-    return rc.run_by_state(config=config,
-                           command_name=sn.APPLICATION,
-                           bookmark_name=VLASS_BOOKMARK,
-                           meta_visitors=META_VISITORS,
-                           data_visitors=DATA_VISITORS,
-                           name_builder=name_builder,
-                           source=source,
-                           end_time=max_date,
-                           store_transfer=tc.HttpTransfer())
+    name_builder = nbc.EntryBuilder(storage_name.VlassName)
+    return rc.run_by_state(
+        config=config,
+        command_name=sn.APPLICATION,
+        bookmark_name=VLASS_BOOKMARK,
+        meta_visitors=META_VISITORS,
+        data_visitors=DATA_VISITORS,
+        name_builder=name_builder,
+        source=source,
+        end_time=max_date,
+        store_transfer=tc.HttpTransfer(),
+    )
 
 
 def run_by_state():
@@ -178,13 +176,15 @@ def _run():
     config.get_executors()
     state = mc.State(config.state_fqn)
     work.init_web_log(state, config)
-    name_builder = builder.VlassInstanceBuilder(config)
-    return rc.run_by_todo(config=config,
-                          name_builder=name_builder,
-                          command_name=sn.APPLICATION,
-                          meta_visitors=META_VISITORS,
-                          data_visitors=DATA_VISITORS,
-                          store_transfer=tc.HttpTransfer())
+    name_builder = nbc.EntryBuilder(storage_name.VlassName)
+    return rc.run_by_todo(
+        config=config,
+        name_builder=name_builder,
+        command_name=sn.APPLICATION,
+        meta_visitors=META_VISITORS,
+        data_visitors=DATA_VISITORS,
+        store_transfer=tc.HttpTransfer(),
+    )
 
 
 def run():
