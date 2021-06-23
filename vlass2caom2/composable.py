@@ -78,7 +78,7 @@ from caom2pipe import transfer_composable as tc
 from vlass2caom2 import storage_name as sn
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
-from vlass2caom2 import work, data_source, scrape, storage_name
+from vlass2caom2 import data_source, scrape, storage_name
 from vlass2caom2 import preview_augmentation
 
 
@@ -132,10 +132,6 @@ def _run_by_state():
     # on the execution environment
     start_time = mc.increment_time(state.get_bookmark(VLASS_BOOKMARK), 0)
     todo_list, max_date = scrape.build_file_url_list(start_time)
-    if len(todo_list) > 0:
-        state = mc.State(config.state_fqn)
-        work.init_web_log(state, config)
-    # still make all subsequent calls if len == 0, for consistent reporting
     source = data_source.NraoPage(todo_list)
     name_builder = nbc.EntryBuilder(storage_name.VlassName)
     return rc.run_by_state(
@@ -174,14 +170,26 @@ def _run():
     """
     config = mc.Config()
     config.get_executors()
-    state = mc.State(config.state_fqn)
-    work.init_web_log(state, config)
+
+    # time_bounds_augmentation and quality_augmentation depend on
+    # metadata scraped from the NRAO site, but that only changes if a new
+    # file is created, a new version of a file is created, or an old version
+    # of a file is replaced. If the pipeline isn't STORE'ing information from
+    # the source, files aren't changing, and the related metadata isn't
+    # changing, so be polite to the NRAO site, and don't scrape if it's not
+    # necessary.
+    meta_visitors = [cleanup_augmentation]
+    if (
+        mc.TaskType.STORE in config.task_types and
+        mc.TaskType.INGEST in config.task_types
+    ):
+        meta_visitors = META_VISITORS
     name_builder = nbc.EntryBuilder(storage_name.VlassName)
     return rc.run_by_todo(
         config=config,
         name_builder=name_builder,
         command_name=sn.APPLICATION,
-        meta_visitors=META_VISITORS,
+        meta_visitors=meta_visitors,
         data_visitors=DATA_VISITORS,
         store_transfer=tc.HttpTransfer(),
     )

@@ -77,7 +77,7 @@ from caom2 import Status
 from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
-from vlass2caom2 import position_bounds_augmentation, work
+from vlass2caom2 import position_bounds_augmentation, scrape
 from vlass2caom2 import storage_name as sn
 import test_scrape
 
@@ -102,7 +102,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
     test_config = mc.Config()
     test_config.get_executors()
     test_state = mc.State(test_config.state_fqn)
-    work.init_web_log(test_state, test_config)
+    scrape.init_web_log(test_state)
     test_name = sn.VlassName(
         'VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
         'image.pbcor.tt0.subim.fits',
