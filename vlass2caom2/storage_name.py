@@ -101,8 +101,13 @@ class VlassName(mc.StorageName):
             self._url = None
             self._file_name = entry
         else:
-            self._url = entry
-            self._file_name = temp.path.split('/')[-1]
+            if temp.scheme.startswith('http'):
+                self._url = entry
+                self._file_name = temp.path.split('/')[-1]
+            else:
+                # it's an Artifact URI
+                self._url = None
+                self._file_name = temp.path.split('/')[-1]
         self._obs_id = VlassName.get_obs_id_from_file_name(self._file_name)
         self._product_id = VlassName.get_product_id_from_file_name(
             self._file_name

@@ -107,7 +107,7 @@ def test_preview_augmentation():
         f'T01t01/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/'
         f'{test_science_f_name}'
     )
-    kwargs = {'url': test_url}
+    kwargs = {'science_file': test_url}
     test_result = cleanup_augmentation.visit(test_obs, **kwargs)
     test_artifacts = test_obs.planes[test_storage_name.product_id].artifacts
     assert test_result is not None, 'expect a result'
