@@ -110,6 +110,7 @@ class VlassName(mc.StorageName):
         self._file_id = VlassName.remove_extensions(self._file_name)
         self._version = VlassName.get_version(self._file_name)
         self._scheme = 'ad'  # for now
+        self._destination_uris = [self.file_uri]
         self._archive = COLLECTION
 
     def __str__(self):
