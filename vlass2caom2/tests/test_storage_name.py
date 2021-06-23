@@ -118,8 +118,8 @@ def test_storage_name():
             ts.thumb_uri == f'ad:{sn.COLLECTION}/{test_bit}.subim_prev_256.jpg'
         ), 'wrong thumbnail uri'
         assert (
-            ts.lineage ==
-            f'{ts.product_id}/ad:{sn.COLLECTION}/{test_bit}.subim.fits'
+            ts.lineage
+            == f'{ts.product_id}/ad:{sn.COLLECTION}/{test_bit}.subim.fits'
         ), 'wrong lineage'
 
 

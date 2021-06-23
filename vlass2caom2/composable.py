@@ -180,8 +180,8 @@ def _run():
     # necessary.
     meta_visitors = [cleanup_augmentation]
     if (
-        mc.TaskType.STORE in config.task_types and
-        mc.TaskType.INGEST in config.task_types
+        mc.TaskType.STORE in config.task_types
+        and mc.TaskType.INGEST in config.task_types
     ):
         meta_visitors = META_VISITORS
     name_builder = nbc.EntryBuilder(storage_name.VlassName)
