@@ -78,6 +78,7 @@ from caom2pipe import manage_composable as mc
 from caom2utils import get_gen_proc_arg_parser
 from caom2 import SimpleObservation, Algorithm
 from vlass2caom2 import composable, VlassName, COLLECTION, scrape, APPLICATION
+from vlass2caom2 import SCHEME
 import test_main_app
 import test_scrape
 
@@ -201,7 +202,7 @@ def test_run_state(run_mock, query_mock, data_client_mock):
             '.fits'
         ), f'wrong url end format {test_storage.url}'
         assert (
-            test_storage.lineage == f'{test_product_id}/ad:{COLLECTION}/'
+            test_storage.lineage == f'{test_product_id}/{SCHEME}:{COLLECTION}/'
             f'{test_f_name}'
         ), 'wrong lineage'
         assert test_storage.external_urls is None, 'wrong external urls'
@@ -260,8 +261,8 @@ def test_store():
     assert cadc_data_client.put.called, 'expect a call'
     cadc_data_client.put.assert_called_with(
         '/tmp/VLASS2.1.T10t12.J073401-033000',
-        'ad:VLASS/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.'
-        'image.pbcor.tt0.rms.subim.fits',
+        f'{SCHEME}:VLASS/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.'
+        f'iter1.image.pbcor.tt0.rms.subim.fits',
         None,
     ), 'wrong put args'
     assert transferrer.get.called, 'expect a transfer call'

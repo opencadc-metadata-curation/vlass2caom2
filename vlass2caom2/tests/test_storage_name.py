@@ -85,7 +85,9 @@ def test_storage_name():
         assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
         assert ts.file_name == f'{test_bit}.subim.fits', 'wrong fname'
         assert ts.file_id == f'{test_bit}.subim', 'wrong fid'
-        assert ts.file_uri == f'ad:VLASS/{test_bit}.subim.fits', 'wrong uri'
+        assert (
+            ts.file_uri == f'{sn.SCHEME}:VLASS/{test_bit}.subim.fits'
+        ), 'wrong uri'
         assert (
             ts.model_file_name == 'VLASS1.2.T23t09.J083851+483000.xml'
         ), 'wrong model name'
@@ -112,14 +114,17 @@ def test_storage_name():
         assert ts.prev == f'{test_bit}.subim_prev.jpg', 'wrong preview'
         assert ts.thumb == f'{test_bit}.subim_prev_256.jpg', 'wrong thumbnail'
         assert (
-            ts.prev_uri == f'ad:{sn.COLLECTION}/{test_bit}.subim_prev.jpg'
+            ts.prev_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
+                           f'{test_bit}.subim_prev.jpg'
         ), 'wrong preview uri'
         assert (
-            ts.thumb_uri == f'ad:{sn.COLLECTION}/{test_bit}.subim_prev_256.jpg'
+            ts.thumb_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
+                            f'{test_bit}.subim_prev_256.jpg'
         ), 'wrong thumbnail uri'
         assert (
             ts.lineage
-            == f'{ts.product_id}/ad:{sn.COLLECTION}/{test_bit}.subim.fits'
+            == f'{ts.product_id}/{sn.SCHEME}:{sn.COLLECTION}/'
+               f'{test_bit}.subim.fits'
         ), 'wrong lineage'
 
 

@@ -118,7 +118,8 @@ def visit(observation, **kwargs):
                 # The observation IDs are missing '.ql', so it's a safe
                 # way to find the artifacts to be removed.
                 if artifact.uri.startswith(
-                    f'ad:VLASS/{observation.observation_id}'
+                    f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
+                    f'{observation.observation_id}'
                 ) and artifact.uri.endswith('.jpg'):
                     temp.append(artifact.uri)
 

@@ -73,9 +73,13 @@ from caom2pipe import manage_composable as mc
 from vlass2caom2 import scrape
 
 
-__all__ = ['APPLICATION', 'COLLECTION', 'COLLECTION_PATTERN', 'VlassName']
+__all__ = [
+    'APPLICATION', 'COLLECTION', 'COLLECTION_PATTERN', 'SCHEME', 'VlassName'
+]
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
+SCHEME = 'nrao'
+CADC_SCHEME = 'cadc'
 COLLECTION_PATTERN = '*'  # TODO what are acceptable naming patterns?
 
 
@@ -114,9 +118,8 @@ class VlassName(mc.StorageName):
         )
         self._file_id = VlassName.remove_extensions(self._file_name)
         self._version = VlassName.get_version(self._file_name)
-        self._scheme = 'ad'  # for now
+        self._scheme = SCHEME
         self._destination_uris = [self.file_uri]
-        self._archive = COLLECTION
 
     def __str__(self):
         return (
@@ -146,17 +149,11 @@ class VlassName(mc.StorageName):
     @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
-        return cc.build_artifact_uri(
-            self._file_name, self._collection, self._scheme
-        )
+        return self._get_uri(self._file_name, SCHEME)
 
     @property
     def file_name(self):
         return self._file_name
-
-    # @file_name.setter
-    # def file_name(self, value):
-    #     self._file_name = value
 
     @property
     def image_pointing_url(self):
@@ -167,6 +164,10 @@ class VlassName(mc.StorageName):
     @property
     def prev(self):
         return f'{self._file_id}_prev.jpg'
+
+    @property
+    def prev_uri(self):
+        return self._get_uri(self.prev, CADC_SCHEME)
 
     @property
     def product_id(self):
@@ -189,6 +190,10 @@ class VlassName(mc.StorageName):
         return f'{self._file_id}_prev_256.jpg'
 
     @property
+    def thumb_uri(self):
+        return self._get_uri(self.thumb, CADC_SCHEME)
+
+    @property
     def tile(self):
         return self._file_name.split('.')[3]
 
@@ -206,6 +211,9 @@ class VlassName(mc.StorageName):
     @property
     def version(self):
         return self._version
+
+    def _get_uri(self, file_name, scheme):
+        return cc.build_artifact_uri(file_name, self._collection, scheme)
 
     @staticmethod
     def get_obs_id_from_file_name(file_name):
