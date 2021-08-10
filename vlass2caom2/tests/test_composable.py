@@ -85,9 +85,10 @@ import test_scrape
 @patch('caom2pipe.manage_composable.query_endpoint_session')
 @patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd')
 @patch('caom2pipe.client_composable.CAOM2RepoClient')
-@patch('caom2pipe.client_composable.CadcDataClient')
-def test_run_by_builder(data_client_mock, repo_mock, exec_mock,
-                        query_endpoint_mock):
+@patch('caom2pipe.client_composable.StorageClientWrapper')
+def test_run_by_builder(
+    data_client_mock, repo_mock, exec_mock, query_endpoint_mock
+):
     query_endpoint_mock.side_effect = test_scrape._query_endpoint
     repo_mock.return_value.read.side_effect = _mock_repo_read
     repo_mock.return_value.create.side_effect = Mock()
@@ -126,7 +127,7 @@ def test_run_by_builder(data_client_mock, repo_mock, exec_mock,
     assert exec_mock.called, 'expect to be called'
 
 
-@patch('caom2pipe.client_composable.CadcDataClient')
+@patch('caom2pipe.client_composable.StorageClientWrapper')
 @patch('vlass2caom2.scrape.build_file_url_list')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 def test_run_state(run_mock, query_mock, data_client_mock):
@@ -212,7 +213,7 @@ def test_run_state(run_mock, query_mock, data_client_mock):
 @patch('vlass2caom2.to_caom2')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
 @patch('caom2pipe.client_composable.CAOM2RepoClient')
-@patch('caom2pipe.client_composable.CadcDataClient')
+@patch('caom2pipe.client_composable.StorageClientWrapper')
 @patch('cadcdata.CadcDataClient.get_file_info')
 def test_run_state_rc(get_file_info_mock, data_client_mock,
                       repo_client_mock, query_mock, to_caom2_mock):
@@ -238,8 +239,7 @@ def test_run_state_rc(get_file_info_mock, data_client_mock,
         os.getcwd = getcwd_orig
 
 
-@patch('caom2pipe.client_composable.data_put_fqn')
-def test_store(put_mock):
+def test_store():
     test_config = mc.Config()
     test_config.logging_level = 'ERROR'
     test_config.working_directory = '/tmp'
@@ -257,16 +257,21 @@ def test_store(put_mock):
     test_subject = ec.Store(test_config, test_storage_name, APPLICATION,
                             cadc_data_client, observable, transferrer)
     test_subject.execute(None)
-    assert put_mock.called, 'expect a call'
-    args, kwargs = put_mock.call_args
-    assert args[2].file_name == test_storage_name.file_name, 'wrong file name'
+    assert cadc_data_client.put.called, 'expect a call'
+    cadc_data_client.put.assert_called_with(
+        '/tmp/VLASS2.1.T10t12.J073401-033000',
+        'ad:VLASS/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.'
+        'image.pbcor.tt0.rms.subim.fits',
+        None,
+    ), 'wrong put args'
     assert transferrer.get.called, 'expect a transfer call'
-    args, kwargs = transferrer.get.call_args
-    assert args[0] == test_url, 'wrong source parameter'
-    assert (
-        args[1] == f'/tmp/{test_storage_name.obs_id}/'
-        f'{test_storage_name.file_name}'
-    ), 'wrong destination parameter'
+    test_f_name = 'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.' \
+                  'image.pbcor.tt0.rms.subim.fits'
+    transferrer.get.assert_called_with(
+        f'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T10t12/'
+        f'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/{test_f_name}',
+        f'/tmp/VLASS2.1.T10t12.J073401-033000/{test_f_name}',
+    ), 'wrong transferrer args'
 
 
 def _cmd_direct_mock():

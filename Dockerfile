@@ -1,4 +1,4 @@
-FROM opencadc/matplotlib:3.8-slim
+FROM opencadc/matplotlib:3.9-slim
 
 RUN apt-get update --no-install-recommends && \
     apt-get install -y build-essential git wget && \
@@ -6,8 +6,8 @@ RUN apt-get update --no-install-recommends && \
 
 RUN oldpath=`pwd` && cd /tmp && \
     wget http://www.eso.org/~fstoehr/footprintfinder.py && \
-    cp footprintfinder.py /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
-    chmod 755 /usr/local/lib/python3.8/site-packages/footprintfinder.py && \
+    cp footprintfinder.py /usr/local/lib/python3.9/site-packages/footprintfinder.py && \
+    chmod 755 /usr/local/lib/python3.9/site-packages/footprintfinder.py && \
     cd $oldpath
 
 RUN pip install bs4 \
