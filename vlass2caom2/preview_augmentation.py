@@ -94,10 +94,6 @@ class VlassPreview(mc.PreviewVisitor):
         super(VlassPreview, self).__init__(
             sn.COLLECTION, ReleaseType.META, **kwargs
         )
-        # the science file is from StorageName.source_names, which in this
-        # case may be a URL or a file name. The VlassName constructor will
-        # figure that out, and handle it correctly.
-        self._storage_name = sn.VlassName(self._science_file)
         self._science_file = self._storage_name.file_name
         self._science_fqn = os.path.join(self._working_dir, self._science_file)
         self._preview_fqn = os.path.join(
@@ -106,10 +102,6 @@ class VlassPreview(mc.PreviewVisitor):
         self._thumb_fqn = os.path.join(
             self._working_dir, self._storage_name.thumb)
         self._logger = logging.getLogger(__name__)
-
-    @property
-    def storage_name(self):
-        return self._storage_name
 
     def generate_plots(self, obs_id):
         """Make a preview for a VLASS image. Tested on random sample of 16

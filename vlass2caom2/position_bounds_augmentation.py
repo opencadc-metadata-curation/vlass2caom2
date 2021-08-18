@@ -81,8 +81,6 @@ from caom2 import Observation
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import storage_name as sn
-
 
 __all__ = ['visit']
 
@@ -94,10 +92,10 @@ def visit(observation, **kwargs):
     ), 'Input parameter must be an Observation'
 
     working_dir = kwargs.get('working_directory', './')
-    science_file = kwargs.get('science_file')
-    if science_file is None:
+    storage_name = kwargs.get('storage_name')
+    if storage_name is None:
         raise mc.CadcException(
-            'No science_file parameter provided to vistor '
+            'No storage_name parameter provided to visitor '
             'for obs {}.'.format(observation.observation_id))
     # TODO - this moves location handling structures to other than the
     # main composable code - this could be MUCH better handled, just not
@@ -107,8 +105,7 @@ def visit(observation, **kwargs):
     # the science file is from StorageName.source_names, which in this case
     # may be a URL or a file name. The VlassName constructor will figure
     # that out, and handle it correctly.
-    vlass_name = sn.VlassName(science_file)
-    science_fqn = os.path.join(working_dir, vlass_name.file_name)
+    science_fqn = os.path.join(working_dir, storage_name.file_name)
     count = 0
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():
@@ -119,7 +116,7 @@ def visit(observation, **kwargs):
                         chunk,
                         science_fqn,
                         log_file_directory,
-                        vlass_name.file_id,
+                        storage_name.file_id,
                         '-t 10',
                     )
                     count += 1

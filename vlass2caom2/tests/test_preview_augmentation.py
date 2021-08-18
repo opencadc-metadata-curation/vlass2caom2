@@ -88,14 +88,14 @@ def test_preview_augmentation():
     test_observable = mc.Observable(test_rejected, test_metrics)
     kwargs = {'stream': 'raw',
               'observable': test_observable,
-              'science_file': test_science_f_name,
+              'storage_name': test_storage_name,
               'working_directory': '/test_files'}
     test_subject = preview_augmentation.VlassPreview(test_obs, **kwargs)
     assert test_subject is not None, 'need a test subject'
     assert len(test_obs.planes) == 1, 'wrong number of planes'
     assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 4, \
         'wrong starting # of artifacts'
-    test_result = test_subject.visit(test_obs, test_storage_name)
+    test_result = test_subject.visit(test_obs)
     assert test_result is not None, 'expect a result'
     assert test_result.get('artifacts') == 2, 'wrong result'
     assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 6, \

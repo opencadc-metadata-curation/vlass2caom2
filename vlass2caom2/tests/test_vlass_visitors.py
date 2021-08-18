@@ -157,14 +157,15 @@ def test_aug_visit_position_bounds():
                     test_input_file)
     test_file = os.path.join(TEST_DATA_DIR, 'fpf_start_obs.xml')
     test_obs = mc.read_obs_from_file(test_file)
+    test_storage_name = sn.VlassName(test_input_file)
     kwargs = {'working_directory': '/test_files',
-              'science_file': f'{test_file_id}.fits',
+              'storage_name': test_storage_name,
               'log_file_directory': os.path.join(TEST_DATA_DIR, 'logs')}
     test_result = position_bounds_augmentation.visit(test_obs, **kwargs)
     assert test_result is not None, 'should have a result status'
     assert len(test_result) == 1, 'modified chunks count'
     assert test_result['chunks'] == 2, 'chunk count'
-    return_file = os.path.join(THIS_DIR, '{test_file_id}__footprint.txt')
+    return_file = os.path.join(THIS_DIR, f'{test_file_id}__footprint.txt')
     assert not os.path.exists(return_file), 'bad cleanup'
     if os.path.exists(test_input_file):
         os.unlink(test_input_file)

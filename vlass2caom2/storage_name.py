@@ -67,6 +67,7 @@
 # ***********************************************************************
 #
 
+from os.path import basename
 from urllib.parse import urlparse
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
@@ -103,7 +104,7 @@ class VlassName(mc.StorageName):
         temp = urlparse(entry)
         if temp.scheme == '':
             self._url = None
-            self._file_name = entry
+            self._file_name = basename(entry)
         else:
             if temp.scheme.startswith('http'):
                 self._url = entry
@@ -119,6 +120,7 @@ class VlassName(mc.StorageName):
         self._file_id = VlassName.remove_extensions(self._file_name)
         self._version = VlassName.get_version(self._file_name)
         self._scheme = SCHEME
+        self._source_names = [entry]
         self._destination_uris = [self.file_uri]
 
     def __str__(self):
