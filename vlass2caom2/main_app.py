@@ -204,9 +204,10 @@ def update(observation, **kwargs):
                     for chunk in part.chunks:
                         if 'headers' in kwargs:
                             headers = kwargs['headers']
-                            chunk.position.resolution = (
-                                get_position_resolution(headers)
-                            )
+                            if chunk.position is not None:
+                                chunk.position.resolution = (
+                                    get_position_resolution(headers)
+                                )
                             if chunk.energy is not None:
                                 # A value of None per Chris, 2018-07-26
                                 # Set the value to None here, because the

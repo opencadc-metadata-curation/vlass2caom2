@@ -404,9 +404,11 @@ def test_list_files_on_page(query_endpoint_mock):
            'image.pbcor.tt0.subim.fits' in test_list, 'wrong content'
 
 
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
-def test_run_state(query_endpoint_mock, run_mock):
+def test_run_state(query_endpoint_mock, run_mock, access_mock):
+    access_mock.return_value = 'https://localhost'
     _write_state('23Apr2019 10:30')
     # execution
     query_endpoint_mock.side_effect = _query_endpoint
@@ -428,9 +430,11 @@ def test_run_state(query_endpoint_mock, run_mock):
         os.getcwd = getcwd_orig
 
 
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
-def test_run_state_with_work(query_endpoint_mock, run_mock):
+def test_run_state_with_work(query_endpoint_mock, run_mock, access_mock):
+    access_mock.return_value = 'https://localhost'
     _write_state('23Apr2019 10:30')
     # execution
 

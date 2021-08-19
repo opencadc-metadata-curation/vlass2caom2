@@ -85,7 +85,7 @@ def test_visit():
     test_artifacts = test_obs.planes[test_product_id].artifacts
     assert len(test_artifacts) == 4, 'wrong starting conditions'
 
-    kwargs = {'science_file': test_url}
+    kwargs = {'url': test_url}
     test_result = cleanup_augmentation.visit(test_obs, **kwargs)
 
     assert test_result is not None, 'expect a result'

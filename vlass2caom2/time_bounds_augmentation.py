@@ -89,8 +89,8 @@ def visit(observation, **kwargs):
 
     else:
         # conversation with JJK, 2018-08-08 - until such time as VLASS becomes
-        # a dynamic collection, rely on the time information as provided for all
-        # observations as retrieved on this date from:
+        # a dynamic collection, rely on the time information as provided for
+        # all observations as retrieved on this date from:
         #
         # https://archive-new.nrao.edu/vlass/weblog/quicklook/*
 

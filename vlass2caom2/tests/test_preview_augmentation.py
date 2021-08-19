@@ -71,10 +71,13 @@ from caom2pipe import manage_composable as mc
 from vlass2caom2 import preview_augmentation, cleanup_augmentation
 from vlass2caom2 import storage_name as sn
 
+from mock import patch
 from test_main_app import TEST_DATA_DIR
 
 
-def test_preview_augmentation():
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
+def test_preview_augmentation(access_mock):
+    access_mock.return_value = 'https://localhost'
     test_fqn = f'{TEST_DATA_DIR}/preview_augmentation_start.xml'
     test_science_f_name = (
         'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.'
@@ -86,7 +89,7 @@ def test_preview_augmentation():
     test_rejected = mc.Rejected(f'{TEST_DATA_DIR}/rejected.yml')
     test_metrics = mc.Metrics(test_config)
     test_observable = mc.Observable(test_rejected, test_metrics)
-    kwargs = {'stream': 'raw',
+    kwargs = {'stream': None,
               'observable': test_observable,
               'storage_name': test_storage_name,
               'working_directory': '/test_files'}
@@ -107,7 +110,7 @@ def test_preview_augmentation():
         f'T01t01/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/'
         f'{test_science_f_name}'
     )
-    kwargs = {'science_file': test_url}
+    kwargs = {'url': test_url}
     test_result = cleanup_augmentation.visit(test_obs, **kwargs)
     test_artifacts = test_obs.planes[test_storage_name.product_id].artifacts
     assert test_result is not None, 'expect a result'

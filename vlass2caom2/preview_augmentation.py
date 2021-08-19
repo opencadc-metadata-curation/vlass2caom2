@@ -268,4 +268,4 @@ class VlassPreview(mc.PreviewVisitor):
 
 def visit(observation, **kwargs):
     previewer = VlassPreview(observation, **kwargs)
-    return previewer.visit(observation, previewer.storage_name)
+    return previewer.visit(observation)

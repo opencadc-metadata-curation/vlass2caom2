@@ -128,10 +128,12 @@ def test_run_by_builder(
     assert exec_mock.called, 'expect to be called'
 
 
+@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.client_composable.StorageClientWrapper')
 @patch('vlass2caom2.scrape.build_file_url_list')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run_state(run_mock, query_mock, data_client_mock):
+def test_run_state(run_mock, query_mock, data_client_mock, url_mock):
+    url_mock.return_value = 'https://localhost'
     def _mock_file_url_list(ignore_start_time):
         a = {
             # 2019-04-24 12:34:00 UTC
