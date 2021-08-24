@@ -75,7 +75,6 @@ footprint benefits from footprintfinder.py.
 
 """
 import logging
-import os
 
 from caom2 import Observation
 from caom2pipe import caom_composable as cc
@@ -102,10 +101,10 @@ def visit(observation, **kwargs):
     # sure how right now
     log_file_directory = kwargs.get('log_file_directory')
 
-    # the science file is from StorageName.source_names, which in this case
-    # may be a URL or a file name. The VlassName constructor will figure
-    # that out, and handle it correctly.
-    science_fqn = os.path.join(working_dir, storage_name.file_name)
+    logging.info(
+        f'Begin footprint finding for '
+        f'{storage_name.get_file_fqn(working_dir)}.'
+    )
     count = 0
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():
@@ -114,7 +113,7 @@ def visit(observation, **kwargs):
                     # -t 10 provides a margin of up to 10 pixels
                     cc.exec_footprintfinder(
                         chunk,
-                        science_fqn,
+                        storage_name.get_file_fqn(working_dir),
                         log_file_directory,
                         storage_name.file_id,
                         '-t 10',

@@ -185,7 +185,7 @@ def test_run_state(run_mock, query_mock, data_client_mock, url_mock):
                   'image.pbcor.tt0.rms.subim.fits'
     try:
         # execution
-        test_result = composable._run_by_state()
+        test_result = composable._run_state()
         assert test_result == 0, 'mocking correct execution'
 
         # assert query_mock.called, 'service query not created'
@@ -228,7 +228,7 @@ def test_run_state_rc(get_file_info_mock, data_client_mock,
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
     try:
-        test_result = composable._run_by_state()
+        test_result = composable._run_state()
         assert test_result is not None, 'expect result'
         assert test_result == 0, 'expect success'
         assert repo_client_mock.return_value.read.called, 'read called'

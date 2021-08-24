@@ -93,7 +93,7 @@ def test_preview_augmentation(access_mock):
               'observable': test_observable,
               'storage_name': test_storage_name,
               'working_directory': '/test_files'}
-    test_subject = preview_augmentation.VlassPreview(test_obs, **kwargs)
+    test_subject = preview_augmentation.VlassPreview(**kwargs)
     assert test_subject is not None, 'need a test subject'
     assert len(test_obs.planes) == 1, 'wrong number of planes'
     assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 4, \

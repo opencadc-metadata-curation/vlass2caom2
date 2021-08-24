@@ -117,7 +117,7 @@ def run_single():
         sys.exit(-1)
 
 
-def _run_by_state():
+def _run_state():
     """Uses a state file with a timestamp to control which quicklook
     files will be retrieved from VLASS.
 
@@ -147,10 +147,10 @@ def _run_by_state():
     )
 
 
-def run_by_state():
-    """Wraps _run_by_state in exception handling."""
+def run_state():
+    """Wraps _run_state in exception handling."""
     try:
-        result = _run_by_state()
+        result = _run_state()
         sys.exit(result)
     except Exception as e:
         logging.error(e)

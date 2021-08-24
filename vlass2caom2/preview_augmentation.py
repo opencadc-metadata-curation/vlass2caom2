@@ -90,12 +90,11 @@ class VlassPreview(mc.PreviewVisitor):
     with a zoom-in box on the brightest pixel on the right.
     """
 
-    def __init__(self, observation, **kwargs):
+    def __init__(self, **kwargs):
         super(VlassPreview, self).__init__(
             sn.COLLECTION, ReleaseType.META, **kwargs
         )
         self._science_file = self._storage_name.file_name
-        self._science_fqn = os.path.join(self._working_dir, self._science_file)
         self._preview_fqn = os.path.join(
             self._working_dir, self._storage_name.prev
         )
@@ -267,5 +266,5 @@ class VlassPreview(mc.PreviewVisitor):
 
 
 def visit(observation, **kwargs):
-    previewer = VlassPreview(observation, **kwargs)
+    previewer = VlassPreview(**kwargs)
     return previewer.visit(observation)

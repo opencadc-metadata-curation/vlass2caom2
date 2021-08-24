@@ -321,7 +321,7 @@ def test_run_state_file_modify(run_mock, query_endpoint_mock):
     try:
         # execution
         query_endpoint_mock.side_effect = _query_endpoint
-        composable._run_by_state()
+        composable._run_state()
         assert run_mock.assert_called, 'should have been called'
     finally:
         os.getcwd = getcwd_orig
@@ -416,7 +416,7 @@ def test_run_state(query_endpoint_mock, run_mock, access_mock):
     os.getcwd = Mock(return_value=TEST_DATA_DIR)
     try:
         sys.argv = ['test_command']
-        composable._run_by_state()
+        composable._run_state()
         assert run_mock.called, 'should have been called'
         args, kwargs = run_mock.call_args
         test_storage = args[0]
@@ -450,7 +450,7 @@ def test_run_state_with_work(query_endpoint_mock, run_mock, access_mock):
         # because of the start times
         sys.argv = ['test_command']
         run_mock.side_effect = _run_mock_return
-        test_result = composable._run_by_state()
+        test_result = composable._run_state()
         assert test_result is not None, 'expect a result'
         assert test_result == 0, 'wrong result'
         assert run_mock.called, 'should have been called'
@@ -468,7 +468,7 @@ def test_run_state_with_work(query_endpoint_mock, run_mock, access_mock):
         # because of the start times
         run_mock.reset_mock()
         assert not run_mock.called, 'reset worked'
-        test_result = composable._run_by_state()
+        test_result = composable._run_state()
         assert test_result is not None, 'expect a result'
         assert test_result == 0, 'wrong test result'
         assert run_mock.called, 'run_mock not called'

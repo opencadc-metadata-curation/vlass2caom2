@@ -126,7 +126,7 @@ else:
 
 
 @pytest.mark.parametrize('test_files', test_obs)
-@patch('caom2utils.cadc_client_wrapper.StorageClientWrapper')
+@patch('caom2utils.data_util.StorageClientWrapper')
 def test_main_app(data_client_mock, test_files):
     def get_file_info(uri):
         if a in uri:
