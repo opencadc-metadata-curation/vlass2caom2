@@ -90,21 +90,17 @@ class VlassPreview(mc.PreviewVisitor):
     with a zoom-in box on the brightest pixel on the right.
     """
 
-    def __init__(self, observation, **kwargs):
+    def __init__(self, **kwargs):
         super(VlassPreview, self).__init__(
-            sn.COLLECTION, ReleaseType.META, **kwargs)
-        self._storage_name = sn.VlassName(file_name=self._science_file)
-        self._science_fqn = os.path.join(self._working_dir,
-                                         self._science_file)
+            sn.COLLECTION, ReleaseType.META, **kwargs
+        )
+        self._science_file = self._storage_name.file_name
         self._preview_fqn = os.path.join(
-            self._working_dir,  self._storage_name.prev)
+            self._working_dir, self._storage_name.prev
+        )
         self._thumb_fqn = os.path.join(
             self._working_dir, self._storage_name.thumb)
         self._logger = logging.getLogger(__name__)
-
-    @property
-    def storage_name(self):
-        return self._storage_name
 
     def generate_plots(self, obs_id):
         """Make a preview for a VLASS image. Tested on random sample of 16
@@ -125,7 +121,7 @@ class VlassPreview(mc.PreviewVisitor):
 
         # Plot the full sized image in the left subplot
         with fits.open(self._science_fqn) as hdul:
-            image_data = hdul['PRIMARY'].data[0,0]
+            image_data = hdul['PRIMARY'].data[0, 0]
             interval = ZScaleInterval(contrast=0.99)
             array = interval((image_data))
         axs[0].imshow(array, cmap='gray', interpolation='none')
@@ -171,8 +167,11 @@ class VlassPreview(mc.PreviewVisitor):
         # To decrease/increase the resolution, change the desired_resolution
         # constant here. It doesn't work perfectly, but is close.
         desired_resolution = 1024
-        bbox = axs[0].get_window_extent().transformed(
-            fig.dpi_scale_trans.inverted())
+        bbox = (
+            axs[0]
+            .get_window_extent()
+            .transformed(fig.dpi_scale_trans.inverted())
+        )
         width, height = bbox.width, bbox.height
 
         # Save as outfile
@@ -234,23 +233,38 @@ class VlassPreview(mc.PreviewVisitor):
             x_upper = x_max + x_size
 
             # If hitting a border of the frame...
-            if (y_lower < 0 or x_lower < 0 or
-                    y_upper > masked_array.shape[1] or
-                    x_upper > masked_array.shape[0]):
+            if (
+                y_lower < 0
+                or x_lower < 0
+                or y_upper > masked_array.shape[1]
+                or x_upper > masked_array.shape[0]
+            ):
                 masked_array = np.ma.masked_greater_equal(
                     masked_array, array_max)
                 continue
 
-            return array[x_max - x_size:x_max + x_size,
-                         y_max - y_size:y_max + y_size], x_max, y_max
+            return (
+                array[
+                    x_max - x_size : x_max + x_size,
+                    y_max - y_size : y_max + y_size,
+                ],
+                x_max,
+                y_max,
+            )
 
         # Fall back to returning a cutout from the centre of the frame.
-        x_max = int(array.shape[0]/2)
-        y_max = int(array.shape[1]/2)
-        return array[x_max - x_size:x_max + x_size,
-                     y_max - y_size:y_max + y_size], x_max, y_max
+        x_max = int(array.shape[0] / 2)
+        y_max = int(array.shape[1] / 2)
+        return (
+            array[
+                x_max - x_size : x_max + x_size,
+                y_max - y_size : y_max + y_size,
+            ],
+            x_max,
+            y_max,
+        )
 
 
 def visit(observation, **kwargs):
-    previewer = VlassPreview(observation, **kwargs)
-    return previewer.visit(observation, previewer.storage_name)
+    previewer = VlassPreview(**kwargs)
+    return previewer.visit(observation)

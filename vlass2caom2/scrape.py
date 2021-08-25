@@ -87,13 +87,19 @@ __all__ = ['build_good_todo', 'make_date_time', 'retrieve_obs_metadata',
 
 QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
 QL_WEB_LOG_URL = 'https://archive-new.nrao.edu/vlass/weblog/quicklook/'
+VLASS_CONTEXT = 'vlass_context'
 
 web_log_content = {}
 
 
 def make_date_time(from_str):
-    for fmt in ['%d%b%Y %H:%M', '%Y-%m-%d %H:%M', '%Y%m%d %H:%M',
-                '%d-%b-%Y %H:%M', '%Y_%m_%dT%H_%M_%S.%f']:
+    for fmt in [
+        '%d%b%Y %H:%M',
+        '%Y-%m-%d %H:%M',
+        '%Y%m%d %H:%M',
+        '%d-%b-%Y %H:%M',
+        '%Y_%m_%dT%H_%M_%S.%f',
+    ]:
         try:
             dt = datetime.strptime(from_str, fmt)
             break
@@ -222,7 +228,8 @@ def build_good_todo(start_date, session):
                             logging.warning(f'Could not query {tile_url}')
                         else:
                             observations = _parse_id_page(
-                                response.text, start_date)
+                                response.text, start_date
+                            )
                             response.close()
 
                             # for each tile, get the list of observations
@@ -230,7 +237,8 @@ def build_good_todo(start_date, session):
                                 obs_url = f'{tile_url}{observation}'
                                 dt_as_s = observations[observation].timestamp()
                                 max_date = max(
-                                    max_date, observations[observation])
+                                    max_date, observations[observation]
+                                )
                                 if dt_as_s in temp:
                                     temp[dt_as_s].append(obs_url)
                                 else:
@@ -244,19 +252,6 @@ def build_good_todo(start_date, session):
 def _parse_for_reference(html_string, reference):
     soup = BeautifulSoup(html_string, features='lxml')
     return soup.find(string=re.compile(reference))
-
-
-def _parse_image_phase_centre_list_page(html_string):
-    """
-    :param html_string:
-    :return: a list of all hrefs on the page
-    """
-    result = []
-    soup = BeautifulSoup(html_string, features='lxml')
-    hrefs = soup.find_all('a', string=re.compile('^VLASS[123]\\.[123]'))
-    for href in hrefs:
-        result.append(href.get('href'))
-    return result
 
 
 def _parse_single_field(html_string):
@@ -397,23 +392,6 @@ def build_todo(start_date):
     return result, return_date
 
 
-def _parse_page_for_hrefs(html_string, reference, start_date):
-    """
-    :return a dict, where keys are URLs, and values are timestamps
-    """
-    result = {}
-    soup = BeautifulSoup(html_string, features='lxml')
-    hrefs = soup.find_all('a', string=re.compile(reference))
-    for ii in hrefs:
-        y = ii.get('href')
-        z = ii.next_element.next_element.string.replace('-', '').strip()
-        dt = make_date_time(z)
-        if dt >= start_date:
-            logging.info(f'Adding {y}')
-            result[y] = dt
-    return result
-
-
 def _parse_specific_file_list_page(html_string, start_time):
     """
     :return: a dict, where keys are URLS, and values are timestamps
@@ -444,8 +422,7 @@ def list_files_on_page(url, start_time, session):
         if response is None:
             raise mc.CadcException(f'Could not query {url}')
         else:
-            result = _parse_specific_file_list_page(response.text,
-                                                    start_time)
+            result = _parse_specific_file_list_page(response.text, start_time)
             response.close()
             return result
     finally:
@@ -495,7 +472,11 @@ def retrieve_obs_metadata(obs_id):
     mod_obs_id = obs_id.replace('.', '_', 2).replace('_', '.', 1)
     global web_log_content
     if len(web_log_content) == 0:
-        raise mc.CadcException('Must initialize weblog content.')
+        config = mc.Config()
+        config.get_executors()
+        logging.warning('Initializing from /weblog. This may take a while.')
+        state = mc.State(config.state_fqn)
+        init_web_log(state)
     latest_key = None
     max_ts = None
     tz_info = tz.gettz('US/Socorro')
@@ -503,8 +484,9 @@ def retrieve_obs_metadata(obs_id):
     # most recent
     for key in web_log_content.keys():
         if key.startswith(mod_obs_id):
-            dt_bits = '_'.join(ii for ii in
-                               key.replace('/', '').split('_')[3:])
+            dt_bits = '_'.join(
+                ii for ii in key.replace('/', '').split('_')[3:]
+            )
             dt_tz = make_date_time(dt_bits).replace(tzinfo=tz_info)
             if max_ts is None:
                 max_ts = dt_tz
@@ -524,14 +506,14 @@ def retrieve_obs_metadata(obs_id):
             if response is None:
                 logging.error(f'Could not query {obs_url}')
             else:
-                pipeline_bit = _parse_for_reference(response.text,
-                                                    'pipeline-')
+                pipeline_bit = _parse_for_reference(response.text, 'pipeline-')
                 response.close()
                 if pipeline_bit is None:
                     logging.error(f'Did not find pipeline on {obs_url}')
                 else:
-                    pipeline_url = \
+                    pipeline_url = (
                         f'{obs_url}{pipeline_bit.strip()}html/index.html'
+                    )
                     logging.debug(f'Querying {pipeline_url}')
                     response = mc.query_endpoint_session(pipeline_url, session)
                     if response is None:
@@ -592,8 +574,7 @@ def build_url_list(start_date):
 
 
 def query_top_page():
-    """Query the timestamp from the top page, for reporting.
-    """
+    """Query the timestamp from the top page, for reporting."""
     start_date = make_date_time('01Jan2017 12:00')
     response = None
     max_date = None
@@ -617,3 +598,16 @@ def query_top_page():
             response.close()
 
     return max_date
+
+
+def init_web_log(state):
+    """Cache content of https:archive-new.nrao.edu/vlass/weblog, because
+    it's large and takes a long time to read. This cached information
+    is how time and provenance metadata is found for the individual
+    observations.
+    """
+    epochs = state.get_context(VLASS_CONTEXT)
+    for key, value in epochs.items():
+        epochs[key] = make_date_time(value)
+        logging.info('Initialize weblog listing from NRAO.')
+    init_web_log_content(epochs)

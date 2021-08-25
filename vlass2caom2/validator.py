@@ -82,6 +82,7 @@ from astropy.io.votable import parse_single_table
 from cadcutils import net
 from cadctap import CadcTapClient
 from caom2repo import CAOM2RepoClient
+from caom2pipe import client_composable as clc
 from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import APPLICATION, scrape, VlassName, COLLECTION
@@ -98,6 +99,7 @@ class FileMeta:
     The information that is used to determine which version of a file
     at NRAO to keep at CADC, since CADC keeps only the latest version.
     """
+
     url: str
     version: str
     dt: str
@@ -106,39 +108,51 @@ class FileMeta:
 
 def read_file_list_from_archive(config):
     ad_resource_id = 'ivo://cadc.nrc.ca/ad'
-    agent = '{}/{}'.format(APPLICATION, '1.0')
+    agent = f'{APPLICATION}/1.0'
     subject = net.Subject(certificate=config.proxy_fqn)
-    client = net.BaseWsClient(resource_id=ad_resource_id,
-                              subject=subject, agent=agent, retry=True)
-    query_meta = "SELECT fileName FROM archive_files WHERE " \
-                 "archiveName = '{}'".format(config.archive)
+    client = net.BaseWsClient(
+        resource_id=ad_resource_id,
+        subject=subject,
+        agent=agent,
+        retry=True,
+    )
+    query_meta = (
+        f"SELECT fileName FROM archive_files WHERE archiveName = "
+        f"'{config.archive}'"
+    )
     data = {'QUERY': query_meta, 'LANG': 'ADQL', 'FORMAT': 'csv'}
-    logging.debug('Query is {}'.format(query_meta))
+    logging.debug(f'Query is {query_meta}')
     try:
-        response = client.get('https://{}/ad/sync?{}'.format(
-            client.host, parse.urlencode(data)), cert=config.proxy_fqn)
+        response = client.get(
+            f'https://{client.host}/ad/sync?{parse.urlencode((data))}',
+            cert=config.proxy_fqn,
+        )
         if response.status_code == 200:
             # ignore the column name as the first part of the response
             artifact_files_list = response.text.split()[1:]
             return artifact_files_list
         else:
-            raise mc.CadcException('Query failure {!r}'.format(response))
+            raise mc.CadcException(f'Query failure {response}')
     except Exception as e:
-        raise mc.CadcException('Failed ad content query: {}'.format(e))
+        raise mc.CadcException(f'Failed ad content query: {e}')
 
 
 def read_list_from_caom(config):
-    query = "SELECT A.uri FROM caom2.Observation AS O " \
-            "JOIN caom2.Plane AS P ON O.obsID = P.obsID " \
-            "JOIN caom2.Artifact AS A ON P.planeID = A.planeID " \
-            "WHERE O.collection='{}'".format(config.archive)
+    query = (
+        f"SELECT A.uri FROM caom2.Observation AS O "
+        f"JOIN caom2.Plane AS P ON O.obsID = P.obsID "
+        f"JOIN caom2.Artifact AS A ON P.planeID = A.planeID "
+        f"WHERE O.collection='{config.archive}'"
+    )
     subject = net.Subject(certificate=config.proxy_fqn)
     tap_client = CadcTapClient(subject, resource_id=config.tap_id)
     buffer = io.BytesIO()
     tap_client.query(query, output_file=buffer)
     temp = parse_single_table(buffer).to_table()
-    return [ii.decode().replace('ad:{}/'.format(config.archive), '').strip()
-            for ii in temp['uri']]
+    return [
+        ii.decode().replace(f'ad:{config.archive}/', '').strip()
+        for ii in temp['uri']
+    ]
 
 
 def read_list_from_nrao(nrao_state_fqn):
@@ -188,9 +202,10 @@ def get_file_url_list_max_versions(nrao_dict):
     # have the effect of building up a list of URLs of all versions by
     # observation ID
     for key, value in nrao_dict.items():
-        storage_name = VlassName(url=key)
-        file_meta = FileMeta(key, storage_name.version, value,
-                             storage_name.file_name)
+        storage_name = VlassName(key)
+        file_meta = FileMeta(
+            key, storage_name.version, value, storage_name.file_name
+        )
         obs_id_dict[storage_name.obs_id].append(file_meta)
 
     # now handle the URLs based on how many there are per observation ID
@@ -226,14 +241,16 @@ def _get_max_version(entries):
 class VlassValidator(mc.Validator):
     def __init__(self):
         super(VlassValidator, self).__init__(
-            source_name='NRAO', source_tz=tz.gettz('Canada/Eastern'))
+            source_name='NRAO', source_tz=tz.gettz('Canada/Eastern')
+        )
         # a dictionary where the file name is the key, and the fully-qualified
         # file name at the HTTP site is the value
         self._fully_qualified_list = None
 
     def read_from_source(self):
         nrao_state_fqn = os.path.join(
-            self._config.working_directory, NRAO_STATE)
+            self._config.working_directory, NRAO_STATE
+        )
         validator_list, fully_qualified_list = read_file_url_list_from_nrao(
             nrao_state_fqn)
         self._fully_qualified_list = fully_qualified_list
@@ -249,28 +266,33 @@ class VlassValidator(mc.Validator):
     def _filter_result(self):
         config = mc.Config()
         config.get_executors()
-        subject = mc.define_subject(config)
+        subject = clc.define_subject(config)
         caom_client = CAOM2RepoClient(subject)
         metrics = mc.Metrics(config)
         for entry in self._source:
             if VlassValidator._later_version_at_cadc(
-                    entry, caom_client, metrics):
+                entry, caom_client, metrics
+            ):
                 self._source.remove(entry)
 
     @staticmethod
     def _later_version_at_cadc(entry, caom_client, metrics):
         later_version_found = False
-        storage_name = VlassName(file_name=entry, entry=entry)
-        caom_at_cadc = mc.repo_get(caom_client, COLLECTION,
-                                   storage_name.obs_id, metrics)
+        storage_name = VlassName(entry)
+        caom_at_cadc = clc.repo_get(
+            caom_client, COLLECTION, storage_name.obs_id, metrics
+        )
         if caom_at_cadc is not None:
             for plane in caom_at_cadc.planes.values():
                 for artifact in plane.artifacts.values():
                     if 'jpg' in artifact.uri:
                         continue
-                    ignore_scheme, ignore_collection, f_name = mc.decompose_uri(
-                        artifact.uri)
-                    vlass_name = VlassName(file_name=f_name)
+                    (
+                        ignore_scheme,
+                        ignore_collection,
+                        f_name,
+                    ) = mc.decompose_uri(artifact.uri)
+                    vlass_name = VlassName(f_name)
                     if vlass_name.version > storage_name.version:
                         # there's a later version at CADC, everything is good
                         # ignore the failure report
@@ -289,6 +311,7 @@ def validate():
 
 if __name__ == '__main__':
     import sys
+
     try:
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)

@@ -79,7 +79,7 @@ from mock import patch, Mock
 import test_main_app, test_scrape
 
 
-@patch('caom2pipe.manage_composable.repo_get')
+@patch('caom2pipe.client_composable.repo_get')
 @patch('cadcdata.core.net.BaseWsClient.post')
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
@@ -151,8 +151,9 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
         assert os.path.exists(test_listing_fqn), 'should create file record'
 
         test_subject.write_todo()
-        assert os.path.exists(test_subject._config.work_fqn), \
-            'should create file record'
+        assert os.path.exists(
+            test_subject._config.work_fqn
+        ), 'should create file record'
         with open(test_subject._config.work_fqn, 'r') as f:
             content = f.readlines()
         assert len(content) == 2, 'wrong number of entries'
@@ -175,8 +176,9 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
 
 
 def test_multiple_versions():
-    with open(f'{test_main_app.TEST_DATA_DIR}/multiple_versions_tile.html',
-              'r') as f:
+    with open(
+        f'{test_main_app.TEST_DATA_DIR}/multiple_versions_tile.html', 'r'
+    ) as f:
         test_string = f.read()
     test_start_date = datetime.strptime('2018-01-01', '%Y-%m-%d')
     start_content = scrape._parse_id_page(test_string, test_start_date)
@@ -190,8 +192,10 @@ def test_multiple_versions():
                     f'rms.subim.fits'
         test_content[test_key1] = value.timestamp()
         test_content[test_key2] = value.timestamp()
-    test_result, test_validate_dict_result = \
-        validator.get_file_url_list_max_versions(test_content)
+    (
+        test_result,
+        test_validate_dict_result,
+    ) = validator.get_file_url_list_max_versions(test_content)
     assert test_result is not None, 'expect a test result'
     assert test_validate_dict_result is not None, 'expect a test result'
     assert len(test_result) == 82, 'wrong test result len'

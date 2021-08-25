@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 
 def make_list():
     import sys
-    soup = None
     with open(sys.argv[1]) as listing:
         soup = BeautifulSoup(listing, 'html.parser')
     file_list = soup.find_all('a', recursive=True)

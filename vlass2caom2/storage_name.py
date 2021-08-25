@@ -67,13 +67,20 @@
 # ***********************************************************************
 #
 
+from os.path import basename
+from urllib.parse import urlparse
+from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import scrape
 
 
-__all__ = ['APPLICATION', 'COLLECTION', 'COLLECTION_PATTERN', 'VlassName']
+__all__ = [
+    'APPLICATION', 'COLLECTION', 'COLLECTION_PATTERN', 'SCHEME', 'VlassName'
+]
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
+SCHEME = 'nrao'
+CADC_SCHEME = 'cadc'
 COLLECTION_PATTERN = '*'  # TODO what are acceptable naming patterns?
 
 
@@ -87,45 +94,50 @@ class VlassName(mc.StorageName):
     because some of the URLs are from the QA_REJECTED directories, hence
     the absence of that functionality in this class.
     """
-    def __init__(self, obs_id=None, file_name=None, fname_on_disk=None,
-                 url=None, entry=None):
-        if obs_id is None:
-            if file_name is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(file_name)
-            elif fname_on_disk is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(fname_on_disk)
-            elif url is not None:
-                obs_id = VlassName.get_obs_id_from_file_name(
-                    url.split('/')[-1])
-        super(VlassName, self).__init__(
-            obs_id, COLLECTION, COLLECTION_PATTERN, entry=entry)
-        product_id = None
-        if file_name is not None:
-            product_id = VlassName.get_product_id_from_file_name(file_name)
-        elif fname_on_disk is not None:
-            product_id = VlassName.get_product_id_from_file_name(fname_on_disk)
-        elif url is not None:
-            product_id = VlassName.get_product_id_from_file_name(
-                url.split('/')[-1])
-        self._product_id = product_id
-        self.file_name = file_name
-        if file_name is None:
-            self.file_id = None
+
+    def __init__(
+        self,
+        entry=None,
+    ):
+        self._collection = COLLECTION
+        self._entry = entry
+        temp = urlparse(entry)
+        if temp.scheme == '':
+            self._url = None
+            self._file_name = basename(entry)
         else:
-            self.file_id = VlassName.remove_extensions(file_name)
-            self.fname_on_disk = file_name
-        self.obs_id = obs_id
-        if fname_on_disk is not None:
-            self.file_id = VlassName.remove_extensions(fname_on_disk)
-            self.fname_on_disk = fname_on_disk
-            self.file_name = self.fname_on_disk.replace('.header', '')
-        if url is not None:
-            self.file_name = url.strip('/').split('/')[-1]
-            self.fname_on_disk = self.file_name
-            self.file_id = VlassName.remove_extensions(self.file_name)
-            self.obs_id = VlassName.get_obs_id_from_file_name(self.file_name)
-            self._url = url
-        self._version = VlassName.get_version(self.file_name)
+            if temp.scheme.startswith('http'):
+                self._url = entry
+                self._file_name = temp.path.split('/')[-1]
+            else:
+                # it's an Artifact URI
+                self._url = None
+                self._file_name = temp.path.split('/')[-1]
+        self._obs_id = VlassName.get_obs_id_from_file_name(self._file_name)
+        self._product_id = VlassName.get_product_id_from_file_name(
+            self._file_name
+        )
+        self._file_id = VlassName.remove_extensions(self._file_name)
+        self._version = VlassName.get_version(self._file_name)
+        self._scheme = SCHEME
+        self._source_names = [entry]
+        self._destination_uris = [self.file_uri]
+
+    def __str__(self):
+        return (
+            f'\n'
+            f'      obs_id: {self.obs_id}\n'
+            f'     file_id: {self.file_id}\n'
+            f'   file_name: {self.file_name}\n'
+            f'source_names: {self.source_names}\n'
+            f'    file_uri: {self.file_uri}\n'
+            f'     lineage: {self.lineage}\n'
+            f'         url: {self.url}\n'
+        )
+
+    @property
+    def archive(self):
+        return self._archive
 
     @property
     def epoch(self):
@@ -133,27 +145,17 @@ class VlassName(mc.StorageName):
         return f'{bits[0]}.{bits[1]}'
 
     @property
-    def epoch(self):
-        bits = self._file_name.split('.')
-        return f'{bits[0]}.{bits[1]}'
-
-    @property
-    def epoch(self):
-        bits = self._file_name.split('.')
-        return f'{bits[0]}.{bits[1]}'
+    def file_id(self):
+        return self._file_id
 
     @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
-        return 'ad:{}/{}'.format(self.collection, self.file_name)
+        return self._get_uri(self._file_name, SCHEME)
 
     @property
     def file_name(self):
         return self._file_name
-
-    @file_name.setter
-    def file_name(self, value):
-        self._file_name = value
 
     @property
     def image_pointing_url(self):
@@ -163,7 +165,11 @@ class VlassName(mc.StorageName):
 
     @property
     def prev(self):
-        return f'{self.file_id}_prev.jpg'
+        return f'{self._file_id}_prev.jpg'
+
+    @property
+    def prev_uri(self):
+        return self._get_uri(self.prev, CADC_SCHEME)
 
     @property
     def product_id(self):
@@ -174,8 +180,20 @@ class VlassName(mc.StorageName):
         return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
 
     @property
+    def scheme(self):
+        return self._scheme
+
+    @property
+    def source_names(self):
+        return [self.entry]
+
+    @property
     def thumb(self):
-        return f'{self.file_id}_prev_256.jpg'
+        return f'{self._file_id}_prev_256.jpg'
+
+    @property
+    def thumb_uri(self):
+        return self._get_uri(self.thumb, CADC_SCHEME)
 
     @property
     def tile(self):
@@ -189,13 +207,6 @@ class VlassName(mc.StorageName):
     def url(self):
         return self._url
 
-    @url.setter
-    def url(self, value):
-        self._url = value
-
-    def _get_file_id(self):
-        return self.file_id
-
     def is_valid(self):
         return True
 
@@ -203,21 +214,23 @@ class VlassName(mc.StorageName):
     def version(self):
         return self._version
 
+    def _get_uri(self, file_name, scheme):
+        return cc.build_artifact_uri(file_name, self._collection, scheme)
+
     @staticmethod
     def get_obs_id_from_file_name(file_name):
         """The obs id is made of the VLASS epoch, tile name, and image centre
         from the file name.
         """
         bits = file_name.split('.')
-        obs_id = '{}.{}.{}.{}'.format(bits[0], bits[1], bits[3], bits[4])
+        obs_id = f'{bits[0]}.{bits[1]}.{bits[3]}.{bits[4]}'
         return obs_id
 
     @staticmethod
     def get_product_id_from_file_name(file_name):
-        """The product id is made of the obs id plus the string 'quicklook'.
-        """
+        """The product id is made of the obs id plus the string 'quicklook'."""
         obs_id = VlassName.get_obs_id_from_file_name(file_name)
-        return '{}.quicklook'.format(obs_id)
+        return f'{obs_id}.quicklook'
 
     @staticmethod
     def get_version(entry):

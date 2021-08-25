@@ -67,14 +67,18 @@
 # ***********************************************************************
 #
 
+"""
+
+VLASS2.1.T05t02.J011933-233000 is an example of an observation where the
+footprint benefits from footprintfinder.py.
+
+
+"""
 import logging
-import os
 
 from caom2 import Observation
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
-
-from vlass2caom2 import storage_name as sn
 
 
 __all__ = ['visit']
@@ -82,21 +86,25 @@ __all__ = ['visit']
 
 def visit(observation, **kwargs):
     assert observation is not None, 'Input parameter must have a value.'
-    assert isinstance(observation, Observation), \
-        'Input parameter must be an Observation'
+    assert isinstance(
+        observation, Observation
+    ), 'Input parameter must be an Observation'
 
     working_dir = kwargs.get('working_directory', './')
-    science_file = kwargs.get('science_file')
-    if science_file is None:
+    storage_name = kwargs.get('storage_name')
+    if storage_name is None:
         raise mc.CadcException(
-            'No science_file parameter provided to vistor '
+            'No storage_name parameter provided to visitor '
             'for obs {}.'.format(observation.observation_id))
     # TODO - this moves location handling structures to other than the
     # main composable code - this could be MUCH better handled, just not
     # sure how right now
     log_file_directory = kwargs.get('log_file_directory')
 
-    science_fqn = os.path.join(working_dir, science_file)
+    logging.info(
+        f'Begin footprint finding for '
+        f'{storage_name.get_file_fqn(working_dir)}.'
+    )
     count = 0
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():
@@ -104,8 +112,12 @@ def visit(observation, **kwargs):
                 for chunk in part.chunks:
                     # -t 10 provides a margin of up to 10 pixels
                     cc.exec_footprintfinder(
-                        chunk, science_fqn, log_file_directory,
-                        sn.VlassName.remove_extensions(science_file), '-t 10')
+                        chunk,
+                        storage_name.get_file_fqn(working_dir),
+                        log_file_directory,
+                        storage_name.file_id,
+                        '-t 10',
+                    )
                     count += 1
 
     logging.info('Completed footprint augmentation for {}'.format(

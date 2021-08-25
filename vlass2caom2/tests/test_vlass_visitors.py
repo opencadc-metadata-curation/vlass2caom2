@@ -77,7 +77,7 @@ from caom2 import Status
 from caom2pipe import manage_composable as mc
 
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
-from vlass2caom2 import position_bounds_augmentation, work
+from vlass2caom2 import position_bounds_augmentation, scrape
 from vlass2caom2 import storage_name as sn
 import test_scrape
 
@@ -102,12 +102,11 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
     test_config = mc.Config()
     test_config.get_executors()
     test_state = mc.State(test_config.state_fqn)
-    work.init_web_log(test_state, test_config)
+    scrape.init_web_log(test_state)
     test_name = sn.VlassName(
-        file_name='VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
-                  'image.pbcor.tt0.subim.fits',
-        entry='VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
-              'image.pbcor.tt0.subim.fits')
+        'VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
+        'image.pbcor.tt0.subim.fits',
+    )
     test_file = os.path.join(TEST_DATA_DIR, f'{test_name.obs_id}.xml')
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
@@ -158,14 +157,15 @@ def test_aug_visit_position_bounds():
                     test_input_file)
     test_file = os.path.join(TEST_DATA_DIR, 'fpf_start_obs.xml')
     test_obs = mc.read_obs_from_file(test_file)
+    test_storage_name = sn.VlassName(test_input_file)
     kwargs = {'working_directory': '/test_files',
-              'science_file': f'{test_file_id}.fits',
+              'storage_name': test_storage_name,
               'log_file_directory': os.path.join(TEST_DATA_DIR, 'logs')}
     test_result = position_bounds_augmentation.visit(test_obs, **kwargs)
     assert test_result is not None, 'should have a result status'
     assert len(test_result) == 1, 'modified chunks count'
     assert test_result['chunks'] == 2, 'chunk count'
-    return_file = os.path.join(THIS_DIR, '{test_file_id}__footprint.txt')
+    return_file = os.path.join(THIS_DIR, f'{test_file_id}__footprint.txt')
     assert not os.path.exists(return_file), 'bad cleanup'
     if os.path.exists(test_input_file):
         os.unlink(test_input_file)

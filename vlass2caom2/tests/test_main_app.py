@@ -68,6 +68,7 @@
 #
 
 
+from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import to_caom2, VlassName
 from caom2.diff import get_differences
@@ -125,38 +126,43 @@ else:
 
 
 @pytest.mark.parametrize('test_files', test_obs)
-def test_main_app(test_files):
+@patch('caom2utils.data_util.StorageClientWrapper')
+def test_main_app(data_client_mock, test_files):
+    def get_file_info(uri):
+        if a in uri:
+            return FileInfo(
+                id=uri,
+                size=55425600,
+                md5sum='ae2a33238c5051611133e7090560fd8a',
+                file_type='application/fits',
+            )
+        else:
+            return FileInfo(
+                id=uri,
+                size=55425600,
+                md5sum='40f7c2763f92ea6e9c6b0304c569097e',
+                file_type='application/fits',
+            )
+    data_client_mock.return_value.info.side_effect = get_file_info
+
     obs_id = test_files[0]
-    obs_path = os.path.join(TEST_DATA_DIR, '{}.xml'.format(obs_id))
+    obs_path = os.path.join(TEST_DATA_DIR, f'{obs_id}.xml')
     expected = mc.read_obs_from_file(obs_path)
     if obs_id.endswith('r'):
-        obs_path = os.path.join(TEST_DATA_DIR, '{}.in.xml'.format(obs_id))
-        input_param = '--in {}'.format(obs_path)
+        obs_path = os.path.join(TEST_DATA_DIR, f'{obs_id}.in.xml')
+        input_param = f'--in {obs_path}'
     else:
-        input_param = '--observation {} {}'.format(COLLECTION, obs_id)
+        input_param = f'--observation {COLLECTION} {obs_id}'
     lineage = _get_lineage(obs_id, test_files)
-    output_file = '{}.actual.xml'.format(obs_id)
+    output_file = f'{obs_id}.actual.xml'
     local = _get_local(test_files[1:])
 
-    with patch('caom2utils.fits2caom2.CadcDataClient') as data_client_mock:
-        def get_file_info(archive, file_id):
-            if file_id == a:
-                return {'size': 55425600,
-                        'md5sum': 'ae2a33238c5051611133e7090560fd8a',
-                        'type': 'application/fits'}
-            else:
-                return {'size': 55425600,
-                        'md5sum': '40f7c2763f92ea6e9c6b0304c569097e',
-                        'type': 'application/fits'}
-        data_client_mock.return_value.get_file_info.side_effect = \
-            get_file_info
-
-        sys.argv = \
-            ('vlass2caom2 --local {} {} -o {} --plugin {} --module {} '
-             '--lineage {}'.format(local, input_param, output_file, PLUGIN,
-                                   PLUGIN, lineage)).split()
-        print(sys.argv)
-        to_caom2()
+    sys.argv = (
+        f'vlass2caom2 --local {local} {input_param} -o {output_file} '
+        f'--plugin {PLUGIN} --module {PLUGIN} --lineage {lineage}'
+    ).split()
+    print(sys.argv)
+    to_caom2()
 
     actual = mc.read_obs_from_file(output_file)
     result = get_differences(expected, actual, 'Observation')
@@ -171,19 +177,23 @@ def test_main_app(test_files):
 def _get_local(test_files):
     result = ''
     for test_name in test_files:
-        result = '{} {}/{}'.format(result, TEST_DATA_DIR, test_name)
+        result = f'{result} {TEST_DATA_DIR}/{test_name}'
     return result
 
 
 def _get_lineage(obs_id, test_files):
     if obs_id in [obs_id_a, obs_id_c, obs_id_c + 'r', obs_id_f]:
-        return ' '.join(VlassName(fname_on_disk=ii).lineage for ii in
-                        test_files[1:])
+        return ' '.join(
+            VlassName(ii.replace('.header', '')).lineage
+            for ii in test_files[1:]
+        )
     else:
-        ql_pid = '{}.quicklook'.format(obs_id)
-        cat_pid = '{}.catalog'.format(obs_id)
-        coarse_pid = '{}.coarsecube'.format(obs_id)
-        return '{}/ad:VLASS/{} {}/ad:VLASS/{} {}/ad:VLASS/{} ' \
-               '{}/ad:VLASS/{}'.format(ql_pid, test_files[1], ql_pid,
-                                       test_files[2], cat_pid, test_files[3],
-                                       coarse_pid, test_files[4])
+        ql_pid = f'{obs_id}.quicklook'
+        cat_pid = f'{obs_id}.catalog'
+        coarse_pid = f'{obs_id}.coarsecube'
+        return (
+            f'{ql_pid}/ad:VLASS/{test_files[1]} '
+            f'{ql_pid}/ad:VLASS/{test_files[2]} '
+            f'{cat_pid}/ad:VLASS/{test_files[3]} '
+            f'{coarse_pid}/ad:VLASS/{test_files[4]}'
+        )
