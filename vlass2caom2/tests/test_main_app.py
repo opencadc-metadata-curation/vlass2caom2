@@ -72,6 +72,7 @@ from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import to_caom2, VlassName
 from caom2.diff import get_differences
+from caom2utils import data_util
 
 import os
 import pytest
@@ -126,8 +127,9 @@ else:
 
 
 @pytest.mark.parametrize('test_files', test_obs)
+@patch('caom2utils.data_util.get_local_headers_from_fits')
 @patch('caom2utils.data_util.StorageClientWrapper')
-def test_main_app(data_client_mock, test_files):
+def test_main_app(data_client_mock, local_headers_mock, test_files):
     def get_file_info(uri):
         if a in uri:
             return FileInfo(
@@ -144,6 +146,16 @@ def test_main_app(data_client_mock, test_files):
                 file_type='application/fits',
             )
     data_client_mock.return_value.info.side_effect = get_file_info
+
+    def _read_file(fqn):
+        from urllib.parse import urlparse
+        file_uri = urlparse(fqn)
+        fits_header = open(file_uri.path).read()
+        headers = data_util.make_headers_from_string(fits_header)
+        return headers
+    # during operation, want to use astropy on FITS files but during testing
+    # want to use headers and built-in Python file operations
+    local_headers_mock.side_effect = _read_file
 
     obs_id = test_files[0]
     obs_path = os.path.join(TEST_DATA_DIR, f'{obs_id}.xml')
