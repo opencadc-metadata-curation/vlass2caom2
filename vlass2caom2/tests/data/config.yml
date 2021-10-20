@@ -41,7 +41,4 @@ interval: 600
 task_types: 
   - ingest
 features:
-  use_file_names: False
-  use_urls: True
-  run_in_airflow: False
   supports_latest_client: False

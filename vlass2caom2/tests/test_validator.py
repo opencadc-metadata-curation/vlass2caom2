@@ -157,7 +157,7 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
         with open(test_subject._config.work_fqn, 'r') as f:
             content = f.readlines()
         assert len(content) == 2, 'wrong number of entries'
-        compare = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
+        compare = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/' \
                   'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/' \
                   'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.' \
                   'image.pbcor.tt0.rms.subim.fits\n'
