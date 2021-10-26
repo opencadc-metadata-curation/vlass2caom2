@@ -95,7 +95,8 @@ def visit(observation, **kwargs):
     if storage_name is None:
         raise mc.CadcException(
             'No storage_name parameter provided to visitor '
-            'for obs {}.'.format(observation.observation_id))
+            'for obs {}.'.format(observation.observation_id)
+        )
     # TODO - this moves location handling structures to other than the
     # main composable code - this could be MUCH better handled, just not
     # sure how right now
@@ -120,6 +121,9 @@ def visit(observation, **kwargs):
                     )
                     count += 1
 
-    logging.info('Completed footprint augmentation for {}'.format(
-        observation.observation_id))
+    logging.info(
+        'Completed footprint augmentation for {}'.format(
+            observation.observation_id
+        )
+    )
     return {'chunks': count}

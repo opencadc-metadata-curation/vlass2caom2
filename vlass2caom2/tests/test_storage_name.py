@@ -118,16 +118,15 @@ def test_storage_name():
         assert ts.thumb == f'{test_bit}.subim_prev_256.jpg', 'wrong thumbnail'
         assert (
             ts.prev_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
-                           f'{test_bit}.subim_prev.jpg'
+            f'{test_bit}.subim_prev.jpg'
         ), 'wrong preview uri'
         assert (
             ts.thumb_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
-                            f'{test_bit}.subim_prev_256.jpg'
+            f'{test_bit}.subim_prev_256.jpg'
         ), 'wrong thumbnail uri'
         assert (
-            ts.lineage
-            == f'{ts.product_id}/{sn.SCHEME}:{sn.COLLECTION}/'
-               f'{test_bit}.subim.fits'
+            ts.lineage == f'{ts.product_id}/{sn.SCHEME}:{sn.COLLECTION}/'
+            f'{test_bit}.subim.fits'
         ), 'wrong lineage'
 
 

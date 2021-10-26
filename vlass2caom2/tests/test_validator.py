@@ -87,14 +87,15 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
     caps_mock.return_value = 'https://sc2.canfar.net/sc2repo'
     response = Mock()
     response.status_code = 200
-    x = \
-        [b'uri\n'
-         b'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.'
-         b'iter1.image.pbcor.tt0.rms.subim.fits\n'
-         b'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.'
-         b'image.pbcor.tt0.subim.fits\n'
-         b'ad:VLASS/VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.'
-         b'image.pbcor.tt0.rms.subim.fits']
+    x = [
+        b'uri\n'
+        b'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.'
+        b'iter1.image.pbcor.tt0.rms.subim.fits\n'
+        b'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.'
+        b'image.pbcor.tt0.subim.fits\n'
+        b'ad:VLASS/VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.'
+        b'image.pbcor.tt0.rms.subim.fits'
+    ]
 
     y = [b'ingestDate,fileName\n']
 
@@ -126,10 +127,13 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
     try:
         test_subject = validator.VlassValidator()
-        test_listing_fqn = \
+        test_listing_fqn = (
             f'{test_subject._config.working_directory}/{mc.VALIDATE_OUTPUT}'
-        test_source_list_fqn = f'{test_subject._config.working_directory}/' \
-                               f'{validator.NRAO_STATE}'
+        )
+        test_source_list_fqn = (
+            f'{test_subject._config.working_directory}/'
+            f'{validator.NRAO_STATE}'
+        )
         if os.path.exists(test_listing_fqn):
             os.unlink(test_listing_fqn)
         if os.path.exists(test_subject._config.work_fqn):
@@ -141,13 +145,15 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
         assert test_source is not None, 'expected source result'
         assert test_meta is not None, 'expected destination result'
         assert len(test_source) == 2, 'wrong number of source results'
-        assert 'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits' in test_source, \
-            'wrong source content'
+        assert (
+            'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.'
+            'pbcor.tt0.rms.subim.fits' in test_source
+        ), 'wrong source content'
         assert len(test_meta) == 1, 'wrong # of destination results'
-        assert 'VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits' in test_meta, \
-            'wrong destination content'
+        assert (
+            'VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.image.'
+            'pbcor.tt0.rms.subim.fits' in test_meta
+        ), 'wrong destination content'
         assert os.path.exists(test_listing_fqn), 'should create file record'
 
         test_subject.write_todo()
@@ -157,18 +163,22 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock):
         with open(test_subject._config.work_fqn, 'r') as f:
             content = f.readlines()
         assert len(content) == 2, 'wrong number of entries'
-        compare = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/' \
-                  'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/' \
-                  'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.' \
-                  'image.pbcor.tt0.rms.subim.fits\n'
+        compare = (
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/'
+            'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
+            'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.'
+            'image.pbcor.tt0.rms.subim.fits\n'
+        )
         assert compare in content, 'unexpected content'
 
         # does the cached list work too?
         assert os.path.exists(test_source_list_fqn), 'cache should exist'
         test_cache = test_subject.read_from_source()
         assert test_cache is not None, 'expected cached source result'
-        compare = 'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.' \
-                  'image.pbcor.tt0.rms.subim.fits'
+        compare = (
+            'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.'
+            'image.pbcor.tt0.rms.subim.fits'
+        )
         assert len(test_cache) == 4, 'wrong amount of cache content'
         assert compare in test_cache, 'wrong cached result'
     finally:
@@ -184,12 +194,16 @@ def test_multiple_versions():
     start_content = scrape._parse_id_page(test_string, test_start_date)
     test_content = {}
     for key, value in start_content.items():
-        test_key1 = f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
-                    f'T23t13{key}/{key.strip("/")}.I.iter1.image.pbcor.tt0.' \
-                    f'subim.fits'
-        test_key2 = f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
-                    f'T23t13{key}/{key.strip("/")}.I.iter1.image.pbcor.tt0.' \
-                    f'rms.subim.fits'
+        test_key1 = (
+            f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
+            f'T23t13{key}/{key.strip("/")}.I.iter1.image.pbcor.tt0.'
+            f'subim.fits'
+        )
+        test_key2 = (
+            f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
+            f'T23t13{key}/{key.strip("/")}.I.iter1.image.pbcor.tt0.'
+            f'rms.subim.fits'
+        )
         test_content[test_key1] = value.timestamp()
         test_content[test_key2] = value.timestamp()
     (
@@ -199,19 +213,24 @@ def test_multiple_versions():
     assert test_result is not None, 'expect a test result'
     assert test_validate_dict_result is not None, 'expect a test result'
     assert len(test_result) == 82, 'wrong test result len'
-    assert len(test_validate_dict_result) == 82, \
-        'wrong test validate dict result len'
+    assert (
+        len(test_validate_dict_result) == 82
+    ), 'wrong test validate dict result len'
 
-    for multiple in ['VLASS1.1.ql.T23t13.J120259+483000.10.2048',
-                     'VLASS1.1.ql.T23t13.J125953+483000.10.2048']:
+    for multiple in [
+        'VLASS1.1.ql.T23t13.J120259+483000.10.2048',
+        'VLASS1.1.ql.T23t13.J125953+483000.10.2048',
+    ]:
         l1 = f'{multiple}.v1.I.iter1.image.pbcor.tt0.subim.fits'
         l2 = f'{multiple}.v2.I.iter1.image.pbcor.tt0.subim.fits'
         assert l1 not in test_result.keys(), f'{l1} in test_result keys'
         assert l2 in test_result.keys(), f'{l2} not in test_result keys'
-        assert l1 not in test_validate_dict_result.keys(), \
-            f'{l1} in test_validate_dict_result keys'
-        assert l2 in test_validate_dict_result.keys(), \
-            f'{l2} not in test_validate_dict_result keys'
+        assert (
+            l1 not in test_validate_dict_result.keys()
+        ), f'{l1} in test_validate_dict_result keys'
+        assert (
+            l2 in test_validate_dict_result.keys()
+        ), f'{l2} not in test_validate_dict_result keys'
 
 
 def _mock_repo_read(ignore_client, collection, obs_id, ignore_metrics):

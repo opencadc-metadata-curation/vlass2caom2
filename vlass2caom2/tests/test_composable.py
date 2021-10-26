@@ -106,8 +106,10 @@ def test_run_by_builder(
     test_config = mc.Config()
     test_config.get_executors()
 
-    test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
-                  'image.pbcor.tt0.subim.fits'
+    test_f_name = (
+        'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.'
+        'image.pbcor.tt0.subim.fits'
+    )
     with open(test_config.work_fqn, 'w') as f:
         f.write(f'{test_f_name}\n')
 
@@ -134,6 +136,7 @@ def test_run_by_builder(
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 def test_run_state(run_mock, query_mock, data_client_mock, url_mock):
     url_mock.return_value = 'https://localhost'
+
     def _mock_file_url_list(ignore_start_time):
         a = {
             # 2019-04-24 12:34:00 UTC
@@ -181,8 +184,10 @@ def test_run_state(run_mock, query_mock, data_client_mock, url_mock):
 
     test_obs_id = 'VLASS2.1.T07t13.J083838-153000'
     test_product_id = 'VLASS2.1.T07t13.J083838-153000.quicklook'
-    test_f_name = 'VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.' \
-                  'image.pbcor.tt0.rms.subim.fits'
+    test_f_name = (
+        'VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.'
+        'image.pbcor.tt0.rms.subim.fits'
+    )
     try:
         # execution
         test_result = composable._run_state()
@@ -218,8 +223,13 @@ def test_run_state(run_mock, query_mock, data_client_mock, url_mock):
 @patch('caom2pipe.client_composable.CAOM2RepoClient')
 @patch('caom2pipe.client_composable.StorageClientWrapper')
 @patch('cadcdata.CadcDataClient.get_file_info')
-def test_run_state_rc(get_file_info_mock, data_client_mock,
-                      repo_client_mock, query_mock, to_caom2_mock):
+def test_run_state_rc(
+    get_file_info_mock,
+    data_client_mock,
+    repo_client_mock,
+    query_mock,
+    to_caom2_mock,
+):
     test_scrape._write_state('24Apr2019 12:34')
     query_mock.side_effect = test_scrape._query_endpoint
     repo_client_mock.return_value.read.return_value = None
@@ -256,9 +266,16 @@ def test_store():
     transferrer = Mock()
     cadc_data_client = Mock()
     observable = mc.Observable(
-        mc.Rejected('/tmp/rejected.yml'), mc.Metrics(test_config))
-    test_subject = ec.Store(test_config, test_storage_name, APPLICATION,
-                            cadc_data_client, observable, transferrer)
+        mc.Rejected('/tmp/rejected.yml'), mc.Metrics(test_config)
+    )
+    test_subject = ec.Store(
+        test_config,
+        test_storage_name,
+        APPLICATION,
+        cadc_data_client,
+        observable,
+        transferrer,
+    )
     test_subject.execute(None)
     assert cadc_data_client.put.called, 'expect a call'
     cadc_data_client.put.assert_called_with(
@@ -268,8 +285,10 @@ def test_store():
         None,
     ), 'wrong put args'
     assert transferrer.get.called, 'expect a transfer call'
-    test_f_name = 'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.' \
-                  'image.pbcor.tt0.rms.subim.fits'
+    test_f_name = (
+        'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.'
+        'image.pbcor.tt0.rms.subim.fits'
+    )
     transferrer.get.assert_called_with(
         f'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T10t12/'
         f'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/{test_f_name}',
@@ -279,6 +298,7 @@ def test_store():
 
 def _cmd_direct_mock():
     from caom2 import SimpleObservation, Algorithm
+
     obs = SimpleObservation(
         observation_id='VLASS1.2.T07t13.J083838-153000',
         collection=COLLECTION,
@@ -316,12 +336,14 @@ def _mock_repo_update():
 
 def _mock_get_cadc_headers(archive, file_id):
     import logging
+
     logging.error(f'\n\n\nmock get cadc headers\n\n\n')
     return {'md5sum': 'md5:abc123'}
 
 
 def _mock_x(archive, file_id, b, fhead):
     import logging
+
     logging.error(f'{archive} {file_id} {fhead}')
     logging.error(f'\n\n\ncalled called called \n\n\n')
     from astropy.io import fits
@@ -336,15 +358,16 @@ TYPE    = 'image  '
 END
 """
     delim = '\nEND'
-    extensions = \
-        [e + delim for e in x.split(delim) if e.strip()]
+    extensions = [e + delim for e in x.split(delim) if e.strip()]
     headers = [fits.Header.fromstring(e, sep='\n') for e in extensions]
     return headers
 
 
 def _write_obs_mock():
     args = get_gen_proc_arg_parser().parse_args()
-    obs = SimpleObservation(collection=args.observation[0],
-                            observation_id=args.observation[1],
-                            algorithm=Algorithm(name='exposure'))
+    obs = SimpleObservation(
+        collection=args.observation[0],
+        observation_id=args.observation[1],
+        algorithm=Algorithm(name='exposure'),
+    )
     mc.write_obs_to_file(obs, args.out_obs_xml)

@@ -97,11 +97,14 @@ def visit(observation, **kwargs):
     else:
         observation.requirements = None
     if observation.requirements != original:
-        logging.warning(f'Changed requirements to {observation.requirements} '
-                        f'for {observation.observation_id}.')
+        logging.warning(
+            f'Changed requirements to {observation.requirements} '
+            f'for {observation.observation_id}.'
+        )
         count = 1
     logging.info(
-        f'Completed quality augmentation for {observation.observation_id}')
+        f'Completed quality augmentation for {observation.observation_id}'
+    )
     return {'observations': count}
 
 

@@ -84,8 +84,10 @@ def visit(observation, **kwargs):
     cadc_client = kwargs.get('cadc_client')
     count = 0
     if cadc_client is None:
-        logging.warning('No cadc_client parameter, no connection for input '
-                        'metadata. Stopping time_bounds_augmentation.')
+        logging.warning(
+            'No cadc_client parameter, no connection for input '
+            'metadata. Stopping time_bounds_augmentation.'
+        )
 
     else:
         # conversation with JJK, 2018-08-08 - until such time as VLASS becomes
@@ -107,8 +109,10 @@ def visit(observation, **kwargs):
                     if reference is not None:
                         plane.provenance.reference = reference
                         count += 1
-        logging.info(f'Completed time bounds augmentation for '
-                     f'{observation.observation_id}')
+        logging.info(
+            f'Completed time bounds augmentation for '
+            f'{observation.observation_id}'
+        )
         global obs_metadata
         obs_metadata = None
     return {'artifacts': count}
@@ -129,7 +133,8 @@ def _augment_artifact(obs_id, artifact):
         bounds, exposure = _build_time(
             obs_metadata.get('Observation Start'),
             obs_metadata.get('Observation End'),
-            obs_metadata.get('On Source'))
+            obs_metadata.get('On Source'),
+        )
         version = obs_metadata.get('Pipeline Version')
         reference = obs_metadata.get('reference')
         found = True

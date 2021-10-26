@@ -252,7 +252,8 @@ class VlassValidator(mc.Validator):
             self._config.working_directory, NRAO_STATE
         )
         validator_list, fully_qualified_list = read_file_url_list_from_nrao(
-            nrao_state_fqn)
+            nrao_state_fqn
+        )
         self._fully_qualified_list = fully_qualified_list
         return validator_list
 

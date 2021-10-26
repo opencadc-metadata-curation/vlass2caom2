@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 
 def make_list():
     import sys
+
     with open(sys.argv[1]) as listing:
         soup = BeautifulSoup(listing, 'html.parser')
     file_list = soup.find_all('a', recursive=True)
@@ -13,8 +14,9 @@ def make_list():
         for f in file_list:
             href = f.attrs['href'].strip('/')
             if href.startswith('VLASS'):
-                fnames = '{}.{}\n{}.{}\n'.format(href, rms_suffix, href,
-                                                 subim_suffix)
+                fnames = '{}.{}\n{}.{}\n'.format(
+                    href, rms_suffix, href, subim_suffix
+                )
                 op.write(fnames)
 
 

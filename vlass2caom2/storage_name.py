@@ -75,7 +75,11 @@ from vlass2caom2 import scrape
 
 
 __all__ = [
-    'APPLICATION', 'COLLECTION', 'COLLECTION_PATTERN', 'SCHEME', 'VlassName'
+    'APPLICATION',
+    'COLLECTION',
+    'COLLECTION_PATTERN',
+    'SCHEME',
+    'VlassName',
 ]
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
@@ -160,8 +164,10 @@ class VlassName(mc.StorageName):
     @property
     def image_pointing_url(self):
         bits = self._file_name.split('.')
-        return f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.' \
-               f'{bits[5]}.{bits[6]}.{bits[7]}/'
+        return (
+            f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.'
+            f'{bits[5]}.{bits[6]}.{bits[7]}/'
+        )
 
     @property
     def prev(self):

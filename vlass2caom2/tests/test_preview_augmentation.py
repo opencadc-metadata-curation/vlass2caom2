@@ -89,20 +89,24 @@ def test_preview_augmentation(access_mock):
     test_rejected = mc.Rejected(f'{TEST_DATA_DIR}/rejected.yml')
     test_metrics = mc.Metrics(test_config)
     test_observable = mc.Observable(test_rejected, test_metrics)
-    kwargs = {'stream': None,
-              'observable': test_observable,
-              'storage_name': test_storage_name,
-              'working_directory': '/test_files'}
+    kwargs = {
+        'stream': None,
+        'observable': test_observable,
+        'storage_name': test_storage_name,
+        'working_directory': '/test_files',
+    }
     test_subject = preview_augmentation.VlassPreview(**kwargs)
     assert test_subject is not None, 'need a test subject'
     assert len(test_obs.planes) == 1, 'wrong number of planes'
-    assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 4, \
-        'wrong starting # of artifacts'
+    assert (
+        len(test_obs.planes[test_storage_name.product_id].artifacts) == 4
+    ), 'wrong starting # of artifacts'
     test_result = test_subject.visit(test_obs)
     assert test_result is not None, 'expect a result'
     assert test_result.get('artifacts') == 2, 'wrong result'
-    assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 6, \
-        'wrong ending # of artifacts'
+    assert (
+        len(test_obs.planes[test_storage_name.product_id].artifacts) == 6
+    ), 'wrong ending # of artifacts'
 
     # does artifact re-naming work?
     test_url = (
@@ -115,8 +119,9 @@ def test_preview_augmentation(access_mock):
     test_artifacts = test_obs.planes[test_storage_name.product_id].artifacts
     assert test_result is not None, 'expect a result'
     assert 'artifacts' in test_result, 'expect artifact count'
-    assert test_result['artifacts'] == 2, f'actual deleted count ' \
-                                          f'{test_result["artifacts"]}'
+    assert test_result['artifacts'] == 2, (
+        f'actual deleted count ' f'{test_result["artifacts"]}'
+    )
     assert len(test_artifacts) == 4, 'wrong ending conditions'
     assert test_storage_name.prev_uri in test_artifacts, 'missing preview'
     assert test_storage_name.thumb_uri in test_artifacts, 'missing thumbnail'

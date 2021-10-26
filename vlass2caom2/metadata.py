@@ -88,8 +88,9 @@ class VLASSCache(object):
     def _refresh(self):
         start_date = self._refresh_bookmark
         if self._refresh_bookmark is None:
-            start_date = datetime(year=2017, month=1, day=1, hour=0,
-                                  tzinfo=self._tz)
+            start_date = datetime(
+                year=2017, month=1, day=1, hour=0, tzinfo=self._tz
+            )
         session = mc.get_endpoint_session()
         todo_list, ignore_max_date = scrape.build_qa_rejected_todo(
             start_date, session
@@ -99,7 +100,8 @@ class VLASSCache(object):
             for url in urls:
                 # there are trailing slashes on the NRAO VLASS QL page
                 obs_id = sn.VlassName.get_obs_id_from_file_name(
-                    url.split('/')[-2])
+                    url.split('/')[-2]
+                )
                 self._logger.debug(f'Add QA REJECTED {obs_id}.')
                 self._qa_rejected_obs_ids.append(obs_id)
         self._refresh_bookmark = self._new_bookmark

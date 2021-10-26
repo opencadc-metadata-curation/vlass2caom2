@@ -131,8 +131,9 @@ def test_build_bits():
         assert len(test_result) == 3, 'wrong number of results'
         first_answer = next(iter(test_result.items()))
         assert len(first_answer) == 2, 'wrong number of results'
-        assert first_answer[0] == \
-            'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+        assert (
+            first_answer[0] == 'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+        )
         assert first_answer[1] == datetime(2019, 4, 26, 15, 19)
 
     with open(CROSS_EPOCH) as f:
@@ -142,8 +143,9 @@ def test_build_bits():
         assert len(test_result) == 5, 'wrong number of results'
         first_answer = next(iter(test_result.items()))
         assert len(first_answer) == 2, 'wrong number of results'
-        assert first_answer[0] == \
-               'VLASS1.1.ql.T05t33.J212207-203000.10.2048.v1/'
+        assert (
+            first_answer[0] == 'VLASS1.1.ql.T05t33.J212207-203000.10.2048.v1/'
+        )
         assert first_answer[1] == datetime(2019, 7, 16, 9, 24)
 
 
@@ -159,8 +161,8 @@ def test_build_todo_good(query_endpoint_mock):
     assert len(test_result_list) == 3, 'wrong number of results'
     temp = test_result_list.popitem()
     assert (
-        temp[1][0] ==
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
+        temp[1][0]
+        == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
         'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/'
     ), temp[1][0]
     assert test_result_date == datetime(
@@ -174,12 +176,15 @@ def test_augment_bits():
         test_result = scrape._parse_single_field(test_content)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 4, 'wrong number of fields'
-        assert test_result['Pipeline Version'] == \
-            '42270 (Pipeline-CASA54-P2-B)', 'wrong pipeline'
-        assert test_result['Observation Start'] == \
-            '2019-04-12 00:10:01', 'wrong start'
-        assert test_result['Observation End'] == \
-            '2019-04-12 00:39:18', 'wrong end'
+        assert (
+            test_result['Pipeline Version'] == '42270 (Pipeline-CASA54-P2-B)'
+        ), 'wrong pipeline'
+        assert (
+            test_result['Observation Start'] == '2019-04-12 00:10:01'
+        ), 'wrong start'
+        assert (
+            test_result['Observation End'] == '2019-04-12 00:39:18'
+        ), 'wrong end'
         assert test_result['On Source'] == '0:03:54', 'wrong tos'
 
 
@@ -193,8 +198,7 @@ def test_retrieve_qa_rejected(query_endpoint_mock):
     assert len(test_result_list) == 1, 'wrong size results'
     temp = sorted([ii for ii in test_result_list.values()][0])
     assert (
-        temp[0] ==
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/'
+        temp[0] == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/'
         'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
     ), 'wrong result'
     assert test_max_date is not None, 'expected date result'
@@ -226,16 +230,19 @@ def test_qa_rejected_bits():
         test_result = scrape._parse_specific_rejected_page(test_content)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 2, 'wrong result'
-        assert 'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits' in test_result, 'wrong content'
+        assert (
+            'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.'
+            'pbcor.tt0.rms.subim.fits' in test_result
+        ), 'wrong content'
 
 
 @patch('vlass2caom2.scrape.requests.get')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_visit(query_endpoint_mock, get_mock):
     get_mock.return_value.__enter__.return_value.raw = WL_INDEX
-    test_id = 'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.' \
-              '128/'
+    test_id = (
+        'VLASS1.2_T07t14.J084202-123000_P35696v1_2019_03_11T23_06_04.' '128/'
+    )
     query_endpoint_mock.side_effect = _query_endpoint
     scrape.init_web_log_content({'VLASS1.2': TEST_START_TIME})
     scrape.web_log_content[test_id] = TEST_START_TIME - timedelta(hours=1)
@@ -250,8 +257,9 @@ def test_visit(query_endpoint_mock, get_mock):
     expected_obs = mc.read_obs_from_file(obs_path)
     result = get_differences(expected_obs, test_obs, 'Observation')
     if result:
-        msg = 'Differences found in observation {}\n{}'. \
-            format(TEST_OBS_ID, '\n'.join([r for r in result]))
+        msg = 'Differences found in observation {}\n{}'.format(
+            TEST_OBS_ID, '\n'.join([r for r in result])
+        )
         raise AssertionError(msg)
 
 
@@ -265,8 +273,8 @@ def test_build_todo(query_endpoint_mock):
     assert test_max_date == datetime(2019, 4, 28, 15, 18), 'wrong date result'
     temp = sorted([ii for ii in test_result.values()][0])
     assert (
-        temp[0] ==
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
+        temp[0]
+        == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
         'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
     ), 'wrong result'
 
@@ -281,8 +289,8 @@ def test_build_file_url_list(query_endpoint_mock):
     assert test_max_date == datetime(2019, 4, 28, 15, 18), 'wrong date result'
     temp = sorted([ii for ii in test_result.values()][0])
     assert (
-        temp[0] ==
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
+        temp[0]
+        == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
         'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
         'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.'
         'tt0.rms.subim.fits'
@@ -292,8 +300,10 @@ def test_build_file_url_list(query_endpoint_mock):
 @patch('caom2pipe.manage_composable.query_endpoint_session')
 @patch('caom2pipe.run_composable.run_by_state')
 def test_run_state_file_modify(run_mock, query_endpoint_mock):
-    test_fname = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.' \
-                 'image.pbcor.tt0.subim.fits'
+    test_fname = (
+        'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.'
+        'image.pbcor.tt0.subim.fits'
+    )
     # preconditions
     _write_state(TEST_START_TIME_STR)
 
@@ -344,7 +354,8 @@ def test_retrieve_metadata(query_endpoint_mock, get_mock):
 
     query_endpoint_mock.side_effect = _query_endpoint
     test_result = scrape.retrieve_obs_metadata(
-        'VLASS1.2.T07t13.J083453-133000')
+        'VLASS1.2.T07t13.J083453-133000'
+    )
     assert test_result is not None, 'expected dict result'
     assert len(test_result) == 5, 'wrong size results'
     assert (
@@ -384,10 +395,12 @@ def test_list_files_on_page(query_endpoint_mock):
     )
     assert test_list is not None, 'expect result'
     assert len(test_list) == 2, 'wrong number of results'
-    assert 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/' \
-           'T01t01/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/' \
-           'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.' \
-           'image.pbcor.tt0.subim.fits' in test_list, 'wrong content'
+    assert (
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
+        'T01t01/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/'
+        'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.'
+        'image.pbcor.tt0.subim.fits' in test_list
+    ), 'wrong content'
 
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
@@ -408,8 +421,8 @@ def test_run_state(query_endpoint_mock, run_mock, access_mock):
         test_storage = args[0]
         assert isinstance(test_storage, VlassName), type(test_storage)
         assert test_storage.url.startswith(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'), \
-            test_storage.url
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'
+        ), test_storage.url
         assert test_storage.url.endswith('.fits'), test_storage.url
         assert run_mock.call_count == 120, 'wrong call count'
     finally:
@@ -445,8 +458,8 @@ def test_run_state_with_work(query_endpoint_mock, run_mock, access_mock):
         test_storage = args[0]
         assert isinstance(test_storage, VlassName), type(test_storage)
         assert test_storage.url.startswith(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'), \
-            test_storage.url
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'
+        ), test_storage.url
         assert test_storage.url.endswith('.fits'), test_storage.url
 
         # the second time through, the build_todo method will
@@ -485,9 +498,7 @@ def _query_endpoint(url, session, timeout=-1):
         with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
             result.text = f.read()
     elif (
-        url.startswith(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'
-        )
+        url.startswith('https://archive-new.nrao.edu/vlass/quicklook/VLASS')
         and url.endswith('.10.2048.v1/')
         and 'QA_REJECTED' not in url
     ):
@@ -516,10 +527,10 @@ def _query_endpoint(url, session, timeout=-1):
                 with open(SINGLE_TILE) as f:
                     result.text = f.read()
     elif (
-        url.endswith('VLASS1.1/') or
-        url.endswith('VLASS2.1/') or
-        url.endswith('VLASS2.2/') or
-        url.endswith('VLASS1.2v2/')
+        url.endswith('VLASS1.1/')
+        or url.endswith('VLASS2.1/')
+        or url.endswith('VLASS2.2/')
+        or url.endswith('VLASS1.2v2/')
     ):
         with open(ALL_FIELDS) as f:
             result.text = f.read()
@@ -547,6 +558,7 @@ def _write_state(start_time_str):
 
 def _run_mock(**kwargs):
     import logging
+
     logging.error('well, do I get here?')
     assert kwargs.get('command_name') == 'vlass2caom2'
     assert kwargs.get('end_time') == datetime(2019, 4, 28, 15, 18)
