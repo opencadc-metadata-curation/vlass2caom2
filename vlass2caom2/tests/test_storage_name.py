@@ -76,7 +76,7 @@ def test_storage_name():
         'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.pbcor.tt0'
     )
     test_url = (
-        f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T23t09/'
+        f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T23t09/'
         f'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/{test_bit}.subim.fits'
     )
     ts1 = sn.VlassName(test_url)

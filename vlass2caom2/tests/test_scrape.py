@@ -159,8 +159,9 @@ def test_build_todo_good(query_endpoint_mock):
     assert len(test_result_list) == 3, 'wrong number of results'
     temp = test_result_list.popitem()
     assert (
-        temp[1][0] == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
-        'T07t13/VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/'
+        temp[1][0] ==
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
+        'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/'
     ), temp[1][0]
     assert test_result_date == datetime(
         2019, 4, 28, 15, 18
@@ -168,23 +169,6 @@ def test_build_todo_good(query_endpoint_mock):
 
 
 def test_augment_bits():
-    with open(PIPELINE_INDEX) as f:
-        test_content = f.read()
-        test_result = scrape._parse_for_reference(test_content, 'pipeline-')
-        assert test_result is not None, 'expected a result'
-        assert test_result == 'pipeline-20190422T202821/', 'wrong result'
-
-    with open(WL_INDEX) as f:
-        test_content = f.read()
-        test_result = scrape._parse_for_reference(
-            test_content, 'VLASS1.2.T07t13.J083453-133000'
-        )
-        assert test_result is not None, 'expected a result'
-        assert (
-            test_result == 'VLASS1.2_T07t13.J083453-133000_P42511v1_2019_04_'
-            '26T16_17_56.882/'
-        ), 'wrong result'
-
     with open(SINGLE_FIELD_DETAIL) as f:
         test_content = f.read()
         test_result = scrape._parse_single_field(test_content)
@@ -207,11 +191,12 @@ def test_retrieve_qa_rejected(query_endpoint_mock):
     )
     assert test_result_list is not None, 'expected dict result'
     assert len(test_result_list) == 1, 'wrong size results'
-    temp = test_result_list.popitem()
-    assert temp[1][0].startswith(
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
-        'QA_REJECTED/VLASS1.2.ql.T'
-    ), 'wrong reference'
+    temp = sorted([ii for ii in test_result_list.values()][0])
+    assert (
+        temp[0] ==
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/'
+        'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
+    ), 'wrong result'
     assert test_max_date is not None, 'expected date result'
     assert test_max_date == datetime(2019, 5, 1, 10, 30), 'wrong date result'
 
@@ -278,11 +263,11 @@ def test_build_todo(query_endpoint_mock):
     assert len(test_result) == 4, 'wrong size results'
     assert test_max_date is not None, 'expected date result'
     assert test_max_date == datetime(2019, 4, 28, 15, 18), 'wrong date result'
-    temp = test_result.popitem()
+    temp = sorted([ii for ii in test_result.values()][0])
     assert (
-        temp[1][0] == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
-        'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.'
-        'v1/'
+        temp[0] ==
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
+        'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
     ), 'wrong result'
 
 
@@ -294,13 +279,14 @@ def test_build_file_url_list(query_endpoint_mock):
     assert len(test_result) == 4, 'wrong size results'
     assert test_max_date is not None, 'expected date result'
     assert test_max_date == datetime(2019, 4, 28, 15, 18), 'wrong date result'
-    temp = test_result.popitem()
+    temp = sorted([ii for ii in test_result.values()][0])
     assert (
-        temp[1][0] == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
-        'QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.'
-        '2048.v1/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.'
-        'I.iter1.image.pbcor.tt0.rms.subim.fits'
-    ), temp[1][0]
+        temp[0] ==
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
+        'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+        'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.'
+        'tt0.rms.subim.fits'
+    ), 'wrong result'
 
 
 @patch('caom2pipe.manage_composable.query_endpoint_session')
@@ -422,10 +408,10 @@ def test_run_state(query_endpoint_mock, run_mock, access_mock):
         test_storage = args[0]
         assert isinstance(test_storage, VlassName), type(test_storage)
         assert test_storage.url.startswith(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'), \
             test_storage.url
         assert test_storage.url.endswith('.fits'), test_storage.url
-        assert run_mock.call_count == 40, 'wrong call count'
+        assert run_mock.call_count == 120, 'wrong call count'
     finally:
         os.getcwd = getcwd_orig
 
@@ -454,12 +440,12 @@ def test_run_state_with_work(query_endpoint_mock, run_mock, access_mock):
         assert test_result is not None, 'expect a result'
         assert test_result == 0, 'wrong result'
         assert run_mock.called, 'should have been called'
-        assert run_mock.call_count == 40, 'wrong call count'
+        assert run_mock.call_count == 120, 'wrong call count'
         args, kwargs = run_mock.call_args
         test_storage = args[0]
         assert isinstance(test_storage, VlassName), type(test_storage)
         assert test_storage.url.startswith(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'), \
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'), \
             test_storage.url
         assert test_storage.url.endswith('.fits'), test_storage.url
 
@@ -493,14 +479,14 @@ def _query_endpoint(url, session, timeout=-1):
     result.text = None
 
     if (
-        url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+        url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/'
         'T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
     ):
         with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
             result.text = f.read()
     elif (
         url.startswith(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS'
         )
         and url.endswith('.10.2048.v1/')
         and 'QA_REJECTED' not in url
@@ -513,7 +499,7 @@ def _query_endpoint(url, session, timeout=-1):
     elif url == scrape.QL_URL:
         with open(QL_INDEX) as f:
             result.text = f.read()
-    elif 'vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql' in url:
+    elif 'vlass/quicklook/VLASS1.2v2/QA_REJECTED/VLASS1.2.ql' in url:
         with open(SPECIFIC_REJECTED) as f:
             result.text = f.read()
     elif 'QA_REJECTED' in url:
@@ -529,7 +515,12 @@ def _query_endpoint(url, session, timeout=-1):
             else:
                 with open(SINGLE_TILE) as f:
                     result.text = f.read()
-    elif url.endswith('VLASS1.1/') or url.endswith('VLASS1.2/'):
+    elif (
+        url.endswith('VLASS1.1/') or
+        url.endswith('VLASS2.1/') or
+        url.endswith('VLASS2.2/') or
+        url.endswith('VLASS1.2v2/')
+    ):
         with open(ALL_FIELDS) as f:
             result.text = f.read()
     else:

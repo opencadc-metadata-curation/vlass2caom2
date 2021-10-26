@@ -80,9 +80,15 @@ from bs4 import BeautifulSoup
 
 from caom2pipe import manage_composable as mc
 
-__all__ = ['build_good_todo', 'make_date_time', 'retrieve_obs_metadata',
-           'build_qa_rejected_todo', 'query_top_page',
-           'list_files_on_page', 'build_file_url_list', 'build_url_list']
+__all__ = [
+    'build_file_url_list',
+    'build_good_todo',
+    'build_url_list',
+    'build_qa_rejected_todo',
+    'list_files_on_page',
+    'make_date_time',
+    'retrieve_obs_metadata',
+]
 
 
 QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
@@ -147,26 +153,6 @@ def _parse_tile_page(html_string, start_date):
     return result
 
 
-def _parse_top_page(html_string, start_date):
-    """
-    Parse the page which lists the epochs.
-
-    :return a dict, where keys are URLs, and values are timestamps
-    """
-    result = {}
-    soup = BeautifulSoup(html_string, features='lxml')
-    hrefs = soup.find_all('a')
-    for ii in hrefs:
-        y = ii.get('href')
-        if y.startswith('VLASS') and y.endswith('/'):
-            z = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = make_date_time(z)
-            if dt >= start_date:
-                logging.info(f'Adding epoch: {y}')
-                result[y] = dt
-    return result
-
-
 def _parse_top_page_no_date(html_string):
     """
     Parse the page which lists the epochs.
@@ -181,8 +167,47 @@ def _parse_top_page_no_date(html_string):
         if y.startswith('VLASS') and y.endswith('/'):
             z = ii.next_element.next_element.string.replace('-', '').strip()
             dt = make_date_time(z)
-            logging.info(f'Adding epoch: {y}')
             result[y] = dt
+
+    # NRAO introduced a directory named VLASS1.2v2, with this explanation:
+    # 1-10-21 - forwarded email from Mark Lacy:
+    # The Epoch 1 VLASS quicklook images (VLASS1.1 and VLASS1.2) suffer from
+    # a systematic position error that is a function of the zenith distance
+    # of the observation, reaching up to 1" in the far south of the survey
+    # where zenith distances were largest. These errors are removed in the
+    # second epoch quicklook images. We have now applied a correction to
+    # the VLASS1.2 images that removes the errors in these too. Corrected
+    # images are available in the VLASS1.2v2 directory in
+    # archive-new.nrao.edu/vlass/quicklook. The old VLASS1.2 directory will
+    # be deprecated. Corrected VLASS1.1 images will be made available later
+    # this year.
+
+    # ER 18-10-21
+    # My understanding is that the headers were hacked to include updates to
+    # astrometry without any other information and the way to determine if
+    # v1 or v2 is whether they do-not-have (v1) or have (v2) the extra
+    # HISTORY cards.  It’s definitely a decision to not update the DATE card
+    # or give any other indication of the v1 or v2 but it is a definitive
+    # way to tell them apart.
+
+    # SGo - and because of these two things, ignore top-level directories
+    # that have names that start with the same value as other existing
+    # directories
+    delete_these = []
+    for check_this in result.keys():
+        for against_this in result.keys():
+            if check_this == against_this:
+                continue
+            if against_this.startswith(check_this.replace('/', '')):
+                delete_these.append(check_this)
+
+    for entry in delete_these:
+        logging.warning(f'Ignore content in {entry}')
+        del result[entry]
+
+    for entry in result.keys():
+        logging.info(f'Adding epoch: {entry}')
+
     return result
 
 
@@ -249,11 +274,6 @@ def build_good_todo(start_date, session):
     return temp, max_date
 
 
-def _parse_for_reference(html_string, reference):
-    soup = BeautifulSoup(html_string, features='lxml')
-    return soup.find(string=re.compile(reference))
-
-
 def _parse_single_field(html_string):
     result = {}
     soup = BeautifulSoup(html_string, features='lxml')
@@ -282,7 +302,7 @@ def _parse_rejected_page(html_string, epoch, start_date, url):
     result = {}
     max_date = start_date
     soup = BeautifulSoup(html_string, features='lxml')
-    rejected = soup.find_all('a', string=re.compile(epoch))
+    rejected = soup.find_all('a', string=re.compile(epoch.replace('v2', '')))
     for ii in rejected:
         temp = ii.next_element.next_element.string.replace('-', '').strip()
         dt = make_date_time(temp)
@@ -342,7 +362,7 @@ def build_qa_rejected_todo(start_date, session):
                         temp, rejected_max = _parse_rejected_page(
                             response.text, epoch_name, start_date,
                             epoch_rejected_url)
-                        max_date = max(start_date, rejected_max)
+                        max_date = max(max_date, rejected_max)
                         response.close()
                         temp_rejected = rejected
                         rejected = {**temp, **temp_rejected}
@@ -506,8 +526,9 @@ def retrieve_obs_metadata(obs_id):
             if response is None:
                 logging.error(f'Could not query {obs_url}')
             else:
-                pipeline_bit = _parse_for_reference(response.text, 'pipeline-')
+                soup = BeautifulSoup(response.text, features='lxml')
                 response.close()
+                pipeline_bit = soup.find(string=re.compile('pipeline-'))
                 if pipeline_bit is None:
                     logging.error(f'Did not find pipeline on {obs_url}')
                 else:
@@ -571,33 +592,6 @@ def build_url_list(start_date):
                         temp_url = f'{url}{key}'
                         result[temp_url] = value.timestamp()
     return result
-
-
-def query_top_page():
-    """Query the timestamp from the top page, for reporting."""
-    start_date = make_date_time('01Jan2017 12:00')
-    response = None
-    max_date = None
-
-    try:
-        # get the last modified date on the quicklook images listing
-        session = mc.get_endpoint_session()
-        response = mc.query_endpoint_session(QL_URL, session)
-        if response is None:
-            logging.warning(f'Could not query {QL_URL}')
-        else:
-            epochs = _parse_top_page(response.text, start_date)
-            for key, value in epochs.items():
-                logging.info(f'{key} {make_date_time(value)}')
-                if max_date is None:
-                    max_date = value
-                else:
-                    max_date = max(max_date, value)
-    finally:
-        if response is not None:
-            response.close()
-
-    return max_date
 
 
 def init_web_log(state):
