@@ -83,6 +83,9 @@ def test_storage_name():
     ts2 = sn.VlassName(f'{test_bit}.subim.fits')
     for ts in [ts1, ts2]:
         assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
+        assert (
+            ts.product_id == 'VLASS1.2.T23t09.J083851+483000.quicklook'
+        ), 'wrong product id'
         assert ts.file_name == f'{test_bit}.subim.fits', 'wrong fname'
         assert ts.file_id == f'{test_bit}.subim', 'wrong fid'
         assert (
