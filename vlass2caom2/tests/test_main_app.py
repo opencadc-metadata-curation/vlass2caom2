@@ -70,7 +70,7 @@
 
 from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import to_caom2, VlassName
+from vlass2caom2 import to_caom2, storage_name
 from caom2.diff import get_differences
 from caom2utils import data_util
 
@@ -150,6 +150,8 @@ else:
 @patch('caom2utils.data_util.get_local_headers_from_fits')
 @patch('caom2utils.data_util.StorageClientWrapper')
 def test_main_app(data_client_mock, local_headers_mock, test_files):
+    storage_name.set_use_storage_inventory(True)
+
     def get_file_info(uri):
         if a in uri:
             return FileInfo(
@@ -219,7 +221,7 @@ def _get_local(test_files):
 def _get_lineage(obs_id, test_files):
     if obs_id in [obs_id_a, obs_id_c, obs_id_c + 'r', obs_id_f]:
         return ' '.join(
-            VlassName(ii.replace('.header', '')).lineage
+            storage_name.VlassName(ii.replace('.header', '')).lineage
             for ii in test_files[1:]
         )
     else:

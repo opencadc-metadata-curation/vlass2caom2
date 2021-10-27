@@ -105,6 +105,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
     test_config.get_executors()
     test_state = mc.State(test_config.state_fqn)
     scrape.init_web_log(test_state)
+    sn.set_use_storage_inventory(True)
     test_name = sn.VlassName(
         'VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
         'image.pbcor.tt0.subim.fits',
