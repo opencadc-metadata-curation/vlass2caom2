@@ -90,8 +90,9 @@ def test_cache(query_endpoint_mock):
     test_obs_id = 'VLASS1.2.T21t15.J141833+413000'
     test_result = test_subject.is_qa_rejected(test_obs_id)
     assert test_result is True, 'expected qa rejected obs id'
-    assert type(test_subject._refresh_bookmark) is datetime, \
-        f'post-condition 1 {test_subject._refresh_bookmark}'
+    assert (
+        type(test_subject._refresh_bookmark) is datetime
+    ), f'post-condition 1 {test_subject._refresh_bookmark}'
     assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'
 
     test_obs_id = 'VLASS1.1.T03t13.J080215-283000'

@@ -99,7 +99,8 @@ class VlassPreview(mc.PreviewVisitor):
             self._working_dir, self._storage_name.prev
         )
         self._thumb_fqn = os.path.join(
-            self._working_dir, self._storage_name.thumb)
+            self._working_dir, self._storage_name.thumb
+        )
         self._logger = logging.getLogger(__name__)
 
     def generate_plots(self, obs_id):
@@ -130,30 +131,50 @@ class VlassPreview(mc.PreviewVisitor):
         # Plot the cutout in the right subplot
         with fits.open(self._science_fqn) as hdul:
             cutout_data, x_max, y_max = VlassPreview._get_cutout(
-                hdul['PRIMARY'].data[0, 0])
+                hdul['PRIMARY'].data[0, 0]
+            )
             interval = ZScaleInterval()
             array = interval(cutout_data)
         axs[1].imshow(array, cmap='gray', interpolation='none')
         axs[1].axis('off')
 
         # Connect the cutout to the full image with two lines
-        con = ConnectionPatch(xyA=(y_max + ysize, x_max - xsize), xyB=(0, 1),
-                              coordsA="data", coordsB="data",
-                              axesA=axs[0], axesB=axs[1], color="#ff0000")
+        con = ConnectionPatch(
+            xyA=(y_max + ysize, x_max - xsize),
+            xyB=(0, 1),
+            coordsA="data",
+            coordsB="data",
+            axesA=axs[0],
+            axesB=axs[1],
+            color="#ff0000",
+        )
         con.set_linewidth(4)
         axs[1].add_artist(con)
-        con = ConnectionPatch(xyA=(y_max + ysize, x_max + xsize), xyB=(0, 398),
-                              coordsA="data", coordsB="data",
-                              axesA=axs[0], axesB=axs[1], color="#ff0000")
+        con = ConnectionPatch(
+            xyA=(y_max + ysize, x_max + xsize),
+            xyB=(0, 398),
+            coordsA="data",
+            coordsB="data",
+            axesA=axs[0],
+            axesB=axs[1],
+            color="#ff0000",
+        )
         con.set_linewidth(4)
         axs[1].add_artist(con)
 
         # Draw a box in the full size image representing the cutout
-        rect = Rectangle((y_max - ysize, x_max - xsize), 400, 400, fill=False,
-                         edgecolor="red", linewidth=4)
+        rect = Rectangle(
+            (y_max - ysize, x_max - xsize),
+            400,
+            400,
+            fill=False,
+            edgecolor="red",
+            linewidth=4,
+        )
         axs[0].add_patch(rect)
-        rect = Rectangle((0, 0), 399, 399, fill=False, edgecolor="red",
-                         linewidth=6)
+        rect = Rectangle(
+            (0, 0), 399, 399, fill=False, edgecolor="red", linewidth=6
+        )
         axs[1].add_patch(rect)
 
         # Adjust the formatting of the entire figure, and flip to
@@ -175,12 +196,18 @@ class VlassPreview(mc.PreviewVisitor):
         width, height = bbox.width, bbox.height
 
         # Save as outfile
-        plt.savefig(self._preview_fqn, bbox_inches='tight',
-                    dpi=int(desired_resolution / height))
+        plt.savefig(
+            self._preview_fqn,
+            bbox_inches='tight',
+            dpi=int(desired_resolution / height),
+        )
         plt.close(fig)
         count += 1
-        self.add_preview(self._storage_name.prev_uri, self._storage_name.prev,
-                         ProductType.PREVIEW)
+        self.add_preview(
+            self._storage_name.prev_uri,
+            self._storage_name.prev,
+            ProductType.PREVIEW,
+        )
         self.add_to_delete(self._preview_fqn)
         count += self._gen_thumbnail()
 
@@ -188,21 +215,27 @@ class VlassPreview(mc.PreviewVisitor):
         return count
 
     def _gen_thumbnail(self):
-        self._logger.debug(f'Generating thumbnail for file '
-                           f'{self._science_fqn}.')
+        self._logger.debug(
+            f'Generating thumbnail for file ' f'{self._science_fqn}.'
+        )
         count = 0
         if os.path.exists(self._preview_fqn):
-            thumb = image.thumbnail(self._preview_fqn, self._thumb_fqn,
-                                    scale=0.25)
+            thumb = image.thumbnail(
+                self._preview_fqn, self._thumb_fqn, scale=0.25
+            )
             if thumb is not None:
-                self.add_preview(self._storage_name.thumb_uri,
-                                 self._storage_name.thumb,
-                                 ProductType.THUMBNAIL)
+                self.add_preview(
+                    self._storage_name.thumb_uri,
+                    self._storage_name.thumb,
+                    ProductType.THUMBNAIL,
+                )
                 self.add_to_delete(self._thumb_fqn)
                 count = 1
         else:
-            self._logger.warning(f'Could not find {self._preview_fqn} for '
-                                 f'thumbnail generation.')
+            self._logger.warning(
+                f'Could not find {self._preview_fqn} for '
+                f'thumbnail generation.'
+            )
         return count
 
     @staticmethod
@@ -224,7 +257,8 @@ class VlassPreview(mc.PreviewVisitor):
         for i in range(num_tries):
             # Get x,y coordinate of nth brightest pixel.
             (x_max, y_max) = np.unravel_index(
-                np.argmax(masked_array, axis=None), masked_array.shape)
+                np.argmax(masked_array, axis=None), masked_array.shape
+            )
             array_max = masked_array[x_max, y_max]
 
             y_lower = y_max - y_size
@@ -240,7 +274,8 @@ class VlassPreview(mc.PreviewVisitor):
                 or x_upper > masked_array.shape[0]
             ):
                 masked_array = np.ma.masked_greater_equal(
-                    masked_array, array_max)
+                    masked_array, array_max
+                )
                 continue
 
             return (

@@ -134,6 +134,9 @@ def _run_state():
     todo_list, max_date = scrape.build_file_url_list(start_time)
     source = data_source.NraoPage(todo_list)
     name_builder = nbc.EntryBuilder(storage_name.VlassName)
+    storage_name.set_use_storage_inventory(
+        config.features.supports_latest_client
+    )
     return rc.run_by_state(
         config=config,
         command_name=sn.APPLICATION,
@@ -185,6 +188,9 @@ def _run():
     ):
         meta_visitors = META_VISITORS
     name_builder = nbc.EntryBuilder(storage_name.VlassName)
+    storage_name.set_use_storage_inventory(
+        config.features.supports_latest_client
+    )
     return rc.run_by_todo(
         config=config,
         name_builder=name_builder,

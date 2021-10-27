@@ -73,10 +73,12 @@ import test_main_app
 
 
 def test_visit():
-    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/' \
-               'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/' \
-               'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.' \
-               'pbcor.tt0.rms.subim.fits'
+    test_url = (
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
+        'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/'
+        'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.'
+        'pbcor.tt0.rms.subim.fits'
+    )
     test_obs_id = 'VLASS1.2.T20t12.J092604+383000'
     test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
     test_fname = f'{test_main_app.TEST_DATA_DIR}/{test_obs_id}.xml'

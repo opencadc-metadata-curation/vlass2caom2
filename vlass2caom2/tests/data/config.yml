@@ -41,4 +41,4 @@ interval: 600
 task_types: 
   - ingest
 features:
-  supports_latest_client: False
+  supports_latest_client: True

@@ -73,9 +73,11 @@ from vlass2caom2 import data_source as ds
 
 
 def test_get_time_box_work():
-    test_todo_list = {1585092104: ['a.fits'],
-                      1585092204: ['b.fits'],
-                      1585092304: ['c.fits']}
+    test_todo_list = {
+        1585092104: ['a.fits'],
+        1585092204: ['b.fits'],
+        1585092304: ['c.fits'],
+    }
     prev_exec_time = datetime.fromtimestamp(1585092199).timestamp()
     exec_time = datetime.fromtimestamp(1585092209).timestamp()
     test_subject = ds.NraoPage(test_todo_list)

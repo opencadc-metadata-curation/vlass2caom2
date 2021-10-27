@@ -70,7 +70,7 @@
 
 from cadcdata import FileInfo
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import to_caom2, VlassName
+from vlass2caom2 import to_caom2, storage_name
 from caom2.diff import get_differences
 from caom2utils import data_util
 
@@ -86,24 +86,40 @@ TEST_URI = 'ad:TEST_COLLECTION/test_file.fits'
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
 PLUGIN = os.path.join(os.path.dirname(THIS_DIR), 'main_app.py')
-a = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
+a = (
+    'VLASS1.1.ql.T01t01.J000228-363000.10.2048.'
     'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
-b = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.' \
+)
+b = (
+    'VLASS1.1.ql.T01t01.J000228-363000.10.2048.'
     'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
-c = 'VLASS1.1.ql.T10t12.J075402-033000.10.2048.' \
+)
+c = (
+    'VLASS1.1.ql.T10t12.J075402-033000.10.2048.'
     'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
-d = 'VLASS1.1.ql.T10t12.J075402-033000.10.2048.' \
+)
+d = (
+    'VLASS1.1.ql.T10t12.J075402-033000.10.2048.'
     'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
-e = 'VLASS1.1.ql.T29t05.J110448+763000.10.2048.' \
+)
+e = (
+    'VLASS1.1.ql.T29t05.J110448+763000.10.2048.'
     'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
-f = 'VLASS1.1.ql.T29t05.J110448+763000.10.2048.' \
+)
+f = (
+    'VLASS1.1.ql.T29t05.J110448+763000.10.2048.'
     'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
+)
 g = 'VLASS1.1.cat.T29t05.J110448+763000.10.2048.v1.csv'
 h = 'VLASS1.1.cc.T29t05.J110448+763000.10.2048.v1.fits.header'
-i = 'VLASS1.2.ql.T07t14.J084202-123000.10.2048.' \
+i = (
+    'VLASS1.2.ql.T07t14.J084202-123000.10.2048.'
     'v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
-j = 'VLASS1.2.ql.T07t14.J084202-123000.10.2048.' \
+)
+j = (
+    'VLASS1.2.ql.T07t14.J084202-123000.10.2048.'
     'v1.I.iter1.image.pbcor.tt0.subim.fits.header'
+)
 obs_id_a = 'VLASS1.1.T01t01.J000228-363000'
 obs_id_c = 'VLASS1.1.T10t12.J075402-033000'
 obs_id_e = 'VLASS1.1.T29t05.J110448+763000'
@@ -114,22 +130,28 @@ COLLECTION = 'VLASS'
 features = mc.Features()
 features.supports_catalog = False
 if features.supports_catalog:
-    test_obs = [[obs_id_a, a, b],
-                [obs_id_c, c, d],
-                [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
-                [obs_id_e, e, f, g, h],
-                [obs_id_f, i, j]]
+    test_obs = [
+        [obs_id_a, a, b],
+        [obs_id_c, c, d],
+        [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
+        [obs_id_e, e, f, g, h],
+        [obs_id_f, i, j],
+    ]
 else:
-    test_obs = [[obs_id_a, a, b],
-                [obs_id_c, c, d],
-                [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
-                [obs_id_f, i, j]]
+    test_obs = [
+        [obs_id_a, a, b],
+        [obs_id_c, c, d],
+        [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
+        [obs_id_f, i, j],
+    ]
 
 
 @pytest.mark.parametrize('test_files', test_obs)
 @patch('caom2utils.data_util.get_local_headers_from_fits')
 @patch('caom2utils.data_util.StorageClientWrapper')
 def test_main_app(data_client_mock, local_headers_mock, test_files):
+    storage_name.set_use_storage_inventory(True)
+
     def get_file_info(uri):
         if a in uri:
             return FileInfo(
@@ -145,14 +167,17 @@ def test_main_app(data_client_mock, local_headers_mock, test_files):
                 md5sum='40f7c2763f92ea6e9c6b0304c569097e',
                 file_type='application/fits',
             )
+
     data_client_mock.return_value.info.side_effect = get_file_info
 
     def _read_file(fqn):
         from urllib.parse import urlparse
+
         file_uri = urlparse(fqn)
         fits_header = open(file_uri.path).read()
         headers = data_util.make_headers_from_string(fits_header)
         return headers
+
     # during operation, want to use astropy on FITS files but during testing
     # want to use headers and built-in Python file operations
     local_headers_mock.side_effect = _read_file
@@ -179,9 +204,9 @@ def test_main_app(data_client_mock, local_headers_mock, test_files):
     actual = mc.read_obs_from_file(output_file)
     result = get_differences(expected, actual, 'Observation')
     if result:
-        msg = 'Differences found in observation {}\n{}'. \
-            format(expected.observation_id, '\n'.join(
-                [r for r in result]))
+        msg = 'Differences found in observation {}\n{}'.format(
+            expected.observation_id, '\n'.join([r for r in result])
+        )
         raise AssertionError(msg)
     # assert False  # cause I want to see logging messages
 
@@ -196,7 +221,7 @@ def _get_local(test_files):
 def _get_lineage(obs_id, test_files):
     if obs_id in [obs_id_a, obs_id_c, obs_id_c + 'r', obs_id_f]:
         return ' '.join(
-            VlassName(ii.replace('.header', '')).lineage
+            storage_name.VlassName(ii.replace('.header', '')).lineage
             for ii in test_files[1:]
         )
     else:

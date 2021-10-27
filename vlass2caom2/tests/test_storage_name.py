@@ -72,6 +72,7 @@ from vlass2caom2 import storage_name as sn
 
 
 def test_storage_name():
+    sn.set_use_storage_inventory(True)
     test_bit = (
         'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.pbcor.tt0'
     )
@@ -83,6 +84,9 @@ def test_storage_name():
     ts2 = sn.VlassName(f'{test_bit}.subim.fits')
     for ts in [ts1, ts2]:
         assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
+        assert (
+            ts.product_id == 'VLASS1.2.T23t09.J083851+483000.quicklook'
+        ), 'wrong product id'
         assert ts.file_name == f'{test_bit}.subim.fits', 'wrong fname'
         assert ts.file_id == f'{test_bit}.subim', 'wrong fid'
         assert (
@@ -115,16 +119,34 @@ def test_storage_name():
         assert ts.thumb == f'{test_bit}.subim_prev_256.jpg', 'wrong thumbnail'
         assert (
             ts.prev_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
-                           f'{test_bit}.subim_prev.jpg'
+            f'{test_bit}.subim_prev.jpg'
         ), 'wrong preview uri'
         assert (
             ts.thumb_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
-                            f'{test_bit}.subim_prev_256.jpg'
+            f'{test_bit}.subim_prev_256.jpg'
         ), 'wrong thumbnail uri'
         assert (
-            ts.lineage
-            == f'{ts.product_id}/{sn.SCHEME}:{sn.COLLECTION}/'
-               f'{test_bit}.subim.fits'
+            ts.lineage == f'{ts.product_id}/{sn.SCHEME}:{sn.COLLECTION}/'
+            f'{test_bit}.subim.fits'
+        ), 'wrong lineage'
+    sn.set_use_storage_inventory(False)
+    ts1 = sn.VlassName(test_url)
+    ts2 = sn.VlassName(f'{test_bit}.subim.fits')
+    for ts in [ts1, ts2]:
+        assert (
+                ts.file_uri == f'{sn.AD_SCHEME}:VLASS/{test_bit}.subim.fits'
+        ), 'wrong uri'
+        assert (
+                ts.prev_uri == f'{sn.AD_SCHEME}:{sn.COLLECTION}/'
+                               f'{test_bit}.subim_prev.jpg'
+        ), 'wrong preview uri'
+        assert (
+                ts.thumb_uri == f'{sn.AD_SCHEME}:{sn.COLLECTION}/'
+                                f'{test_bit}.subim_prev_256.jpg'
+        ), 'wrong thumbnail uri'
+        assert (
+                ts.lineage == f'{ts.product_id}/{sn.AD_SCHEME}:'
+                              f'{sn.COLLECTION}/{test_bit}.subim.fits'
         ), 'wrong lineage'
 
 

@@ -67,6 +67,8 @@
 # ***********************************************************************
 #
 
+import logging
+
 from os.path import basename
 from urllib.parse import urlparse
 from caom2pipe import caom_composable as cc
@@ -75,13 +77,28 @@ from vlass2caom2 import scrape
 
 
 __all__ = [
-    'APPLICATION', 'COLLECTION', 'COLLECTION_PATTERN', 'SCHEME', 'VlassName'
+    'APPLICATION',
+    'COLLECTION',
+    'COLLECTION_PATTERN',
+    'SCHEME',
+    'use_storage_inventory',
+    'VlassName',
 ]
 COLLECTION = 'VLASS'
 APPLICATION = 'vlass2caom2'
 SCHEME = 'nrao'
 CADC_SCHEME = 'cadc'
+AD_SCHEME = 'ad'
 COLLECTION_PATTERN = '*'  # TODO what are acceptable naming patterns?
+
+
+# set in composable.py
+use_storage_inventory = True
+
+
+def set_use_storage_inventory(to_flag_value):
+    global use_storage_inventory
+    use_storage_inventory = to_flag_value
 
 
 class VlassName(mc.StorageName):
@@ -119,9 +136,11 @@ class VlassName(mc.StorageName):
         )
         self._file_id = VlassName.remove_extensions(self._file_name)
         self._version = VlassName.get_version(self._file_name)
-        self._scheme = SCHEME
+        self._scheme = SCHEME if use_storage_inventory else AD_SCHEME
         self._source_names = [entry]
         self._destination_uris = [self.file_uri]
+        self._logger = logging.getLogger(self.__class__.__name__)
+        self._logger.error(self)
 
     def __str__(self):
         return (
@@ -151,7 +170,7 @@ class VlassName(mc.StorageName):
     @property
     def file_uri(self):
         """No .gz extension, unlike the default implementation."""
-        return self._get_uri(self._file_name, SCHEME)
+        return self._get_uri(self._file_name, self._scheme)
 
     @property
     def file_name(self):
@@ -160,8 +179,10 @@ class VlassName(mc.StorageName):
     @property
     def image_pointing_url(self):
         bits = self._file_name.split('.')
-        return f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.' \
-               f'{bits[5]}.{bits[6]}.{bits[7]}/'
+        return (
+            f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.'
+            f'{bits[5]}.{bits[6]}.{bits[7]}/'
+        )
 
     @property
     def prev(self):
@@ -169,7 +190,8 @@ class VlassName(mc.StorageName):
 
     @property
     def prev_uri(self):
-        return self._get_uri(self.prev, CADC_SCHEME)
+        scheme = CADC_SCHEME if use_storage_inventory else AD_SCHEME
+        return self._get_uri(self.prev, scheme)
 
     @property
     def product_id(self):
@@ -193,7 +215,8 @@ class VlassName(mc.StorageName):
 
     @property
     def thumb_uri(self):
-        return self._get_uri(self.thumb, CADC_SCHEME)
+        scheme = CADC_SCHEME if use_storage_inventory else AD_SCHEME
+        return self._get_uri(self.thumb, scheme)
 
     @property
     def tile(self):

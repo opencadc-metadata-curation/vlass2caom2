@@ -83,8 +83,10 @@ import test_scrape
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
-TEST_URI = 'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.' \
-           'image.pbcor.tt0.rms.subim.fits'
+TEST_URI = (
+    'ad:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.'
+    'image.pbcor.tt0.rms.subim.fits'
+)
 
 
 def test_aug_visit():
@@ -103,6 +105,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
     test_config.get_executors()
     test_state = mc.State(test_config.state_fqn)
     scrape.init_web_log(test_state)
+    sn.set_use_storage_inventory(True)
     test_name = sn.VlassName(
         'VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.'
         'image.pbcor.tt0.subim.fits',
@@ -112,8 +115,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
     assert test_obs is not None, 'unexpected None'
 
     data_dir = os.path.join(THIS_DIR, '../../data')
-    kwargs = {'working_directory': data_dir,
-              'cadc_client': Mock()}
+    kwargs = {'working_directory': data_dir, 'cadc_client': Mock()}
     test_result = time_bounds_augmentation.visit(test_obs, **kwargs)
     assert test_obs is not None, 'unexpected modification'
     assert test_result is not None, 'should have a result status'
@@ -125,8 +127,9 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
     assert chunk.time is not None, 'no time information'
     assert chunk.time.axis is not None, 'no axis information'
     assert chunk.time.axis.bounds is not None, 'no bounds information'
-    assert len(chunk.time.axis.bounds.samples) == 1, \
-        'wrong amount of bounds info'
+    assert (
+        len(chunk.time.axis.bounds.samples) == 1
+    ), 'wrong amount of bounds info'
     assert chunk.time.exposure == 234.0, 'wrong exposure value'
 
 
@@ -134,7 +137,8 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
 def test_aug_visit_quality_works(query_endpoint_mock):
     query_endpoint_mock.side_effect = test_scrape._query_endpoint
     test_file = os.path.join(
-        TEST_DATA_DIR, 'VLASS1.2.T08t19.J123816-103000.xml')
+        TEST_DATA_DIR, 'VLASS1.2.T08t19.J123816-103000.xml'
+    )
     test_obs = mc.read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
 
@@ -148,19 +152,25 @@ def test_aug_visit_quality_works(query_endpoint_mock):
 
 
 def test_aug_visit_position_bounds():
-    test_file_id = 'VLASS1.2.ql.T24t07.J065836+563000.10.2048.v1.I.' \
-                   'iter1.image.pbcor.tt0.subim'
+    test_file_id = (
+        'VLASS1.2.ql.T24t07.J065836+563000.10.2048.v1.I.'
+        'iter1.image.pbcor.tt0.subim'
+    )
     test_input_file = f'/test_files/{test_file_id}.fits'
     if not os.path.exists(test_input_file):
-        shutil.copy(f'/usr/src/app/vlass2caom2/int_test/test_files/'
-                    f'{test_file_id}.fits',
-                    test_input_file)
+        shutil.copy(
+            f'/usr/src/app/vlass2caom2/int_test/test_files/'
+            f'{test_file_id}.fits',
+            test_input_file,
+        )
     test_file = os.path.join(TEST_DATA_DIR, 'fpf_start_obs.xml')
     test_obs = mc.read_obs_from_file(test_file)
     test_storage_name = sn.VlassName(test_input_file)
-    kwargs = {'working_directory': '/test_files',
-              'storage_name': test_storage_name,
-              'log_file_directory': os.path.join(TEST_DATA_DIR, 'logs')}
+    kwargs = {
+        'working_directory': '/test_files',
+        'storage_name': test_storage_name,
+        'log_file_directory': os.path.join(TEST_DATA_DIR, 'logs'),
+    }
     test_result = position_bounds_augmentation.visit(test_obs, **kwargs)
     assert test_result is not None, 'should have a result status'
     assert len(test_result) == 1, 'modified chunks count'

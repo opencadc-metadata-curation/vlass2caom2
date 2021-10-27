@@ -127,11 +127,13 @@ def visit(observation, **kwargs):
         for entry in delete_list:
             logging.warning(
                 f'Removing artifact {entry} from observation '
-                f'{observation.observation_id}, plane {plane.product_id}.')
+                f'{observation.observation_id}, plane {plane.product_id}.'
+            )
             count += 1
             observation.planes[plane.product_id].artifacts.pop(entry)
 
     logging.info(
         f'Completed cleanup augmentation for {observation.observation_id}. '
-        f'Remove {count} artifacts from the observation.')
+        f'Remove {count} artifacts from the observation.'
+    )
     return {'artifacts': count}
