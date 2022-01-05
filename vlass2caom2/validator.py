@@ -85,7 +85,7 @@ from caom2repo import CAOM2RepoClient
 from caom2pipe import client_composable as clc
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import APPLICATION, scrape, VlassName, COLLECTION
+from vlass2caom2 import scrape, VlassName, COLLECTION
 
 __all__ = ['VlassValidator', 'validate']
 
@@ -108,7 +108,7 @@ class FileMeta:
 
 def read_file_list_from_archive(config):
     ad_resource_id = 'ivo://cadc.nrc.ca/ad'
-    agent = f'{APPLICATION}/1.0'
+    agent = 'vlass2caom2/1.0'
     subject = net.Subject(certificate=config.proxy_fqn)
     client = net.BaseWsClient(
         resource_id=ad_resource_id,

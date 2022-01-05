@@ -9,7 +9,7 @@ echo "Get the container"
 docker pull ${CONTAINER}
 
 echo "Run container ${CONTAINER}“"
-docker run --rm --name vlass_run -v ${PWD}:/usr/src/app/ ${CONTAINER} vlass_run_state || exit $?
+docker run --rm --name vlass_run -v ${PWD}:/usr/src/app/ --user $(id -u):$(id -g) -e HOME=/usr/src/app ${CONTAINER} vlass_run_state || exit $?
 
 date
 exit 0

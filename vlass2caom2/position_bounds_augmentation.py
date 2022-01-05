@@ -126,4 +126,4 @@ def visit(observation, **kwargs):
             observation.observation_id
         )
     )
-    return {'chunks': count}
+    return observation

@@ -8,7 +8,7 @@ echo "Get the image ${IMAGE}"
 docker pull ${IMAGE}
 
 echo "Run ${IMAGE}"
-docker run --rm --name vlass_run -v ${PWD}:/usr/src/app/ ${IMAGE} vlass_run || exit $?
+docker run --rm --name vlass_run -v ${PWD}:/usr/src/app/ --user $(id -u):$(id -g) -e HOME=/usr/src/app ${IMAGE} vlass_run || exit $?
 
 date
 exit 0

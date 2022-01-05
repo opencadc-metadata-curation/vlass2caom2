@@ -2,7 +2,7 @@
 <caom2:Observation xmlns:caom2="http://www.opencadc.org/caom2/xml/v2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="caom2:SimpleObservation" caom2:id="00000000-0000-0000-9878-0305fa4e0070">
   <caom2:collection>VLASS</caom2:collection>
   <caom2:observationID>VLASS1.1.T01t01.J000228-363000</caom2:observationID>
-  <caom2:metaRelease>2018-02-07T22:38:34.124</caom2:metaRelease>
+  <caom2:metaRelease>2018-02-07T22:38:34.124999</caom2:metaRelease>
   <caom2:algorithm>
     <caom2:name>exposure</caom2:name>
   </caom2:algorithm>
@@ -29,8 +29,8 @@
   <caom2:planes>
     <caom2:plane caom2:id="00000000-0000-0000-82ab-9ab91176b0f9">
       <caom2:productID>VLASS1.1.T01t01.J000228-363000.quicklook</caom2:productID>
-      <caom2:metaRelease>2018-02-07T22:38:34.124</caom2:metaRelease>
-      <caom2:dataRelease>2018-02-07T22:38:34.124</caom2:dataRelease>
+      <caom2:metaRelease>2018-02-07T22:38:34.124999</caom2:metaRelease>
+      <caom2:dataRelease>2018-02-07T22:38:34.124999</caom2:dataRelease>
       <caom2:dataProductType>image</caom2:dataProductType>
       <caom2:calibrationLevel>2</caom2:calibrationLevel>
       <caom2:provenance>
@@ -45,8 +45,6 @@
           <caom2:uri>nrao:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits</caom2:uri>
           <caom2:productType>noise</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>55425600</caom2:contentLength>
           <caom2:contentChecksum>md5:ae2a33238c5051611133e7090560fd8a</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="00000000-0000-0000-80c4-205841ed41fa">
@@ -135,8 +133,6 @@
           <caom2:uri>nrao:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>55425600</caom2:contentLength>
           <caom2:contentChecksum>md5:40f7c2763f92ea6e9c6b0304c569097e</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="00000000-0000-0000-80c4-205841ed41fa">

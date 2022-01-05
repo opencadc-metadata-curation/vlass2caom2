@@ -136,4 +136,4 @@ def visit(observation, **kwargs):
         f'Completed cleanup augmentation for {observation.observation_id}. '
         f'Remove {count} artifacts from the observation.'
     )
-    return {'artifacts': count}
+    return observation

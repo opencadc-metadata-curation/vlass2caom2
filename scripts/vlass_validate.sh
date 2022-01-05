@@ -10,7 +10,7 @@ echo "Get the image ${IMAGE}"
 docker pull ${IMAGE}
 
 echo "Run ${COLLECTION}_run"
-docker run --rm --name ${COLLECTION}_validate -v ${PWD}:/usr/src/app/ ${IMAGE} ${COLLECTION}_validate || exit $?
+docker run --rm --name ${COLLECTION}_validate -v ${PWD}:/usr/src/app/ --user $(id -u):$(id -g) -e HOME=/usr/src/app ${IMAGE} ${COLLECTION}_validate || exit $?
 
 date
 exit 0

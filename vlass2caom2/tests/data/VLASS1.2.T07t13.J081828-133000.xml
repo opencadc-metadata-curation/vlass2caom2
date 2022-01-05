@@ -142,8 +142,6 @@
           <caom2:uri>nrao:VLASS/VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits</caom2:uri>
           <caom2:productType>noise</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>55428480</caom2:contentLength>
           <caom2:contentChecksum>md5:e981f1afa21a50ee2c66f22c639d23ee</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="7349e7c9-8d03-40c1-b9c5-898bd2072b23" caom2:lastModified="2019-09-19T00:13:08.508" caom2:maxLastModified="2021-03-14T18:53:13.887" caom2:metaChecksum="md5:be9ac529a4bbb3500af93daa103332b2" caom2:accMetaChecksum="md5:c116265515a05e9f3b375fa36a968873">
@@ -277,8 +275,6 @@
           <caom2:uri>nrao:VLASS/VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>55425600</caom2:contentLength>
           <caom2:contentChecksum>md5:a162a33b38f828a7a60de14f32291b38</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="4ac7e053-962e-49dd-8aa1-e24a9e1f3922" caom2:lastModified="2019-09-18T00:22:45.559" caom2:maxLastModified="2021-03-14T18:53:44.744" caom2:metaChecksum="md5:29e9741b7272f917e99f4ec88374afe7" caom2:accMetaChecksum="md5:ee50b92640451edd07118196025a0109">
@@ -412,8 +408,6 @@
           <caom2:uri>cadc:VLASS/VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.subim_prev.jpg</caom2:uri>
           <caom2:productType>preview</caom2:productType>
           <caom2:releaseType>meta</caom2:releaseType>
-          <caom2:contentType>image/jpeg</caom2:contentType>
-          <caom2:contentLength>1587946</caom2:contentLength>
           <caom2:contentChecksum>md5:64c80185892ecf4620b4e211abc8ad7b</caom2:contentChecksum>
           <caom2:parts/>
         </caom2:artifact>
@@ -421,8 +415,6 @@
           <caom2:uri>cadc:VLASS/VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.subim_prev_256.jpg</caom2:uri>
           <caom2:productType>thumbnail</caom2:productType>
           <caom2:releaseType>meta</caom2:releaseType>
-          <caom2:contentType>image/jpeg</caom2:contentType>
-          <caom2:contentLength>83237</caom2:contentLength>
           <caom2:contentChecksum>md5:0b3ac497c257e80a5544533262093017</caom2:contentChecksum>
           <caom2:parts/>
         </caom2:artifact>

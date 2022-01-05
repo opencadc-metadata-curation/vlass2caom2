@@ -45,8 +45,6 @@
           <caom2:uri>nrao:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits</caom2:uri>
           <caom2:productType>noise</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>55425600</caom2:contentLength>
           <caom2:contentChecksum>md5:ae2a33238c5051611133e7090560fd8a</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="00000000-0000-0000-80c4-205841ed41fa">
@@ -135,8 +133,6 @@
           <caom2:uri>nrao:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>55425600</caom2:contentLength>
           <caom2:contentChecksum>md5:40f7c2763f92ea6e9c6b0304c569097e</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="00000000-0000-0000-80c4-205841ed41fa">
@@ -225,17 +221,11 @@
           <caom2:uri>cadc:VLASS/VLASS1.1.T01t01.J000228-363000_prev.jpg</caom2:uri>
           <caom2:productType>preview</caom2:productType>
           <caom2:releaseType>meta</caom2:releaseType>
-          <caom2:contentType>image/jpeg</caom2:contentType>
-          <caom2:contentLength>444344</caom2:contentLength>
           <caom2:contentChecksum>md5:45ede29c9b4d8fd7bc386cebd6dfde81</caom2:contentChecksum>
           <caom2:parts/>
         </caom2:artifact>
         <caom2:artifact caom2:id="76ca50ab-606b-43d9-987c-46c5062df964">
           <caom2:uri>cadc:VLASS/VLASS1.1.T01t01.J000228-363000_prev_256.jpg</caom2:uri>
-          <caom2:productType>thumbnail</caom2:productType>
-          <caom2:releaseType>meta</caom2:releaseType>
-          <caom2:contentType>image/jpeg</caom2:contentType>
-          <caom2:contentLength>49450</caom2:contentLength>
           <caom2:contentChecksum>md5:b71c0f04997e34240eb9c5e5bba4747f</caom2:contentChecksum>
           <caom2:parts/>
         </caom2:artifact>

@@ -115,7 +115,7 @@ def visit(observation, **kwargs):
         )
         global obs_metadata
         obs_metadata = None
-    return {'artifacts': count}
+    return observation
 
 
 def _augment_artifact(obs_id, artifact):

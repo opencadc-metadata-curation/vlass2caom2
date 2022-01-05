@@ -49,8 +49,6 @@
           <caom2:uri>nrao:VLASS/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits</caom2:uri>
           <caom2:productType>noise</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>55428480</caom2:contentLength>
           <caom2:contentChecksum>md5:9fc1dcb0c2fb897bc3715334d3f126ba</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="62d85bb7-1b16-4336-875f-2d31ef5b7f0d" caom2:lastModified="2019-09-19T19:42:30.984" caom2:maxLastModified="2020-01-23T01:12:12.311" caom2:metaChecksum="md5:8d9435712fd6e665caf8d8d5511f19e6" caom2:accMetaChecksum="md5:caf7e0033a5d1d57b65682f1dfb3a54c">
@@ -66,8 +64,6 @@
           <caom2:uri>nrao:VLASS/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
-          <caom2:contentLength>55425600</caom2:contentLength>
           <caom2:contentChecksum>md5:a31c693132c49ed5393f792b84a31230</caom2:contentChecksum>
           <caom2:parts>
             <caom2:part caom2:id="94d69be6-de19-44bf-a2b2-afd3640f1c87" caom2:lastModified="2019-09-18T15:33:23.801" caom2:maxLastModified="2020-01-23T01:12:12.311" caom2:metaChecksum="md5:3b71162046e3edca64247779f439dcea" caom2:accMetaChecksum="md5:38bdd2f55086788e4e5cf7d39f8a7f0d">

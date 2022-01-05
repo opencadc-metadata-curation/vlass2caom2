@@ -67,16 +67,14 @@
 # ***********************************************************************
 #
 
-
-from cadcdata import FileInfo
+from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import to_caom2, storage_name
+from caom2pipe import reader_composable as rdc
+from vlass2caom2 import storage_name, fits2caom2_augmentation
 from caom2.diff import get_differences
-from caom2utils import data_util
 
 import os
 import pytest
-import sys
 
 from mock import patch
 
@@ -148,89 +146,40 @@ else:
 
 @pytest.mark.parametrize('test_files', test_obs)
 @patch('caom2utils.data_util.get_local_headers_from_fits')
-@patch('caom2utils.data_util.StorageClientWrapper')
-def test_main_app(data_client_mock, local_headers_mock, test_files):
-    storage_name.set_use_storage_inventory(True)
-
-    def get_file_info(uri):
-        if a in uri:
-            return FileInfo(
-                id=uri,
-                size=55425600,
-                md5sum='ae2a33238c5051611133e7090560fd8a',
-                file_type='application/fits',
-            )
-        else:
-            return FileInfo(
-                id=uri,
-                size=55425600,
-                md5sum='40f7c2763f92ea6e9c6b0304c569097e',
-                file_type='application/fits',
-            )
-
-    data_client_mock.return_value.info.side_effect = get_file_info
-
-    def _read_file(fqn):
-        from urllib.parse import urlparse
-
-        file_uri = urlparse(fqn)
-        fits_header = open(file_uri.path).read()
-        headers = data_util.make_headers_from_string(fits_header)
-        return headers
-
-    # during operation, want to use astropy on FITS files but during testing
-    # want to use headers and built-in Python file operations
-    local_headers_mock.side_effect = _read_file
-
+def test_visit(header_mock, test_files):
     obs_id = test_files[0]
-    obs_path = os.path.join(TEST_DATA_DIR, f'{obs_id}.xml')
-    expected = mc.read_obs_from_file(obs_path)
-    if obs_id.endswith('r'):
-        obs_path = os.path.join(TEST_DATA_DIR, f'{obs_id}.in.xml')
-        input_param = f'--in {obs_path}'
-    else:
-        input_param = f'--observation {COLLECTION} {obs_id}'
-    lineage = _get_lineage(obs_id, test_files)
-    output_file = f'{obs_id}.actual.xml'
-    local = _get_local(test_files[1:])
+    header_mock.side_effect = ac.make_headers_from_file
+    expected_fqn = f'{TEST_DATA_DIR}/{obs_id}.xml'
+    expected = mc.read_obs_from_file(expected_fqn)
+    in_fqn = expected_fqn.replace('.xml', '.in.xml')
+    actual_fqn = expected_fqn.replace('.xml', '.actual.xml')
+    observation = None
+    if os.path.exists(in_fqn):
+        observation = mc.read_obs_from_file(in_fqn)
 
-    sys.argv = (
-        f'vlass2caom2 --local {local} {input_param} -o {output_file} '
-        f'--plugin {PLUGIN} --module {PLUGIN} --lineage {lineage}'
-    ).split()
-    print(sys.argv)
-    to_caom2()
-
-    actual = mc.read_obs_from_file(output_file)
-    result = get_differences(expected, actual, 'Observation')
-    if result:
-        msg = 'Differences found in observation {}\n{}'.format(
-            expected.observation_id, '\n'.join([r for r in result])
+    for f_name in test_files[1:]:
+        temp_fqn = f'{TEST_DATA_DIR}/{f_name}'
+        vlass_name = storage_name.VlassName(entry=temp_fqn)
+        metadata_reader = rdc.FileMetadataReader()
+        metadata_reader.set(vlass_name)
+        file_type = 'application/fits'
+        metadata_reader.file_info[vlass_name.file_uri].file_type = file_type
+        kwargs = {
+            'storage_name': vlass_name,
+            'metadata_reader': metadata_reader,
+        }
+        observation = fits2caom2_augmentation.visit(observation, **kwargs)
+    try:
+        compare_result = get_differences(expected, observation)
+    except Exception as e:
+        mc.write_obs_to_file(observation, actual_fqn)
+        raise e
+    if compare_result is not None:
+        mc.write_obs_to_file(observation, actual_fqn)
+        compare_text = '\n'.join([r for r in compare_result])
+        msg = (
+            f'Differences found in observation {expected.observation_id}\n'
+            f'{compare_text}'
         )
         raise AssertionError(msg)
     # assert False  # cause I want to see logging messages
-
-
-def _get_local(test_files):
-    result = ''
-    for test_name in test_files:
-        result = f'{result} {TEST_DATA_DIR}/{test_name}'
-    return result
-
-
-def _get_lineage(obs_id, test_files):
-    if obs_id in [obs_id_a, obs_id_c, obs_id_c + 'r', obs_id_f]:
-        return ' '.join(
-            storage_name.VlassName(ii.replace('.header', '')).lineage
-            for ii in test_files[1:]
-        )
-    else:
-        ql_pid = f'{obs_id}.quicklook'
-        cat_pid = f'{obs_id}.catalog'
-        coarse_pid = f'{obs_id}.coarsecube'
-        return (
-            f'{ql_pid}/ad:VLASS/{test_files[1]} '
-            f'{ql_pid}/ad:VLASS/{test_files[2]} '
-            f'{cat_pid}/ad:VLASS/{test_files[3]} '
-            f'{coarse_pid}/ad:VLASS/{test_files[4]}'
-        )

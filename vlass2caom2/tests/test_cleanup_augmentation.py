@@ -88,11 +88,6 @@ def test_visit():
     assert len(test_artifacts) == 4, 'wrong starting conditions'
 
     kwargs = {'url': test_url}
-    test_result = cleanup_augmentation.visit(test_obs, **kwargs)
-
-    assert test_result is not None, 'expect a result'
-    assert 'artifacts' in test_result, 'expect artifact count'
-    assert (
-        test_result['artifacts'] == 2
-    ), f'actual deleted count {test_result["artifacts"]}'
+    test_obs = cleanup_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'wrong return value'
     assert len(test_artifacts) == 2, 'wrong ending conditions'
