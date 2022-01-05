@@ -538,7 +538,7 @@ def _query_endpoint(url, session, timeout=-1):
     return result
 
 
-def _write_state(start_time_str):
+def _write_state(start_time_str, f_name=STATE_FILE):
     test_time = scrape.make_date_time(start_time_str)
     test_bookmark = {
         'bookmarks': {
@@ -547,12 +547,13 @@ def _write_state(start_time_str):
         'context': {
             'vlass_context': {
                 'VLASS1.1': '01-Jan-2018 00:00',
-                'VLASS1.2': '01-Nov-2018 00:00',
+                'VLASS1.2v2': '01-Nov-2018 00:00',
                 'VLASS2.1': '01-Jul-2020 00:00',
+                'VLASS2.2': '01-Jul-2021 00:00',
             },
         },
     }
-    mc.write_as_yaml(test_bookmark, STATE_FILE)
+    mc.write_as_yaml(test_bookmark, f_name)
 
 
 def _run_mock(**kwargs):
