@@ -87,7 +87,7 @@ def visit(observation, **kwargs):
             f'Require url for cleanup augmentation of '
             f'{observation.observation_id}. Got {url}.'
         )
-        return
+        return observation
 
     count = 0
     for plane in observation.planes.values():
@@ -136,4 +136,4 @@ def visit(observation, **kwargs):
         f'Completed cleanup augmentation for {observation.observation_id}. '
         f'Remove {count} artifacts from the observation.'
     )
-    return {'artifacts': count}
+    return observation

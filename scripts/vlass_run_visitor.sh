@@ -15,7 +15,7 @@ echo "Generate todo list"
 ./visitor_query.sh
 
 echo "Run container ${CONTAINER}"
-docker run --rm --name vlass_run -v ${PWD}:/usr/src/app/ ${CONTAINER} vlass_run || exit $?
+docker run --rm --name vlass_run -v ${PWD}:/usr/src/app/ --user $(id -u):$(id -g) -e HOME=/usr/src/app ${CONTAINER} vlass_run || exit $?
 
 date
 exit 0

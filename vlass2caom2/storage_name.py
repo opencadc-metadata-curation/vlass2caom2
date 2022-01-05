@@ -77,7 +77,6 @@ from vlass2caom2 import scrape
 
 
 __all__ = [
-    'APPLICATION',
     'COLLECTION',
     'COLLECTION_PATTERN',
     'SCHEME',
@@ -85,7 +84,6 @@ __all__ = [
     'VlassName',
 ]
 COLLECTION = 'VLASS'
-APPLICATION = 'vlass2caom2'
 SCHEME = 'nrao'
 CADC_SCHEME = 'cadc'
 AD_SCHEME = 'ad'
@@ -121,7 +119,7 @@ class VlassName(mc.StorageName):
         temp = urlparse(entry)
         if temp.scheme == '':
             self._url = None
-            self._file_name = basename(entry)
+            self._file_name = basename(entry.replace('.header', ''))
         else:
             if temp.scheme.startswith('http'):
                 self._url = entry
@@ -140,23 +138,15 @@ class VlassName(mc.StorageName):
         self._source_names = [entry]
         self._destination_uris = [self.file_uri]
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._logger.error(self)
-
-    def __str__(self):
-        return (
-            f'\n'
-            f'      obs_id: {self.obs_id}\n'
-            f'     file_id: {self.file_id}\n'
-            f'   file_name: {self.file_name}\n'
-            f'source_names: {self.source_names}\n'
-            f'    file_uri: {self.file_uri}\n'
-            f'     lineage: {self.lineage}\n'
-            f'         url: {self.url}\n'
-        )
+        self._logger.debug(self)
 
     @property
     def archive(self):
         return self._archive
+
+    @property
+    def collection(self):
+        return self._collection
 
     @property
     def epoch(self):

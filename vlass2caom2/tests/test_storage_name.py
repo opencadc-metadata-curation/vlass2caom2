@@ -125,10 +125,6 @@ def test_storage_name():
             ts.thumb_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
             f'{test_bit}.subim_prev_256.jpg'
         ), 'wrong thumbnail uri'
-        assert (
-            ts.lineage == f'{ts.product_id}/{sn.SCHEME}:{sn.COLLECTION}/'
-            f'{test_bit}.subim.fits'
-        ), 'wrong lineage'
     sn.set_use_storage_inventory(False)
     ts1 = sn.VlassName(test_url)
     ts2 = sn.VlassName(f'{test_bit}.subim.fits')
@@ -144,10 +140,6 @@ def test_storage_name():
                 ts.thumb_uri == f'{sn.AD_SCHEME}:{sn.COLLECTION}/'
                                 f'{test_bit}.subim_prev_256.jpg'
         ), 'wrong thumbnail uri'
-        assert (
-                ts.lineage == f'{ts.product_id}/{sn.AD_SCHEME}:'
-                              f'{sn.COLLECTION}/{test_bit}.subim.fits'
-        ), 'wrong lineage'
 
 
 def test_source_names():

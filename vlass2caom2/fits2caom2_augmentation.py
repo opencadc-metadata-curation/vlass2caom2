@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2022.                            (c) 2022.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,59 +66,17 @@
 # ***********************************************************************
 #
 
-from caom2pipe import manage_composable as mc
-from vlass2caom2 import preview_augmentation, cleanup_augmentation
-from vlass2caom2 import storage_name as sn
-
-from mock import patch
-from test_main_app import TEST_DATA_DIR
+from caom2pipe import caom_composable as cc
+from vlass2caom2 import main_app
 
 
-@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
-def test_preview_augmentation(access_mock):
-    access_mock.return_value = 'https://localhost'
-    test_fqn = f'{TEST_DATA_DIR}/preview_augmentation_start.xml'
-    test_science_f_name = (
-        'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.'
-        'tt0.subim.fits'
-    )
-    test_storage_name = sn.VlassName(test_science_f_name)
-    test_obs = mc.read_obs_from_file(test_fqn)
-    test_config = mc.Config()
-    test_rejected = mc.Rejected(f'{TEST_DATA_DIR}/rejected.yml')
-    test_metrics = mc.Metrics(test_config)
-    test_observable = mc.Observable(test_rejected, test_metrics)
-    kwargs = {
-        'stream': None,
-        'observable': test_observable,
-        'storage_name': test_storage_name,
-        'working_directory': '/test_files',
-    }
-    test_subject = preview_augmentation.VlassPreview(**kwargs)
-    assert test_subject is not None, 'need a test subject'
-    assert len(test_obs.planes) == 1, 'wrong number of planes'
-    assert (
-        len(test_obs.planes[test_storage_name.product_id].artifacts) == 4
-    ), 'wrong starting # of artifacts'
-    test_obs = test_subject.visit(test_obs)
-    assert test_obs is not None, 'expect a result'
-    assert (
-        len(test_obs.planes[test_storage_name.product_id].artifacts) == 6
-    ), 'wrong ending # of artifacts'
-    test_report = test_subject.report
-    assert test_report is not None
-    assert 'artifacts' in test_report
-    assert test_report.get('artifacts') == 2, 'wrong report count'
+class VLASSFits2caom2Visitor(cc.Fits2caom2Visitor):
+    def __init__(self, observation, **kwargs):
+        super().__init__(observation, **kwargs)
 
-    # does artifact re-naming work?
-    test_url = (
-        f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
-        f'T01t01/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/'
-        f'{test_science_f_name}'
-    )
-    kwargs = {'url': test_url}
-    test_obs = cleanup_augmentation.visit(test_obs, **kwargs)
-    test_artifacts = test_obs.planes[test_storage_name.product_id].artifacts
-    assert len(test_artifacts) == 4, 'wrong ending conditions'
-    assert test_storage_name.prev_uri in test_artifacts, 'missing preview'
-    assert test_storage_name.thumb_uri in test_artifacts, 'missing thumbnail'
+    def _get_mapping(self, headers):
+        return main_app.VLASSMapping(self._storage_name, headers)
+
+
+def visit(observation, **kwargs):
+    return VLASSFits2caom2Visitor(observation, **kwargs).visit()

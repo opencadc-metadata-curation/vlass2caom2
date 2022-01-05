@@ -249,9 +249,8 @@ def test_visit(query_endpoint_mock, get_mock):
     test_fqn = os.path.join(TEST_DATA_DIR, TEST_OBS_ID)
     test_obs = mc.read_obs_from_file(f'{test_fqn}.xml')
     kwargs = {'cadc_client': Mock()}
-    test_result = time_bounds_augmentation.visit(test_obs, **kwargs)
-    assert test_result is not None, 'expected a result'
-    assert test_result['artifacts'] == 2, 'wrong result'
+    test_obs = time_bounds_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'expected a result'
 
     obs_path = os.path.join(TEST_DATA_DIR, 'visit.xml')
     expected_obs = mc.read_obs_from_file(obs_path)
@@ -539,7 +538,7 @@ def _query_endpoint(url, session, timeout=-1):
     return result
 
 
-def _write_state(start_time_str):
+def _write_state(start_time_str, f_name=STATE_FILE):
     test_time = scrape.make_date_time(start_time_str)
     test_bookmark = {
         'bookmarks': {
@@ -548,19 +547,16 @@ def _write_state(start_time_str):
         'context': {
             'vlass_context': {
                 'VLASS1.1': '01-Jan-2018 00:00',
-                'VLASS1.2': '01-Nov-2018 00:00',
+                'VLASS1.2v2': '01-Nov-2018 00:00',
                 'VLASS2.1': '01-Jul-2020 00:00',
+                'VLASS2.2': '01-Jul-2021 00:00',
             },
         },
     }
-    mc.write_as_yaml(test_bookmark, STATE_FILE)
+    mc.write_as_yaml(test_bookmark, f_name)
 
 
 def _run_mock(**kwargs):
-    import logging
-
-    logging.error('well, do I get here?')
-    assert kwargs.get('command_name') == 'vlass2caom2'
     assert kwargs.get('end_time') == datetime(2019, 4, 28, 15, 18)
     test_config = kwargs.get('config')
     assert isinstance(test_config, mc.Config), type(test_config)

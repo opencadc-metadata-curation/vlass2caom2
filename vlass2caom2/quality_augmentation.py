@@ -105,7 +105,7 @@ def visit(observation, **kwargs):
     logging.info(
         f'Completed quality augmentation for {observation.observation_id}'
     )
-    return {'observations': count}
+    return observation
 
 
 def _set_failed(observation):

@@ -67,38 +67,39 @@
 # ***********************************************************************
 #
 
+import logging
 import os
 
 from datetime import datetime, timezone
-from mock import patch, Mock
+from mock import ANY, patch, Mock
 
 from cadctap import CadcTapClient
+from caom2pipe import astro_composable as ac
 from caom2pipe import execute_composable as ec
 from caom2pipe import manage_composable as mc
 from caom2utils import get_gen_proc_arg_parser
 from caom2 import SimpleObservation, Algorithm
-from vlass2caom2 import composable, VlassName, COLLECTION, scrape, APPLICATION
+from vlass2caom2 import composable, VlassName, COLLECTION, scrape
 from vlass2caom2 import SCHEME
 import test_main_app
 import test_scrape
 
 
 @patch('caom2pipe.manage_composable.query_endpoint_session')
-@patch('caom2pipe.execute_composable.CaomExecute._fits2caom2_cmd')
-@patch('caom2pipe.client_composable.CAOM2RepoClient')
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 @patch('caom2pipe.client_composable.StorageClientWrapper')
 def test_run_by_builder(
-    data_client_mock, repo_mock, exec_mock, query_endpoint_mock
+    data_client_mock, exec_mock, query_endpoint_mock
 ):
     query_endpoint_mock.side_effect = test_scrape._query_endpoint
-    repo_mock.return_value.read.side_effect = _mock_repo_read
-    repo_mock.return_value.create.side_effect = Mock()
-    repo_mock.return_value.update.side_effect = _mock_repo_update
-    data_client_mock.return_value.get_file_info.side_effect = (
+    data_client_mock.return_value.info.side_effect = (
         _mock_get_file_info
     )
+    data_client_mock.return_value.get_head.side_effect = (
+        ac.make_headers_from_file
+    )
 
-    exec_mock.side_effect = _cmd_direct_mock
+    exec_mock.return_value = 0
 
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
@@ -125,9 +126,8 @@ def test_run_by_builder(
         if os.path.exists(test_config.work_fqn):
             os.unlink(test_config.work_fqn)
 
-    assert repo_mock.return_value.read.called, 'repo read not called'
-    assert repo_mock.return_value.create.called, 'repo create not called'
     assert exec_mock.called, 'expect to be called'
+    exec_mock.assert_called_with(ANY), 'wrong args'
 
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
@@ -208,48 +208,69 @@ def test_run_state(run_mock, query_mock, data_client_mock, url_mock):
         assert test_storage.url.endswith(
             '.fits'
         ), f'wrong url end format {test_storage.url}'
-        assert (
-            test_storage.lineage == f'{test_product_id}/{SCHEME}:{COLLECTION}/'
-            f'{test_f_name}'
-        ), 'wrong lineage'
         assert test_storage.external_urls is None, 'wrong external urls'
     finally:
         os.getcwd = getcwd_orig
         CadcTapClient.__init__ = orig_client
 
 
-@patch('vlass2caom2.to_caom2')
+@patch('vlass2caom2.time_bounds_augmentation.visit')
+@patch('caom2pipe.transfer_composable.HttpTransfer')
 @patch('caom2pipe.manage_composable.query_endpoint_session')
 @patch('caom2pipe.client_composable.CAOM2RepoClient')
 @patch('caom2pipe.client_composable.StorageClientWrapper')
-@patch('cadcdata.CadcDataClient.get_file_info')
-def test_run_state_rc(
-    get_file_info_mock,
+def test_run_state_store_ingest(
     data_client_mock,
     repo_client_mock,
     query_mock,
-    to_caom2_mock,
+    transferrer_mock,
+    visit_mock,
 ):
-    test_scrape._write_state('24Apr2019 12:34')
+    test_dir = f'{test_main_app.TEST_DATA_DIR}/store_ingest_test'
+    transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
+    data_client_mock.return_value.get_head.side_effect = _mock_headers_read
+    data_client_mock.return_value.info.side_effect = _mock_get_file_info_1
+    visit_mock.side_effect = _mock_visit
+    test_state_fqn = f'{test_dir}/state.yml'
+    test_scrape._write_state('28Apr2019 12:34', test_state_fqn)
     query_mock.side_effect = test_scrape._query_endpoint
     repo_client_mock.return_value.read.return_value = None
-    to_caom2_mock.side_effect = _write_obs_mock
-    get_file_info_mock.side_effect = _mock_get_file_info
     getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    os.getcwd = Mock(return_value=test_dir)
     try:
         test_result = composable._run_state()
         assert test_result is not None, 'expect result'
         assert test_result == 0, 'expect success'
         assert repo_client_mock.return_value.read.called, 'read called'
-        assert to_caom2_mock.called, 'to_caom2 called'
         assert query_mock.called, 'what about you?'
         args, kwargs = query_mock.call_args
         assert args[0].startswith(
             'https://archive-new.nrao.edu/'
         ), 'should be a URL'
+        # make sure data is not being written to CADC storage :)
+        assert data_client_mock.return_value.put.called, 'put should be called'
+        assert (
+            data_client_mock.return_value.put.call_count == 18
+        ), 'wrong number of puts'
+        data_client_mock.return_value.put.assert_called_with(
+            '/usr/src/app/vlass2caom2/vlass2caom2/tests/data/'
+            'store_ingest_test/VLASS1.2.T07t13.J083838-153000',
+            'nrao:VLASS/'
+            'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.'
+            'pbcor.tt0.rms.subim.fits',
+            None,
+        )
     finally:
         os.getcwd = getcwd_orig
+        test_rejected_fqn = f'{test_dir}/rejected.yml'
+        test_log_dir = f'{test_dir}/logs'
+        for entry in [test_state_fqn, test_rejected_fqn]:
+            if os.path.exists(entry):
+                os.unlink(entry)
+        with os.scandir(test_log_dir) as entries:
+            for entry in entries:
+                os.unlink(entry)
+        os.rmdir(test_log_dir)
 
 
 def test_store():
@@ -271,7 +292,6 @@ def test_store():
     test_subject = ec.Store(
         test_config,
         test_storage_name,
-        APPLICATION,
         cadc_data_client,
         observable,
         transferrer,
@@ -304,13 +324,7 @@ def _cmd_direct_mock():
         collection=COLLECTION,
         algorithm=Algorithm(name='testing'),
     )
-    mc.write_obs_to_file(
-        obs,
-        os.path.join(
-            test_main_app.TEST_DATA_DIR,
-            'logs/VLASS1.2.T07t13.J083838-153000.xml',
-        ),
-    )
+    return obs
 
 
 def _mock_service_query():
@@ -320,6 +334,10 @@ def _mock_service_query():
 def _mock_get_file_info(arg1, arg2):
     # arg2 is the file name
     return {'name': arg2}
+
+
+def _mock_get_file_info_1(arg2):
+    return _mock_get_file_info(None, arg2)
 
 
 def _mock_get_file():
@@ -335,17 +353,10 @@ def _mock_repo_update():
 
 
 def _mock_get_cadc_headers(archive, file_id):
-    import logging
-
-    logging.error(f'\n\n\nmock get cadc headers\n\n\n')
     return {'md5sum': 'md5:abc123'}
 
 
 def _mock_x(archive, file_id, b, fhead):
-    import logging
-
-    logging.error(f'{archive} {file_id} {fhead}')
-    logging.error(f'\n\n\ncalled called called \n\n\n')
     from astropy.io import fits
 
     x = """SIMPLE  =                    T / Written by IDL:  Fri Oct  6 01:48:35 2017
@@ -371,3 +382,25 @@ def _write_obs_mock():
         algorithm=Algorithm(name='exposure'),
     )
     mc.write_obs_to_file(obs, args.out_obs_xml)
+
+
+def _mock_retrieve_file(ignore, local_fqn):
+    with open(local_fqn, 'w') as f:
+        f.write('test content')
+
+
+def _mock_headers_read(ignore):
+    return _mock_x(None, None, None, None)
+
+
+def _mock_visit(
+    obs,
+    working_directory=None,
+    cadc_client=None,
+    caom_repo_client=None,
+    stream=None,
+    storage_name=None,
+    metadata_reader=None,
+    observable=None,
+):
+    return obs

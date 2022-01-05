@@ -79,12 +79,13 @@ from vlass2caom2 import storage_name as sn
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
 from vlass2caom2 import data_source, scrape, storage_name
-from vlass2caom2 import preview_augmentation
+from vlass2caom2 import preview_augmentation, fits2caom2_augmentation
 
 
 VLASS_BOOKMARK = 'vlass_timestamp'
 
 META_VISITORS = [
+    fits2caom2_augmentation,
     time_bounds_augmentation,
     quality_augmentation,
     cleanup_augmentation,
@@ -98,7 +99,6 @@ def _run_single():
     vlass_name = builder.build(sys.argv[1])
     return rc.run_single(
         storage_name=vlass_name,
-        command_name=sn.APPLICATION,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         store_transfer=tc.HttpTransfer(),
@@ -139,7 +139,6 @@ def _run_state():
     )
     return rc.run_by_state(
         config=config,
-        command_name=sn.APPLICATION,
         bookmark_name=VLASS_BOOKMARK,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
@@ -194,7 +193,6 @@ def _run():
     return rc.run_by_todo(
         config=config,
         name_builder=name_builder,
-        command_name=sn.APPLICATION,
         meta_visitors=meta_visitors,
         data_visitors=DATA_VISITORS,
         store_transfer=tc.HttpTransfer(),
