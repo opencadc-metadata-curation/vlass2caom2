@@ -71,14 +71,14 @@ import logging
 import sys
 import traceback
 
+from caom2pipe import client_composable
 from caom2pipe import manage_composable as mc
 from caom2pipe import name_builder_composable as nbc
 from caom2pipe import run_composable as rc
 from caom2pipe import transfer_composable as tc
-from vlass2caom2 import storage_name as sn
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
-from vlass2caom2 import data_source, scrape, storage_name
+from vlass2caom2 import data_source, reader, storage_name
 from vlass2caom2 import preview_augmentation, fits2caom2_augmentation
 
 
@@ -93,28 +93,20 @@ META_VISITORS = [
 DATA_VISITORS = [position_bounds_augmentation, preview_augmentation]
 
 
-def _run_single():
-    """expects a single file name on the command line"""
-    builder = nbc.EntryBuilder(storage_name.VlassName)
-    vlass_name = builder.build(sys.argv[1])
-    return rc.run_single(
-        storage_name=vlass_name,
-        meta_visitors=META_VISITORS,
-        data_visitors=DATA_VISITORS,
-        store_transfer=tc.HttpTransfer(),
-    )
+def _common_init():
+    config = mc.Config()
+    config.get_executors()
+    mc.StorageName.collection = config.collection
+    mc.StorageName.scheme = 'nrao' if config.features.supports_latest_client else 'ad'
+    state = mc.State(config.state_fqn)
+    session = mc.get_endpoint_session()
+    web_log_metadata = data_source.WebLogMetadata(state, session)
+    source = data_source.NraoPages(config)
+    clients = client_composable.ClientCollection(config)
+    metadata_reader = reader.VlassStorageMetadataReader(clients.data_client, source, web_log_metadata)
 
-
-def run_single():
-    """Wraps _run_single in exception handling."""
-    try:
-        result = _run_single()
-        sys.exit(result)
-    except Exception as e:
-        logging.error(e)
-        tb = traceback.format_exc()
-        logging.debug(tb)
-        sys.exit(-1)
+    name_builder = nbc.EntryBuilder(storage_name.VlassName)
+    return config, metadata_reader, source, name_builder, clients
 
 
 def _run_state():
@@ -125,18 +117,7 @@ def _run_state():
     'QA_REJECTED' is the only way to tell if the attribute 'requirements'
     should be set to 'fail', or not.
     """
-    config = mc.Config()
-    config.get_executors()
-    state = mc.State(config.state_fqn)
-    # a way to get a datetime from a string, or maybe a datetime, depending
-    # on the execution environment
-    start_time = mc.increment_time(state.get_bookmark(VLASS_BOOKMARK), 0)
-    todo_list, max_date = scrape.build_file_url_list(start_time)
-    source = data_source.NraoPage(todo_list)
-    name_builder = nbc.EntryBuilder(storage_name.VlassName)
-    storage_name.set_use_storage_inventory(
-        config.features.supports_latest_client
-    )
+    config, metadata_reader, source, name_builder, clients = _common_init()
     return rc.run_by_state(
         config=config,
         bookmark_name=VLASS_BOOKMARK,
@@ -144,8 +125,10 @@ def _run_state():
         data_visitors=DATA_VISITORS,
         name_builder=name_builder,
         source=source,
-        end_time=max_date,
+        end_time=source.max_time,
         store_transfer=tc.HttpTransfer(),
+        metadata_reader=metadata_reader,
+        clients=clients,
     )
 
 
@@ -170,8 +153,7 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config = mc.Config()
-    config.get_executors()
+    config, metadata_reader, ignore_source, name_builder, clients = _common_init()
 
     # time_bounds_augmentation and quality_augmentation depend on
     # metadata scraped from the NRAO site, but that only changes if a new
@@ -180,22 +162,20 @@ def _run():
     # the source, files aren't changing, and the related metadata isn't
     # changing, so be polite to the NRAO site, and don't scrape if it's not
     # necessary.
-    meta_visitors = [cleanup_augmentation]
+    meta_visitors = [fits2caom2_augmentation, cleanup_augmentation]
     if (
         mc.TaskType.STORE in config.task_types
         and mc.TaskType.INGEST in config.task_types
     ):
         meta_visitors = META_VISITORS
-    name_builder = nbc.EntryBuilder(storage_name.VlassName)
-    storage_name.set_use_storage_inventory(
-        config.features.supports_latest_client
-    )
     return rc.run_by_todo(
         config=config,
         name_builder=name_builder,
         meta_visitors=meta_visitors,
         data_visitors=DATA_VISITORS,
         store_transfer=tc.HttpTransfer(),
+        metadata_reader=metadata_reader,
+        clients=clients,
     )
 
 

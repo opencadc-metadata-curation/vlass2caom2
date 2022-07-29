@@ -71,7 +71,6 @@ import logging
 
 from caom2 import Observation, Requirements, Status
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import metadata
 
 START_DATE = '2019-01-01'
 
@@ -89,10 +88,16 @@ def visit(observation, **kwargs):
     #
     # and compare against that list. The list gets items added/removed over
     # time.
+    metadata_reader = kwargs.get('metadata_reader')
+    if metadata_reader is None:
+        raise mc.CadcException('Require a metadata_reader.')
+    storage_name = kwargs.get('storage_name')
+    if storage_name is None:
+        raise mc.CadcException('Require a storage_name.')
 
     count = 0
     original = observation.requirements
-    if metadata.cache.is_qa_rejected(observation.observation_id):
+    if metadata_reader.is_qa_rejected(storage_name):
         observation.requirements = Requirements(Status.FAIL)
     else:
         observation.requirements = None
@@ -102,9 +107,7 @@ def visit(observation, **kwargs):
             f'for {observation.observation_id}.'
         )
         count = 1
-    logging.info(
-        f'Completed quality augmentation for {observation.observation_id}'
-    )
+    logging.info(f'Updated {count} as quality augmentation for {observation.observation_id}.')
     return observation
 
 

@@ -74,82 +74,62 @@ from caom2 import TemporalWCS, CoordAxis1D, Axis
 from caom2pipe import astro_composable as ac
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import scrape
-
-obs_metadata = None
-
 
 def visit(observation, **kwargs):
     mc.check_param(observation, Observation)
-    cadc_client = kwargs.get('cadc_client')
+    # conversation with JJK, 2018-08-08 - until such time as VLASS becomes
+    # a dynamic collection, rely on the time information as provided for
+    # all observations as retrieved on this date from:
+    #
+    # https://archive-new.nrao.edu/vlass/weblog/quicklook/*
+
+    metadata_reader = kwargs.get('metadata_reader')
+    if metadata_reader is None:
+        raise mc.CadcException('Require a metadata_reader.')
+    storage_name = kwargs.get('storage_name')
+    if storage_name is None:
+        raise mc.CadcException('Require a storage name.')
+
     count = 0
-    if cadc_client is None:
-        logging.warning(
-            'No cadc_client parameter, no connection for input '
-            'metadata. Stopping time_bounds_augmentation.'
-        )
-
-    else:
-        # conversation with JJK, 2018-08-08 - until such time as VLASS becomes
-        # a dynamic collection, rely on the time information as provided for
-        # all observations as retrieved on this date from:
-        #
-        # https://archive-new.nrao.edu/vlass/weblog/quicklook/*
-
-        count = 0
-        for plane in observation.planes.values():
-            for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:
-                    logging.debug(f'working on artifact {artifact.uri}')
-                    version, reference = _augment_artifact(
-                        observation.observation_id, artifact
-                    )
-                    if version is not None:
-                        plane.provenance.version = version
-                    if reference is not None:
-                        plane.provenance.reference = reference
-                        count += 1
-        logging.info(
-            f'Completed time bounds augmentation for '
-            f'{observation.observation_id}'
-        )
-        global obs_metadata
-        obs_metadata = None
+    for plane in observation.planes.values():
+        for artifact in plane.artifacts.values():
+            if len(artifact.parts) > 0:
+                logging.debug(f'working on artifact {artifact.uri}')
+                version, reference = _augment_artifact(
+                    observation.observation_id, artifact, metadata_reader, storage_name
+                )
+                if version is not None:
+                    plane.provenance.version = version
+                if reference is not None:
+                    plane.provenance.reference = reference
+                    count += 1
+    logging.info(
+        f'Completed time bounds augmentation for '
+        f'{observation.observation_id}'
+    )
     return observation
 
 
-def _augment_artifact(obs_id, artifact):
+def _augment_artifact(obs_id, artifact, metadata_reader, storage_name):
     chunk = artifact.parts['0'].chunks[0]
-    bounds = None
-    exposure = None
     version = None
     reference = None
-    found = False
     logging.debug(f'Scrape for time metadata for {obs_id}')
-    global obs_metadata
-    if obs_metadata is None:
-        obs_metadata = scrape.retrieve_obs_metadata(obs_id)
-    if obs_metadata is not None and len(obs_metadata) > 0:
-        bounds, exposure = _build_time(
-            obs_metadata.get('Observation Start'),
-            obs_metadata.get('Observation End'),
-            obs_metadata.get('On Source'),
-        )
-        version = obs_metadata.get('Pipeline Version')
-        reference = obs_metadata.get('reference')
-        found = True
-    else:
+    obs_metadata = metadata_reader.get_web_log_info(storage_name)
+    if obs_metadata is None or len(obs_metadata) == 0:
         logging.warning(f'Found no time metadata for {obs_id}')
-
-    if found:
+    else:
+        bounds, exposure = _build_time(
+            obs_metadata.get('Observation Start'), obs_metadata.get('Observation End'), obs_metadata.get('On Source')
+        )
         time_axis = CoordAxis1D(Axis('TIME', 'd'))
         time_axis.bounds = bounds
         chunk.time = TemporalWCS(time_axis)
         chunk.time.exposure = exposure
         chunk.time_axis = None
-        return version, reference
-    else:
-        return None, None
+        version = obs_metadata.get('Pipeline Version')
+        reference = obs_metadata.get('reference')
+    return version, reference
 
 
 def _build_time(start, end, tos):

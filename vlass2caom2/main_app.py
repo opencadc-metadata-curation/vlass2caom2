@@ -71,16 +71,17 @@ import traceback
 
 from math import sqrt
 
-from caom2 import ProductType
+from caom2 import CalibrationLevel, DataProductType, ProductType
+from caom2utils import update_artifact_meta
 from caom2pipe import astro_composable as ac
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['VLASSMapping']
+__all__ = ['BlueprintMapping', 'ContinuumMapping', 'QuicklookMapping']
 
 
-class VLASSMapping(cc.TelescopeMapping):
+class BlueprintMapping(cc.TelescopeMapping):
     def __init__(self, storage_name, headers):
         super().__init__(storage_name, headers)
 
@@ -89,21 +90,10 @@ class VLASSMapping(cc.TelescopeMapping):
         SpatialWCS."""
         self._logger.debug('Begin accumulate_wcs.')
         super().accumulate_blueprint(bp, 'vlass2caom2')
-        bp.configure_position_axes((1, 2))
-        bp.configure_energy_axis(3)
-        bp.configure_polarization_axis(4)
 
         # observation level
         bp.set('Observation.type', 'OBJECT')
-
-        # over-ride use of value from default keyword 'DATE'
-        bp.clear('Observation.metaRelease')
-        bp.add_fits_attribute('Observation.metaRelease', 'DATE-OBS')
-
-        bp.clear('Observation.target.name')
-        bp.add_fits_attribute('Observation.target.name', 'FILNAM04')
         bp.set('Observation.target.type', 'field')
-
         # Clare Chandler via JJK - 21-08-18
         bp.set('Observation.instrument.name', 'S-WIDAR')
         # From JJK - 27-08-18 - slack
@@ -112,26 +102,55 @@ class VLASSMapping(cc.TelescopeMapping):
         bp.set('Observation.proposal.id', 'get_proposal_id()')
 
         # plane level
-        bp.set('Plane.calibrationLevel', '2')
-        bp.clear('Plane.dataProductType')
-        bp.add_fits_attribute('Plane.dataProductType', 'TYPE')
+        # PHANGS Intensity are CUBE, calibration level PRODUCT, and the test
+        # files have BTYPE = 'Intensity'
+        bp.set('Plane.calibrationLevel', CalibrationLevel.PRODUCT)
+        bp.set('Plane.dataProductType', DataProductType.CUBE)
 
-        # Clare Chandler via slack - 28-08-18
-        bp.clear('Plane.provenance.name')
-        bp.add_fits_attribute('Plane.provenance.name', 'ORIGIN')
         bp.set('Plane.provenance.producer', 'NRAO')
         # From JJK - 27-08-18 - slack
         bp.set('Plane.provenance.project', 'VLASS')
-        bp.clear('Plane.provenance.runID')
-        bp.add_fits_attribute('Plane.provenance.runID', 'FILNAM08')
-        bp.clear('Plane.provenance.lastExecuted')
-        bp.add_fits_attribute('Plane.provenance.lastExecuted', 'DATE')
 
+        # artifact level
+        bp.set('Artifact.productType', ProductType.AUXILIARY)
+
+
+class QuicklookMapping(BlueprintMapping):
+    def __init__(self, storage_name, headers):
+        super().__init__(storage_name, headers)
+
+    def accumulate_blueprint(self, bp, application=None):
+        """Configure the Quicklook ObsBlueprint for the CAOM model SpatialWCS."""
+        self._logger.debug('Begin accumulate_wcs.')
+        super().accumulate_blueprint(bp, 'vlass2caom2')
+        bp.configure_position_axes((1, 2))
+        bp.configure_energy_axis(3)
+        bp.configure_polarization_axis(4)
+
+        # observation level
+        # over-ride use of value from default keyword 'DATE'
+        bp.clear('Observation.metaRelease')
+        bp.add_attribute('Observation.metaRelease', 'DATE-OBS')
+
+        bp.clear('Observation.target.name')
+        bp.add_attribute('Observation.target.name', 'FILNAM04')
+
+        # plane level
+        bp.set('Plane.calibrationLevel', '2')
+        bp.clear('Plane.dataProductType')
+        bp.add_attribute('Plane.dataProductType', 'TYPE')
+        # Clare Chandler via slack - 28-08-18
+        bp.clear('Plane.provenance.name')
+        bp.add_attribute('Plane.provenance.name', 'ORIGIN')
+        bp.clear('Plane.provenance.runID')
+        bp.add_attribute('Plane.provenance.runID', 'FILNAM08')
+        bp.clear('Plane.provenance.lastExecuted')
+        bp.add_attribute('Plane.provenance.lastExecuted', 'DATE')
         # VLASS data is public, says Eric Rosolowsky via JJK May 30/18
         bp.clear('Plane.metaRelease')
-        bp.add_fits_attribute('Plane.metaRelease', 'DATE-OBS')
+        bp.add_attribute('Plane.metaRelease', 'DATE-OBS')
         bp.clear('Plane.dataRelease')
-        bp.add_fits_attribute('Plane.dataRelease', 'DATE-OBS')
+        bp.add_attribute('Plane.dataRelease', 'DATE-OBS')
 
         # artifact level
         bp.clear('Artifact.productType')
@@ -141,10 +160,10 @@ class VLASSMapping(cc.TelescopeMapping):
         # chunk level
         bp.clear('Chunk.position.axis.function.cd11')
         bp.clear('Chunk.position.axis.function.cd22')
-        bp.add_fits_attribute('Chunk.position.axis.function.cd11', 'CDELT1')
+        bp.add_attribute('Chunk.position.axis.function.cd11', 'CDELT1')
         bp.set('Chunk.position.axis.function.cd12', 0.0)
         bp.set('Chunk.position.axis.function.cd21', 0.0)
-        bp.add_fits_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
+        bp.add_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
 
         # Clare Chandler via JJK - 21-08-18
         bp.set('Chunk.energy.bandpassName', 'S-band')
@@ -160,6 +179,8 @@ class VLASSMapping(cc.TelescopeMapping):
     def get_product_type(self, ext):
         if '.rms.' in self._storage_name.file_uri:
             return ProductType.NOISE
+        elif self._storage_name.file_uri.endswith('.csv'):
+            return ProductType.AUXILIARY
         else:
             return ProductType.SCIENCE
 
@@ -177,15 +198,17 @@ class VLASSMapping(cc.TelescopeMapping):
             else:
                 return None
 
-    def update(self, observation, file_info, caom_repo_client):
+    def update(self, observation, file_info, clients=None):
         """Called to fill multiple CAOM model elements and/or attributes, must
         have this signature for import_module loading and execution.
         """
         self._logger.debug('Begin update.')
         try:
-            plane_ids_to_delete = []
             for plane in observation.planes.values():
                 for artifact in plane.artifacts.values():
+                    if artifact.uri != self._storage_name.file_uri:
+                        continue
+                    update_artifact_meta(artifact, file_info)
                     for part in artifact.parts.values():
                         for chunk in part.chunks:
                             if chunk.position is not None:
@@ -198,17 +221,7 @@ class VLASSMapping(cc.TelescopeMapping):
                                 # blueprint is implemented to not set WCS
                                 # information to None
                                 chunk.energy.restfrq = None
-                if not plane.product_id.endswith('quicklook'):
-                    plane_ids_to_delete.append(plane.product_id)
 
-            for product_id in plane_ids_to_delete:
-                # change handling of product ids - remove the version number
-                self._logger.warning(
-                    'Removing plane {} from {}'.format(
-                        product_id, observation.observation_id
-                    )
-                )
-                observation.planes.pop(product_id)
             self._logger.debug('Done update.')
             return observation
         except mc.CadcException as e:
@@ -219,3 +232,28 @@ class VLASSMapping(cc.TelescopeMapping):
                 f'Terminating ingestion for {observation.observation_id}'
             )
             return None
+
+
+class ContinuumMapping(QuicklookMapping):
+    def __init__(self, storage_name, headers):
+        super().__init__(storage_name, headers)
+
+    def accumulate_blueprint(self, bp, application=None):
+        super().accumulate_blueprint(bp)
+        bp.clear('Observation.target.name')
+        bp.add_attribute('Observation.target.name', 'FILNAM06')
+        bp.clear('Observation.telescope.geoLocationX')
+        bp.add_attribute('Observation.telescope.geoLocationX', 'OBSGEO-X')
+        bp.clear('Observation.telescope.geoLocationY')
+        bp.add_attribute('Observation.telescope.geoLocationY', 'OBSGEO-Y')
+        bp.clear('Observation.telescope.geoLocationZ')
+        bp.add_attribute('Observation.telescope.geoLocationZ', 'OBSGEO-Z')
+
+        # PHANGS Intensity are CUBE, calibration level PRODUCT, and the test
+        # files have BTYPE = 'Intensity'
+        bp.set('Plane.calibrationLevel', CalibrationLevel.PRODUCT)
+        bp.set('Plane.dataProductType', DataProductType.CUBE)
+        bp.clear('Plane.provenance.runID')
+        bp.add_attribute('Plane.provenance.runID', 'FILNAM09')
+
+        bp.add_attribute('Chunk.energy.restfrq', 'RESTFREQ')

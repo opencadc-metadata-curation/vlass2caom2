@@ -139,7 +139,7 @@
       </caom2:polarization>
       <caom2:artifacts>
         <caom2:artifact caom2:id="033b6ead-acea-47c6-94bf-dfb4305599f0" caom2:lastModified="2019-09-19T00:13:08.508" caom2:maxLastModified="2021-03-14T18:53:13.887" caom2:metaChecksum="md5:502b3d07206f7635a9f3fc73623862ce" caom2:accMetaChecksum="md5:2328404e1a41526037391cacce37cd1d">
-          <caom2:uri>nrao:VLASS/VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits</caom2:uri>
+          <caom2:uri>ad:VLASS/VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits</caom2:uri>
           <caom2:productType>noise</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentChecksum>md5:e981f1afa21a50ee2c66f22c639d23ee</caom2:contentChecksum>
@@ -272,7 +272,7 @@
           </caom2:parts>
         </caom2:artifact>
         <caom2:artifact caom2:id="331630b4-0a3f-4e24-9c41-3e4ecab91605" caom2:lastModified="2021-03-14T18:53:13.887" caom2:maxLastModified="2021-03-14T18:53:44.744" caom2:metaChecksum="md5:9a35b049a85b1bb75aa71753c2ebeea7" caom2:accMetaChecksum="md5:8b3deaec54a9f0bf4b20b12f8228d108">
-          <caom2:uri>nrao:VLASS/VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits</caom2:uri>
+          <caom2:uri>ad:VLASS/VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits</caom2:uri>
           <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentChecksum>md5:a162a33b38f828a7a60de14f32291b38</caom2:contentChecksum>

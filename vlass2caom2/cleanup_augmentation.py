@@ -81,14 +81,6 @@ def visit(observation, **kwargs):
     of those files are removed.
     """
     mc.check_param(observation, Observation)
-    url = kwargs.get('url')
-    if url is None or not url.startswith('http'):
-        logging.error(
-            f'Require url for cleanup augmentation of '
-            f'{observation.observation_id}. Got {url}.'
-        )
-        return observation
-
     count = 0
     for plane in observation.planes.values():
         temp = []
@@ -102,13 +94,13 @@ def visit(observation, **kwargs):
             max_version = 1
             for artifact in plane.artifacts.values():
                 if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName.get_version(artifact.uri)
+                    version = sn.VlassName(artifact.uri).version
                     max_version = max(max_version, version)
 
             # now collect the list of artifacts not at the maximum version
             for artifact in plane.artifacts.values():
                 if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName.get_version(artifact.uri)
+                    version = sn.VlassName(artifact.uri).version
                     if version != max_version:
                         temp.append(artifact.uri)
 

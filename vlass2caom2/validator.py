@@ -67,25 +67,21 @@
 # ***********************************************************************
 #
 
-import io
 import logging
 import os
 import traceback
 
+import pandas as pd
+
 from collections import defaultdict
 from dataclasses import dataclass
 from dateutil import tz
-from urllib import parse as parse
 
-from astropy.io.votable import parse_single_table
-
-from cadcutils import net
-from cadctap import CadcTapClient
 from caom2repo import CAOM2RepoClient
 from caom2pipe import client_composable as clc
 from caom2pipe import manage_composable as mc
 
-from vlass2caom2 import scrape, VlassName, COLLECTION
+from vlass2caom2 import data_source, storage_name
 
 __all__ = ['VlassValidator', 'validate']
 
@@ -106,72 +102,6 @@ class FileMeta:
     f_name: str
 
 
-def read_file_list_from_archive(config):
-    ad_resource_id = 'ivo://cadc.nrc.ca/ad'
-    agent = 'vlass2caom2/1.0'
-    subject = net.Subject(certificate=config.proxy_fqn)
-    client = net.BaseWsClient(
-        resource_id=ad_resource_id,
-        subject=subject,
-        agent=agent,
-        retry=True,
-    )
-    query_meta = (
-        f"SELECT fileName FROM archive_files WHERE archiveName = "
-        f"'{config.archive}'"
-    )
-    data = {'QUERY': query_meta, 'LANG': 'ADQL', 'FORMAT': 'csv'}
-    logging.debug(f'Query is {query_meta}')
-    try:
-        response = client.get(
-            f'https://{client.host}/ad/sync?{parse.urlencode((data))}',
-            cert=config.proxy_fqn,
-        )
-        if response.status_code == 200:
-            # ignore the column name as the first part of the response
-            artifact_files_list = response.text.split()[1:]
-            return artifact_files_list
-        else:
-            raise mc.CadcException(f'Query failure {response}')
-    except Exception as e:
-        raise mc.CadcException(f'Failed ad content query: {e}')
-
-
-def read_list_from_caom(config):
-    query = (
-        f"SELECT A.uri FROM caom2.Observation AS O "
-        f"JOIN caom2.Plane AS P ON O.obsID = P.obsID "
-        f"JOIN caom2.Artifact AS A ON P.planeID = A.planeID "
-        f"WHERE O.collection='{config.archive}'"
-    )
-    subject = net.Subject(certificate=config.proxy_fqn)
-    tap_client = CadcTapClient(subject, resource_id=config.tap_id)
-    buffer = io.BytesIO()
-    tap_client.query(query, output_file=buffer)
-    temp = parse_single_table(buffer).to_table()
-    return [
-        ii.decode().replace(f'ad:{config.archive}/', '').strip()
-        for ii in temp['uri']
-    ]
-
-
-def read_list_from_nrao(nrao_state_fqn):
-    if os.path.exists(nrao_state_fqn):
-        vlass_list = mc.read_as_yaml(nrao_state_fqn)
-    else:
-        start_date = scrape.make_date_time('01Jan1990 00:00')
-        vlass_list, vlass_date = scrape.build_file_url_list(start_date)
-        mc.write_as_yaml(vlass_list, nrao_state_fqn)
-    result = {}
-    validate_dict = {}
-    for key, value in vlass_list.items():
-        for url in value:
-            f_name = url.split('/')[-1]
-            result[f_name] = key
-            validate_dict[f_name] = url
-    return result, validate_dict
-
-
 def read_file_url_list_from_nrao(nrao_state_fqn):
     """
     :param nrao_state_fqn: str cache file name
@@ -180,12 +110,14 @@ def read_file_url_list_from_nrao(nrao_state_fqn):
         validate_dict key is file_name, value is NRAO URL of file
     """
     if os.path.exists(nrao_state_fqn):
-        vlass_list = mc.read_as_yaml(nrao_state_fqn)
+        vlass_dict = mc.read_as_yaml(nrao_state_fqn)
     else:
-        start_date = scrape.make_date_time('01Jan1990 00:00')
-        vlass_list = scrape.build_url_list(start_date)
-        mc.write_as_yaml(vlass_list, nrao_state_fqn)
-    result, validate_dict = get_file_url_list_max_versions(vlass_list)
+        config = mc.Config()
+        config.get_executors()
+        source = data_source.NraoPages(config)
+        vlass_dict = source.get_all_file_urls()
+        mc.write_as_yaml(vlass_dict, nrao_state_fqn)
+    result, validate_dict = get_file_url_list_max_versions(vlass_dict)
     return result, validate_dict
 
 
@@ -195,18 +127,17 @@ def get_file_url_list_max_versions(nrao_dict):
 
     :param nrao_dict: dict, keys are NRAO URLs, values are seconds since epoch
         timestamp of the URL at NRAO
-    :return:
+    :return: result dict key : file name, value: timestamp
+             validate_dict dict key: file name, value: url
     """
     obs_id_dict = defaultdict(list)
     # Identify the observation IDs, which are version in-sensitive. This will
     # have the effect of building up a list of URLs of all versions by
     # observation ID
     for key, value in nrao_dict.items():
-        storage_name = VlassName(key)
-        file_meta = FileMeta(
-            key, storage_name.version, value, storage_name.file_name
-        )
-        obs_id_dict[storage_name.obs_id].append(file_meta)
+        vlass_name = storage_name.VlassName(key)
+        file_meta = FileMeta(key, vlass_name.version, value, vlass_name.file_name)
+        obs_id_dict[vlass_name.obs_id].append(file_meta)
 
     # now handle the URLs based on how many there are per observation ID
     result = {}
@@ -240,22 +171,60 @@ def _get_max_version(entries):
 
 class VlassValidator(mc.Validator):
     def __init__(self):
-        super(VlassValidator, self).__init__(
-            source_name='NRAO', source_tz=tz.gettz('Canada/Eastern')
-        )
+        super(VlassValidator, self).__init__(source_name='NRAO', source_tz=tz.gettz('US/Mountain'))
         # a dictionary where the file name is the key, and the fully-qualified
         # file name at the HTTP site is the value
         self._fully_qualified_list = None
 
     def read_from_source(self):
-        nrao_state_fqn = os.path.join(
-            self._config.working_directory, NRAO_STATE
-        )
-        validator_list, fully_qualified_list = read_file_url_list_from_nrao(
-            nrao_state_fqn
-        )
+        nrao_state_fqn = os.path.join(self._config.working_directory, NRAO_STATE)
+        validator_list, fully_qualified_list = read_file_url_list_from_nrao(nrao_state_fqn)
         self._fully_qualified_list = fully_qualified_list
         return validator_list
+
+    def validate(self):
+        self._logger.info('Query destination metadata.')
+        dest_meta_temp = self._read_list_from_destination_meta()
+        dest_meta_temp_df = pd.DataFrame(dest_meta_temp, columns=['fileName'])
+
+        self._logger.info('Query source metadata.')
+        source_temp = self.read_from_source()
+        source_temp_df = pd.DataFrame(source_temp.keys(), columns=['fileName'])
+
+        self._logger.info('Find files that do not appear at CADC.')
+        self._destination_meta = VlassValidator.find_missing(dest_meta_temp_df, source_temp_df)
+
+        self._logger.info(f'Find files that do not appear at {self._source_name}.')
+        self._source = VlassValidator.find_missing(source_temp_df, dest_meta_temp_df)
+
+        self._logger.info('Query destination data.')
+        dest_data_temp = self._read_list_from_destination_data()
+
+        self._logger.info(f'Find files that are newer at {self._source_name} than at CADC.')
+        self._destination_data = self._find_unaligned_dates(source_temp, dest_meta_temp, dest_data_temp)
+
+        self._logger.info(f'Filter the results.')
+        self._filter_result()
+
+        self._logger.info('Log the results.')
+        result = {
+            f'{self._source_name}': self._source,
+            'cadc': self._destination_meta,
+            'timestamps': self._destination_data,
+        }
+        result_fqn = os.path.join(self._config.working_directory, 'validated.yml')
+        mc.write_as_yaml(result, result_fqn)
+
+        self._logger.info(
+            f'Results:\n'
+            f'  - {len(self._source)} files at {self._source_name} that are '
+            f'not referenced by CADC CAOM entries\n'
+            f'  - {len(self._destination_meta)} CAOM entries at CADC that do '
+            f'not reference {self._source_name} files\n'
+            f'  - {len(self._destination_data)} files that are newer at '
+            f'{self._source_name} than in CADC storage'
+        )
+        return self._source, self._destination_meta, self._destination_data
 
     def write_todo(self):
         with open(self._config.work_fqn, 'w') as f:
@@ -279,9 +248,9 @@ class VlassValidator(mc.Validator):
     @staticmethod
     def _later_version_at_cadc(entry, caom_client, metrics):
         later_version_found = False
-        storage_name = VlassName(entry)
+        vlass_name = storage_name.VlassName(entry)
         caom_at_cadc = clc.repo_get(
-            caom_client, COLLECTION, storage_name.obs_id, metrics
+            caom_client, storage_name.COLLECTION, vlass_name.obs_id, metrics
         )
         if caom_at_cadc is not None:
             for plane in caom_at_cadc.planes.values():
@@ -293,7 +262,7 @@ class VlassValidator(mc.Validator):
                         ignore_collection,
                         f_name,
                     ) = mc.decompose_uri(artifact.uri)
-                    vlass_name = VlassName(f_name)
+                    vlass_name = storage_name.VlassName(f_name)
                     if vlass_name.version > storage_name.version:
                         # there's a later version at CADC, everything is good
                         # ignore the failure report
@@ -302,6 +271,11 @@ class VlassValidator(mc.Validator):
                 if later_version_found:
                     break
         return later_version_found
+
+    @staticmethod
+    def find_missing(in_here, from_there):
+        temp = in_here[~in_here.fileName.isin(from_there.fileName)]
+        return temp.fileName.tolist()
 
 
 def validate():

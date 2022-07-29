@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2021.                            (c) 2021.
+#  (c) 2022.                            (c) 2022.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -62,40 +62,48 @@
 #  <http://www.gnu.org/licenses/>.      pas le cas, consultez :
 #                                       <http://www.gnu.org/licenses/>.
 #
-#  : 4 $
+#  $Revision: 4 $
 #
 # ***********************************************************************
 #
 
-from mock import patch
-
-from datetime import datetime
-from vlass2caom2 import metadata
-
-import test_scrape
+from caom2pipe import reader_composable
 
 
-@patch('caom2pipe.manage_composable.query_endpoint_session')
-def test_cache(query_endpoint_mock):
-    query_endpoint_mock.side_effect = test_scrape._query_endpoint
+__all__ = ['VlassStorageMetadataReader']
 
-    # preconditions
-    # depending on the order of test execution, the cache may already have
-    # been filled, so clear it for the purpose of this test
-    test_subject = metadata.cache
-    assert test_subject is not None, 'expect a test subject'
-    test_subject._refresh_bookmark = None
-    test_subject._qa_rejected_obs_ids = []
 
-    test_obs_id = 'VLASS1.2.T21t15.J141833+413000'
-    test_result = test_subject.is_qa_rejected(test_obs_id)
-    assert test_result is True, 'expected qa rejected obs id'
-    assert (
-        type(test_subject._refresh_bookmark) is datetime
-    ), f'post-condition 1 {test_subject._refresh_bookmark}'
-    assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'
+class VlassStorageMetadataReader(reader_composable.StorageClientReader):
+    """
+    This class encapsulates the long-lived metadata retrieved from the NRAO site, as well as the individual file
+    metadata. Scraping the NRAO is impolite, so cache that metadata here, in a class where an instance is made
+    available to all Meta and Data visitors.
 
-    test_obs_id = 'VLASS1.1.T03t13.J080215-283000'
-    test_result = test_subject.is_qa_rejected(test_obs_id)
-    assert test_result is False, 'expected obs id to not be qa rejected'
-    assert len(test_subject._qa_rejected_obs_ids) == 4, 'post-condition 2'
+    Don't clear the web_log_metadata during 'reset'.
+    """
+
+    def __init__(self, client, data_source, web_log_metadata):
+        super().__init__(client)
+        self._data_source = data_source
+        self._web_log_metadata = web_log_metadata
+        self._web_log_info = {}
+
+    def get_web_log_info(self, storage_name):
+        # this is meant to be the laziest possible initialization, so that this is only called if it's going to be used
+        self.set_web_log_metadata_info(storage_name)
+        return self._web_log_info.get(storage_name.obs_id)
+
+    def is_qa_rejected(self, storage_name):
+        return self._data_source.is_qa_rejected(storage_name.obs_id)
+
+    def set_web_log_metadata_info(self, storage_name):
+        """
+        Retrieves Time and Quality metadata information to memory by scraping multiple pages on the NRAO website.
+        """
+        self._logger.debug(
+            f'Begin set_web_log_metadata_info for {storage_name.file_name}'
+        )
+        if storage_name.obs_id not in self._web_log_info.keys():
+            self._logger.debug(f'Retrieve FileInfo for {storage_name.obs_id}')
+            self._web_log_info[storage_name.obs_id] = self._web_log_metadata.retrieve_obs_metadata(storage_name.obs_id)
+        self._logger.debug('End set_web_log_metadata_info')

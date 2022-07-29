@@ -67,36 +67,22 @@
 # ***********************************************************************
 #
 
-import logging
 
 from os.path import basename
 from urllib.parse import urlparse
-from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import scrape
 
 
-__all__ = [
-    'COLLECTION',
-    'COLLECTION_PATTERN',
-    'SCHEME',
-    'use_storage_inventory',
-    'VlassName',
-]
+__all__ = ['AD_SCHEME', 'COLLECTION', 'COLLECTION_PATTERN', 'QL_URL', 'SCHEME', 'SE_URL', 'VlassName']
+
 COLLECTION = 'VLASS'
 SCHEME = 'nrao'
 CADC_SCHEME = 'cadc'
 AD_SCHEME = 'ad'
 COLLECTION_PATTERN = '*'  # TODO what are acceptable naming patterns?
 
-
-# set in composable.py
-use_storage_inventory = True
-
-
-def set_use_storage_inventory(to_flag_value):
-    global use_storage_inventory
-    use_storage_inventory = to_flag_value
+QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
+SE_URL = 'https://archive-new.nrao.edu/vlass/se_continuum_imaging/'
 
 
 class VlassName(mc.StorageName):
@@ -114,39 +100,14 @@ class VlassName(mc.StorageName):
         self,
         entry=None,
     ):
-        self._collection = COLLECTION
-        self._entry = entry
         temp = urlparse(entry)
         if temp.scheme == '':
-            self._url = None
-            self._file_name = basename(entry.replace('.header', ''))
+            file_name = basename(entry.replace('.header', ''))
         else:
-            if temp.scheme.startswith('http'):
-                self._url = entry
-                self._file_name = temp.path.split('/')[-1]
-            else:
-                # it's an Artifact URI
-                self._url = None
-                self._file_name = temp.path.split('/')[-1]
-        self._obs_id = VlassName.get_obs_id_from_file_name(self._file_name)
-        self._product_id = VlassName.get_product_id_from_file_name(
-            self._file_name
-        )
-        self._file_id = VlassName.remove_extensions(self._file_name)
-        self._version = VlassName.get_version(self._file_name)
-        self._scheme = SCHEME if use_storage_inventory else AD_SCHEME
-        self._source_names = [entry]
-        self._destination_uris = [self.file_uri]
-        self._logger = logging.getLogger(self.__class__.__name__)
-        self._logger.debug(self)
-
-    @property
-    def archive(self):
-        return self._archive
-
-    @property
-    def collection(self):
-        return self._collection
+            file_name = temp.path.split('/')[-1]
+        super().__init__(file_name=file_name, source_names=[entry])
+        self.set_root_url()
+        self.set_version()
 
     @property
     def epoch(self):
@@ -154,25 +115,12 @@ class VlassName(mc.StorageName):
         return f'{bits[0]}.{bits[1]}'
 
     @property
-    def file_id(self):
-        return self._file_id
-
-    @property
-    def file_uri(self):
-        """No .gz extension, unlike the default implementation."""
-        return self._get_uri(self._file_name, self._scheme)
-
-    @property
-    def file_name(self):
-        return self._file_name
-
-    @property
     def image_pointing_url(self):
         bits = self._file_name.split('.')
-        return (
-            f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.'
-            f'{bits[5]}.{bits[6]}.{bits[7]}/'
-        )
+        if self.is_quicklook():
+            return f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.{bits[5]}.{bits[6]}.{bits[7]}/'
+        else:
+            return f'{self.tile_url}{self.epoch}.se.{self.tile}.{bits[4]}.{bits[5]}.{bits[6]}.{bits[7]}/'
 
     @property
     def prev(self):
@@ -180,24 +128,16 @@ class VlassName(mc.StorageName):
 
     @property
     def prev_uri(self):
-        scheme = CADC_SCHEME if use_storage_inventory else AD_SCHEME
-        return self._get_uri(self.prev, scheme)
-
-    @property
-    def product_id(self):
-        return self._product_id
+        temp = 'ad' if mc.StorageName.scheme == 'ad' else 'cadc'
+        return mc.build_uri(mc.StorageName.collection, self.prev, temp)
 
     @property
     def rejected_url(self):
-        return f'{scrape.QL_URL}{self.epoch}/QA_REJECTED/'
+        return f'{self._root_url}{self.epoch}/QA_REJECTED/'
 
     @property
-    def scheme(self):
-        return self._scheme
-
-    @property
-    def source_names(self):
-        return [self.entry]
+    def root_url(self):
+        return self._root_url
 
     @property
     def thumb(self):
@@ -205,20 +145,22 @@ class VlassName(mc.StorageName):
 
     @property
     def thumb_uri(self):
-        scheme = CADC_SCHEME if use_storage_inventory else AD_SCHEME
-        return self._get_uri(self.thumb, scheme)
-
+        temp = 'ad' if mc.StorageName.scheme == 'ad' else 'cadc'
+        return mc.build_uri(mc.StorageName.collection, self.thumb, temp)
+        
     @property
     def tile(self):
         return self._file_name.split('.')[3]
 
     @property
     def tile_url(self):
-        return f'{scrape.QL_URL}{self.epoch}/{self.tile}/'
+        return f'{self._root_url}{self.epoch}/{self.tile}/'
 
-    @property
-    def url(self):
-        return self._url
+    def is_catalog(self):
+        return '.catalog.' in self._file_name
+
+    def is_quicklook(self):
+        return '.ql.' in self._file_name
 
     def is_valid(self):
         return True
@@ -227,8 +169,31 @@ class VlassName(mc.StorageName):
     def version(self):
         return self._version
 
-    def _get_uri(self, file_name, scheme):
-        return cc.build_artifact_uri(file_name, self._collection, scheme)
+    def set_obs_id(self, **kwargs):
+        """The obs id is made of the VLASS epoch, tile name, and image centre
+        from the file name.
+        """
+        self._obs_id = VlassName.get_obs_id_from_file_name(self._file_name)
+
+    def set_product_id(self, **kwargs):
+        """The product id is made of the obs id plus the string 'quicklook'."""
+        if self.is_quicklook():
+            self._product_id = f'{self._obs_id}.quicklook'
+        else:
+            self._product_id = f'{self._obs_id}.continuum_imaging'
+
+    def set_root_url(self):
+        self._root_url = SE_URL
+        if self.is_quicklook():
+            self._root_url = QL_URL
+
+    def set_version(self):
+        """The parameter may be a URI, or just the file name."""
+        # file name looks like:
+        # 'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.pbcor.tt0.rms.subim.fits'
+        bits = self._file_name.split('.')
+        version_str = bits[7].replace('v', '')
+        self._version = mc.to_int(version_str)
 
     @staticmethod
     def get_obs_id_from_file_name(file_name):
@@ -236,27 +201,7 @@ class VlassName(mc.StorageName):
         from the file name.
         """
         bits = file_name.split('.')
-        obs_id = f'{bits[0]}.{bits[1]}.{bits[3]}.{bits[4]}'
-        return obs_id
-
-    @staticmethod
-    def get_product_id_from_file_name(file_name):
-        """The product id is made of the obs id plus the string 'quicklook'."""
-        obs_id = VlassName.get_obs_id_from_file_name(file_name)
-        return f'{obs_id}.quicklook'
-
-    @staticmethod
-    def get_version(entry):
-        """The parameter may be a URI, or just the file name."""
-        # file name looks like:
-        # 'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.
-        #                'pbcor.tt0.rms.subim.fits'
-        file_name = entry
-        if '/' in entry:
-            file_name = mc.CaomName(entry).file_name
-        bits = file_name.split('.')
-        version_str = bits[7].replace('v', '')
-        return mc.to_int(version_str)
+        return f'{bits[0]}.{bits[1]}.{bits[3]}.{bits[4]}'
 
     @staticmethod
     def remove_extensions(file_name):

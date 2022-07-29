@@ -67,55 +67,45 @@
 # ***********************************************************************
 #
 
-import logging
 import os
 
 from datetime import datetime, timezone
-from mock import ANY, patch, Mock
+from dateutil import tz
+from mock import ANY, call, patch, Mock
 
-from cadctap import CadcTapClient
-from caom2pipe import astro_composable as ac
+from cadcdata import FileInfo
 from caom2pipe import execute_composable as ec
-from caom2pipe import manage_composable as mc
+from caom2pipe.manage_composable import (
+    Config, Metrics, Observable, read_obs_from_file, Rejected, StorageName, write_as_yaml, write_obs_to_file
+)
+from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
 from caom2 import SimpleObservation, Algorithm
-from vlass2caom2 import composable, VlassName, COLLECTION, scrape
-from vlass2caom2 import SCHEME
+from vlass2caom2 import (
+    COLLECTION, composable, data_source, SCHEME, storage_name, VLASS_BOOKMARK, VlassName
+)
+import test_data_source
 import test_main_app
-import test_scrape
 
 
-@patch('caom2pipe.manage_composable.query_endpoint_session')
+STATE_FILE = os.path.join(test_main_app.TEST_DATA_DIR, 'state.yml')
+
+
+@patch('caom2pipe.client_composable.ClientCollection')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-@patch('caom2pipe.client_composable.StorageClientWrapper')
-def test_run_by_builder(
-    data_client_mock, exec_mock, query_endpoint_mock
-):
-    query_endpoint_mock.side_effect = test_scrape._query_endpoint
-    data_client_mock.return_value.info.side_effect = (
-        _mock_get_file_info
-    )
-    data_client_mock.return_value.get_head.side_effect = (
-        ac.make_headers_from_file
-    )
-
+def test_run_by_builder(exec_mock, clients_mock):
+    # clients_mock - avoid initialization errors against real services
     exec_mock.return_value = 0
 
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
 
-    test_config = mc.Config()
+    test_config = Config()
     test_config.get_executors()
 
-    test_f_name = (
-        'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.'
-        'image.pbcor.tt0.subim.fits'
-    )
+    test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
     with open(test_config.work_fqn, 'w') as f:
         f.write(f'{test_f_name}\n')
-
-    # the equivalent of calling work.init_web_log()
-    scrape.web_log_content['abc'] = 123
 
     try:
         # execution
@@ -127,34 +117,34 @@ def test_run_by_builder(
             os.unlink(test_config.work_fqn)
 
     assert exec_mock.called, 'expect to be called'
-    exec_mock.assert_called_with(ANY), 'wrong args'
+    args, kwargs = exec_mock.call_args
+    arg_0 = args[0]
+    assert isinstance(arg_0, VlassName), 'wrong parameter type'
+    assert arg_0.obs_id == 'VLASS1.2.T07t13.J083838-153000', 'wrong obs id'
+    assert arg_0.source_names[0] == test_f_name, 'wrong source name'
+    assert arg_0.destination_uris[0] == f'{SCHEME}:{COLLECTION}/{test_f_name}', 'wrong destination uri'
 
 
-@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
-@patch('caom2pipe.client_composable.StorageClientWrapper')
-@patch('vlass2caom2.scrape.build_file_url_list')
+@patch('caom2pipe.client_composable.ClientCollection')
+@patch('vlass2caom2.data_source.QuicklookPage._build_todo')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run_state(run_mock, query_mock, data_client_mock, url_mock):
-    url_mock.return_value = 'https://localhost'
+def test_run_state(run_mock, query_mock, client_mock):
 
-    def _mock_file_url_list(ignore_start_time):
+    def _mock_append_work():
         a = {
             # 2019-04-24 12:34:00 UTC
             1556109240.0: [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
-                'T07t13/VLASS1.1.ql.T07t13.J083838-153000.10.2048.v1.I.'
-                'iter1.image.pbcor.tt0.rms.subim.fits',
+                'T07t13/VLASS1.1.ql.T07t13.J083838-153000.10.2048.v1/',
             ],
             1556175640.0: [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
-                'T07t13/VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.'
-                'iter1.image.pbcor.tt0.rms.subim.fits',
+                'T07t13/VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/',
             ],
             # 2019-04-25 12:34:00 UTC
             1556195640.0: [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
-                'T07t13/VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1.I.'
-                'iter1.image.pbcor.tt0.rms.subim.fits',
+                'T07t13/VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1/',
             ],
         }
         b = datetime(
@@ -168,98 +158,112 @@ def test_run_state(run_mock, query_mock, data_client_mock, url_mock):
         )
         return a, b
 
-    test_scrape._write_state('24Apr2019 12:34')
-    query_mock.side_effect = _mock_file_url_list
+    _write_state('24Apr2019 12:34')
+    query_mock.side_effect = _mock_append_work
     run_mock.return_value = 0
-    data_client_mock.return_value.get_file_info.side_effect = (
-        _mock_get_file_info
-    )
+    client_mock.data_client.info.side_effect = _mock_get_file_info
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
-    orig_client = CadcTapClient.__init__
-    CadcTapClient.__init__ = Mock(return_value=None)
-
-    # the equivalent of calling work.init_web_log()
-    scrape.web_log_content['abc'] = 123
 
     test_obs_id = 'VLASS2.1.T07t13.J083838-153000'
     test_product_id = 'VLASS2.1.T07t13.J083838-153000.quicklook'
-    test_f_name = (
-        'VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.'
-        'image.pbcor.tt0.rms.subim.fits'
-    )
+    test_f_name = 'VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
     try:
         # execution
-        test_result = composable._run_state()
+        test_config, test_metadata_reader, test_source, test_name_builder, ignore_clients = composable._common_init()
+        test_source._max_time = datetime(2019, 4, 27, tzinfo=tz.gettz('US/Mountain'))
+        test_metadata_reader._client = client_mock.data_client
+        test_result = run_composable.run_by_state(
+            config=test_config,
+            bookmark_name=VLASS_BOOKMARK,
+            meta_visitors=composable.META_VISITORS,
+            data_visitors=composable.DATA_VISITORS,
+            name_builder=test_name_builder,
+            source=test_source,
+            end_time=test_source.max_time,
+            store_transfer=transfer_composable.HttpTransfer(),
+            metadata_reader=test_metadata_reader,
+            clients=client_mock,
+        )
         assert test_result == 0, 'mocking correct execution'
 
-        # assert query_mock.called, 'service query not created'
-        # assert builder_data_mock.return_value.get_file.called, \
-        #     'get_file not called'
         assert run_mock.called, 'should have been called'
         args, kwargs = run_mock.call_args
         test_storage = args[0]
         assert isinstance(test_storage, VlassName), type(test_storage)
         assert test_storage.obs_id == test_obs_id, 'wrong obs id'
-        assert test_storage.file_name == test_f_name, 'wrong file name'
-        assert test_storage.url.startswith(
+        assert test_storage.product_id == test_product_id, 'wrong product id'
+        assert test_storage.file_name == test_f_name, f'wrong file name {test_storage.file_name}'
+        assert test_storage.source_names[0].startswith(
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS'
         ), f'wrong url start format {test_storage.url}'
-        assert test_storage.url.endswith(
+        assert test_storage.source_names[0].endswith(
             '.fits'
         ), f'wrong url end format {test_storage.url}'
-        assert test_storage.external_urls is None, 'wrong external urls'
     finally:
         os.getcwd = getcwd_orig
-        CadcTapClient.__init__ = orig_client
 
 
 @patch('vlass2caom2.time_bounds_augmentation.visit')
 @patch('caom2pipe.transfer_composable.HttpTransfer')
-@patch('caom2pipe.manage_composable.query_endpoint_session')
-@patch('caom2pipe.client_composable.CAOM2RepoClient')
-@patch('caom2pipe.client_composable.StorageClientWrapper')
+@patch('vlass2caom2.data_source.query_endpoint_session')
+@patch('caom2pipe.client_composable.ClientCollection')
 def test_run_state_store_ingest(
-    data_client_mock,
-    repo_client_mock,
+    client_mock,
     query_mock,
     transferrer_mock,
     visit_mock,
 ):
     test_dir = f'{test_main_app.TEST_DATA_DIR}/store_ingest_test'
     transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
-    data_client_mock.return_value.get_head.side_effect = _mock_headers_read
-    data_client_mock.return_value.info.side_effect = _mock_get_file_info_1
+    client_mock.data_client.get_head.side_effect = _mock_headers_read
+    client_mock.data_client.info.side_effect = _mock_get_file_info_1
     visit_mock.side_effect = _mock_visit
     test_state_fqn = f'{test_dir}/state.yml'
-    test_scrape._write_state('28Apr2019 12:34', test_state_fqn)
-    query_mock.side_effect = test_scrape._query_endpoint
-    repo_client_mock.return_value.read.return_value = None
+    _write_state('28Apr2019 12:34', test_state_fqn)
+    query_mock.side_effect = test_data_source._query_quicklook_endpoint
+    client_mock.metadata_client.read.return_value = None
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_dir)
     try:
-        test_result = composable._run_state()
+        test_config, test_metadata_reader, test_source, test_name_builder, ignore_clients = composable._common_init()
+        test_source._max_time = datetime(2019, 5, 2, tzinfo=tz.gettz('US/Mountain'))
+        test_metadata_reader._client = client_mock.data_client
+        test_result = run_composable.run_by_state(
+            config=test_config,
+            bookmark_name=VLASS_BOOKMARK,
+            meta_visitors=composable.META_VISITORS,
+            data_visitors=composable.DATA_VISITORS,
+            name_builder=test_name_builder,
+            source=test_source,
+            end_time=test_source.max_time,
+            store_transfer=transferrer_mock,
+            metadata_reader=test_metadata_reader,
+            clients=client_mock,
+        )
         assert test_result is not None, 'expect result'
         assert test_result == 0, 'expect success'
-        assert repo_client_mock.return_value.read.called, 'read called'
-        assert query_mock.called, 'what about you?'
-        args, kwargs = query_mock.call_args
-        assert args[0].startswith(
-            'https://archive-new.nrao.edu/'
-        ), 'should be a URL'
+        assert client_mock.metadata_client.read.called, 'read called'
+        assert client_mock.metadata_client.read.call_count == 20, 'read call count'
+        assert query_mock.called, 'query endpoint session calls'
+        assert query_mock.call_count == 21, 'wrong endpoint session call count'
+        query_mock.assert_called_with(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.2/QA_REJECTED/', ANY
+        ), 'query mock call args'
         # make sure data is not being written to CADC storage :)
-        assert data_client_mock.return_value.put.called, 'put should be called'
-        assert (
-            data_client_mock.return_value.put.call_count == 18
-        ), 'wrong number of puts'
-        data_client_mock.return_value.put.assert_called_with(
-            '/usr/src/app/vlass2caom2/vlass2caom2/tests/data/'
-            'store_ingest_test/VLASS1.2.T07t13.J083838-153000',
-            'nrao:VLASS/'
-            'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.'
-            'pbcor.tt0.rms.subim.fits',
-            None,
+        assert client_mock.data_client.put.called, 'put should be called'
+        assert client_mock.data_client.put.call_count == 20, 'wrong number of puts'
+        client_mock.data_client.put.assert_called_with(
+            '/usr/src/app/vlass2caom2/vlass2caom2/tests/data/store_ingest_test/VLASS1.2.T21t15.J141833+413000',
+            'ad:VLASS/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits',
+            'raw',
         )
+
+        test_obs_output = read_obs_from_file(f'{test_dir}/logs/VLASS1.2.T07t13.J083838-153000.xml')
+        for plane in test_obs_output.planes.values():
+            for artifact in plane.artifacts.values():
+                assert artifact.content_checksum.uri == 'md5:abc', 'artifact metadata not updated'
+
     finally:
         os.getcwd = getcwd_orig
         test_rejected_fqn = f'{test_dir}/rejected.yml'
@@ -267,53 +271,65 @@ def test_run_state_store_ingest(
         for entry in [test_state_fqn, test_rejected_fqn]:
             if os.path.exists(entry):
                 os.unlink(entry)
-        with os.scandir(test_log_dir) as entries:
-            for entry in entries:
-                os.unlink(entry)
-        os.rmdir(test_log_dir)
+
+        if os.path.exists(test_log_dir):
+            with os.scandir(test_log_dir) as entries:
+                for entry in entries:
+                    os.unlink(entry)
+            os.rmdir(test_log_dir)
 
 
 def test_store():
-    test_config = mc.Config()
-    test_config.logging_level = 'ERROR'
-    test_config.working_directory = '/tmp'
-    test_url = (
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
-        'T10t12/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/'
-        'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.image.'
-        'pbcor.tt0.rms.subim.fits'
-    )
-    test_storage_name = VlassName(test_url)
-    transferrer = Mock()
-    cadc_data_client = Mock()
-    observable = mc.Observable(
-        mc.Rejected('/tmp/rejected.yml'), mc.Metrics(test_config)
-    )
-    test_subject = ec.Store(
-        test_config,
-        test_storage_name,
-        cadc_data_client,
-        observable,
-        transferrer,
-    )
-    test_subject.execute(None)
-    assert cadc_data_client.put.called, 'expect a call'
-    cadc_data_client.put.assert_called_with(
-        '/tmp/VLASS2.1.T10t12.J073401-033000',
-        f'{SCHEME}:VLASS/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.'
-        f'iter1.image.pbcor.tt0.rms.subim.fits',
-        None,
-    ), 'wrong put args'
-    assert transferrer.get.called, 'expect a transfer call'
-    test_f_name = (
-        'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.'
-        'image.pbcor.tt0.rms.subim.fits'
-    )
-    transferrer.get.assert_called_with(
-        f'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T10t12/'
-        f'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/{test_f_name}',
-        f'/tmp/VLASS2.1.T10t12.J073401-033000/{test_f_name}',
-    ), 'wrong transferrer args'
+    orig_scheme = StorageName.scheme
+    orig_collection = StorageName.collection
+    try:
+        StorageName.collection = COLLECTION
+        StorageName.scheme = SCHEME
+        test_config = Config()
+        test_config.logging_level = 'ERROR'
+        test_config.working_directory = '/tmp'
+        test_url = (
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
+            'T10t12/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/'
+            'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.image.'
+            'pbcor.tt0.rms.subim.fits'
+        )
+        test_storage_name = VlassName(test_url)
+        transferrer = Mock()
+        clients_mock = Mock()
+        observable = Observable(
+            Rejected('/tmp/rejected.yml'), Metrics(test_config)
+        )
+        test_metadata_reader = Mock()
+        test_subject = ec.Store(
+            test_config,
+            test_storage_name,
+            observable,
+            transferrer,
+            clients_mock,
+            test_metadata_reader,
+        )
+        test_subject.execute(None)
+        assert clients_mock.data_client.put.called, 'expect a call'
+        clients_mock.data_client.put.assert_called_with(
+            '/tmp/VLASS2.1.T10t12.J073401-033000',
+            f'{SCHEME}:VLASS/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.'
+            f'iter1.image.pbcor.tt0.rms.subim.fits',
+            None,
+        ), 'wrong put args'
+        assert transferrer.get.called, 'expect a transfer call'
+        test_f_name = (
+            'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.'
+            'image.pbcor.tt0.rms.subim.fits'
+        )
+        transferrer.get.assert_called_with(
+            f'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T10t12/'
+            f'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/{test_f_name}',
+            f'/tmp/VLASS2.1.T10t12.J073401-033000/{test_f_name}',
+        ), 'wrong transferrer args'
+    finally:
+        StorageName.scheme = orig_scheme
+        StorageName.collection = orig_collection
 
 
 def _cmd_direct_mock():
@@ -333,7 +349,7 @@ def _mock_service_query():
 
 def _mock_get_file_info(arg1, arg2):
     # arg2 is the file name
-    return {'name': arg2}
+    return FileInfo(id=arg2, md5sum='abc')
 
 
 def _mock_get_file_info_1(arg2):
@@ -381,7 +397,25 @@ def _write_obs_mock():
         observation_id=args.observation[1],
         algorithm=Algorithm(name='exposure'),
     )
-    mc.write_obs_to_file(obs, args.out_obs_xml)
+    write_obs_to_file(obs, args.out_obs_xml)
+
+
+def _write_state(start_time_str, f_name=STATE_FILE):
+    test_time = data_source.QuicklookPage.make_date_time(start_time_str)
+    test_bookmark = {
+        'bookmarks': {
+            'vlass_timestamp': {'last_record': test_time},
+        },
+        'context': {
+            'vlass_context': {
+                'VLASS1.1': '01-Jan-2018 00:00',
+                'VLASS1.2v2': '01-Nov-2018 00:00',
+                'VLASS2.1': '01-Jul-2020 00:00',
+                'VLASS2.2': '01-Jul-2021 00:00',
+            },
+        },
+    }
+    write_as_yaml(test_bookmark, f_name)
 
 
 def _mock_retrieve_file(ignore, local_fqn):
@@ -396,8 +430,7 @@ def _mock_headers_read(ignore):
 def _mock_visit(
     obs,
     working_directory=None,
-    cadc_client=None,
-    caom_repo_client=None,
+    clients=None,
     stream=None,
     storage_name=None,
     metadata_reader=None,

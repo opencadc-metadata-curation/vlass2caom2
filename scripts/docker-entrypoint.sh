@@ -5,11 +5,6 @@ then
   cp /usr/local/.config/config.yml ${PWD}
 fi
 
-if [[ ! -e ${PWD}/cache.yml ]]
-then
-  cp /usr/local/.config/cache.yml ${PWD}
-fi
-
 if [[ ! -e ${PWD}/state.yml ]]
 then
   yesterday=$(date -d yesterday "+%d-%b-%Y %H:%M")

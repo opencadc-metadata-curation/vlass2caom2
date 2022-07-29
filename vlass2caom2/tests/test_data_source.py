@@ -68,24 +68,264 @@
 #
 
 from datetime import datetime
+from dateutil import tz
+from os.path import dirname, join, realpath
 
-from vlass2caom2 import data_source as ds
+from caom2pipe.manage_composable import Config
+from vlass2caom2.data_source import ContinuumImagingPage, NraoPages, QuicklookPage, WebLogMetadata
+from vlass2caom2 import storage_name
+
+from mock import Mock, patch
+
+THIS_DIR = dirname(realpath(__file__))
+TEST_DATA_DIR = join(THIS_DIR, 'data')
+TEST_START_TIME_STR = '24Apr2019 12:34'
+ALL_FIELDS = join(TEST_DATA_DIR, 'all_fields_list.html')
+CROSS_EPOCH = join(TEST_DATA_DIR, 'cross_epoch.html')
+PIPELINE_INDEX = join(TEST_DATA_DIR, 'pipeline_weblog_quicklook.htm')
+QL_INDEX = join(TEST_DATA_DIR, 'vlass_quicklook.html')
+REJECT_INDEX = join(TEST_DATA_DIR, 'rejected_index.html')
+SE_OBS_ID_PAGE = join(TEST_DATA_DIR, 'se_obs_id_page.html')
+SE_SINGLE_PAGE = join(TEST_DATA_DIR, 'se_single_page.html')
+SE_TILE_PAGE = join(TEST_DATA_DIR, 'se_tile_page.html')
+SINGLE_FIELD_DETAIL = join(TEST_DATA_DIR, 'single_field_detail.html')
+SINGLE_TILE = join(TEST_DATA_DIR, 'single_tile_list.html')
+SPECIFIC_NO_FILES = join(TEST_DATA_DIR, 'no_files.html')
+SPECIFIC_REJECTED = join(TEST_DATA_DIR, 'specific_rejected.html')
+SE_TOP_PAGE = join(TEST_DATA_DIR, 'se_top_page.html')
+
+test_time_zone = tz.gettz('US/Mountain')
 
 
-def test_get_time_box_work():
-    test_todo_list = {
-        1585092104: ['a.fits'],
-        1585092204: ['b.fits'],
-        1585092304: ['c.fits'],
-    }
-    prev_exec_time = datetime.fromtimestamp(1585092199).timestamp()
-    exec_time = datetime.fromtimestamp(1585092209).timestamp()
-    test_subject = ds.NraoPage(test_todo_list)
-    test_result = test_subject.get_time_box_work(prev_exec_time, exec_time)
-    assert test_result is not None, 'expected a result'
-    assert len(test_result) == 1, 'wrong number of results'
-    result = False
-    for entry in test_result:
-        result = True
-        assert 'b.fits' == entry.entry_name, 'wrong result content'
-    assert result, 'make sure the for loop did something'
+def test_parse_functions():
+    # test _parse_* functions in the DataSource specializations
+    test_config = Config()
+    test_config.data_source_extensions = ['.fits', '.csv']
+    test_config.state_file_name = 'state.yml'
+    test_config.state_fqn = join(TEST_DATA_DIR, 'state.yml')
+    test_subject = ContinuumImagingPage(test_config, storage_name.QL_URL)
+    assert test_subject is not None, 'ctor failure'
+    test_subject._start_time = QuicklookPage.make_date_time(TEST_START_TIME_STR)
+
+    with open(SINGLE_TILE) as f:
+        test_content = f.read()
+        test_result = test_subject._parse_id_page(test_content)
+        assert test_result is not None, 'expected a result'
+        assert len(test_result) == 3, 'wrong number of results'
+        first_answer = next(iter(sorted(test_result.items())))
+        assert len(first_answer) == 2, 'wrong number of results'
+        assert first_answer[0] == 'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+        assert first_answer[1] == datetime(2019, 4, 26, 9, 19, tzinfo=test_time_zone)
+
+    with open(REJECT_INDEX) as f:
+        test_content = f.read()
+        test_epoch = 'VLASS1.2v2'
+        test_url = 'https://localhost:8080/VLASS1.2/QA_REJECTED/'
+        test_result, test_max = test_subject._parse_rejected_page(test_content, test_epoch, test_url)
+        assert test_result is not None, 'expect a result'
+        assert len(test_result) == 1, 'wrong number of results'
+        temp = test_result.popitem()
+        assert (
+            temp[1][0] == 'https://localhost:8080/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
+        )
+        assert test_max is not None, 'expected max result'
+        assert test_max == datetime(2019, 5, 1, 4, 30, tzinfo=test_time_zone), 'wrong date result'
+
+    with open(ALL_FIELDS) as f:
+        test_content = f.read()
+        test_result = test_subject._parse_tile_page(test_content)
+        assert test_result is not None, 'expected a result'
+        assert len(test_result) == 4, 'wrong number of results'
+        first_answer = next(iter(test_result.items()))
+        assert len(first_answer) == 2, 'wrong number of results'
+        assert first_answer[0] == 'T07t13/', 'wrong content'
+        assert first_answer[1] == datetime(2019, 4, 29, 2, 2, tzinfo=test_time_zone)
+
+    with open(SE_TOP_PAGE) as f:
+        test_content = f.read()
+        test_result = test_subject._parse_top_page_no_date(test_content)
+        assert test_result is not None, 'expect a top page result'
+        assert len(test_result) == 1, 'wrong top page length'
+        assert 'VLASS2.1/' in test_result, 'wrong top page test result'
+        assert test_result['VLASS2.1/'] == datetime(2022, 7, 26, 10, 31, tzinfo=test_time_zone), 'wrong top page value'
+
+    with open(SE_SINGLE_PAGE) as f:
+        test_content = f.read()
+        test_result = test_subject._parse_specific_file_list_page(test_content)
+        assert test_result is not None, 'expect a specific page result'
+        assert len(test_result) == 7, 'wrong specific page length'
+
+    with open(SPECIFIC_REJECTED) as f:
+        test_content = f.read()
+        test_result = test_subject._parse_specific_rejected_page(test_content)
+        assert test_result is not None, 'expected a result'
+        assert len(test_result) == 2, 'wrong result'
+        assert (
+            'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.'
+            'pbcor.tt0.rms.subim.fits' in test_result
+        ), 'wrong content'
+
+
+def test_metadata_scrape():
+    test_state = Mock()
+    mock_session = Mock()
+    test_subject = WebLogMetadata(test_state, mock_session)
+    assert test_subject is not None, 'ctor failure'
+
+    with open(SINGLE_FIELD_DETAIL) as f:
+        test_content = f.read()
+        test_result = test_subject._parse_single_field(test_content)
+        assert test_result is not None, 'expected a result'
+        assert len(test_result) == 4, 'wrong number of fields'
+        assert (
+            test_result['Pipeline Version'] == '42270 (Pipeline-CASA54-P2-B)'
+        ), 'wrong pipeline'
+        assert (
+            test_result['Observation Start'] == '2019-04-12 00:10:01'
+        ), 'wrong start'
+        assert (
+            test_result['Observation End'] == '2019-04-12 00:39:18'
+        ), 'wrong end'
+        assert test_result['On Source'] == '0:03:54', 'wrong tos'
+
+
+@patch('vlass2caom2.data_source.query_endpoint_session')
+def test_quicklook(query_endpoint_mock):
+    query_endpoint_mock.side_effect = _query_quicklook_endpoint
+    test_config = Config()
+    test_config.state_file_name = 'state.yml'
+    test_config.state_fqn = join(TEST_DATA_DIR, 'state.yml')
+    test_config.data_sources = [storage_name.QL_URL]
+    test_subject = NraoPages(test_config)
+    assert test_subject is not None, 'ctor failure'
+    test_start_time = QuicklookPage.make_date_time(TEST_START_TIME_STR)
+    test_subject.set_start_time(test_start_time)
+    test_result = test_subject.get_time_box_work(
+        test_start_time.timestamp(), datetime.fromtimestamp(1556311111).timestamp()
+    )
+    assert test_result is not None, 'expected dict result'
+    assert len(test_result) == 24, 'wrong size results'
+    temp = sorted([ii.entry_name for ii in test_result])
+    assert (
+        temp[0]
+        == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
+           'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+           'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
+    ), 'wrong result'
+    assert test_subject.max_time is not None, 'expected date result'
+    assert test_subject.max_time == datetime(2019, 4, 28, 9, 18, tzinfo=test_time_zone), 'wrong date result'
+
+
+@patch('vlass2caom2.data_source.query_endpoint_session')
+def test_continuum(query_endpoint_mock):
+    import logging
+    logging.getLogger('ContinuumImagingPage').setLevel(logging.INFO)
+    query_endpoint_mock.side_effect = _query_continuum_endpoint
+    test_config = Config()
+    test_config.state_file_name = 'state.yml'
+    test_config.state_fqn = join(TEST_DATA_DIR, 'state.yml')
+    test_config.data_sources = [storage_name.SE_URL]
+    test_subject = NraoPages(test_config)
+    assert test_subject is not None, 'ctor failure'
+    test_start_time = datetime(2022, 5, 15, 0, 0, 0, tzinfo=test_time_zone)
+    test_subject.set_start_time(test_start_time)
+    test_result = test_subject.get_time_box_work(
+        test_start_time.timestamp(), datetime(2022, 6, 24, 0, 0, 0).timestamp()
+    )
+    # test_result, test_max_date = scrape.build_todo(TEST_START_TIME)
+    assert test_result is not None, 'expected dict result'
+    # 36 == the same 6 files returned for each of 3 observations * 2 tiles
+    assert len(test_result) == 36, 'wrong size results'
+    temp = sorted([ii.entry_name for ii in test_result])
+    assert (
+        temp[0]
+        == 'https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T10t01/'
+           'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1/'
+           'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.alpha.error.subim.fits'
+    ), f'wrong result {temp[0]}'
+    assert test_subject.max_time is not None, 'expected date result'
+    assert test_subject.max_time == datetime(2022, 5, 16, 10, 24, tzinfo=test_time_zone), 'wrong se date result'
+
+
+def _close():
+    pass
+
+
+def _query_quicklook_endpoint(url, session, timeout=-1):
+    result = type('response', (), {})
+    result.text = None
+    result.close = _close
+
+    if (
+        url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/'
+               'T07t13/VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+    ):
+        with open(f'{TEST_DATA_DIR}/file_list.html', 'r') as f:
+            result.text = f.read()
+    elif (
+        url.startswith('https://archive-new.nrao.edu/vlass/quicklook/VLASS')
+        and url.endswith('.10.2048.v1/')
+        and 'QA_REJECTED' not in url
+    ):
+        with open(SPECIFIC_NO_FILES) as f:
+            result.text = f.read()
+    elif url.endswith('index.html'):
+        with open(SINGLE_FIELD_DETAIL) as f:
+            result.text = f.read()
+    elif url == storage_name.QL_URL:
+        with open(QL_INDEX) as f:
+            result.text = f.read()
+    elif 'vlass/quicklook/VLASS1.2v2/QA_REJECTED/VLASS1.2.ql' in url:
+        with open(SPECIFIC_REJECTED) as f:
+            result.text = f.read()
+    elif 'QA_REJECTED' in url:
+        with open(REJECT_INDEX) as f:
+            result.text = f.read()
+    elif len(url.split('/')) == 8:
+        if 'weblog' in url:
+            with open(PIPELINE_INDEX) as f:
+                result.text = f.read()
+        else:
+            if 'VLASS1.1' in url:
+                result.text = ''
+            else:
+                with open(SINGLE_TILE) as f:
+                    result.text = f.read()
+    elif (
+        url.endswith('VLASS1.1/')
+        or url.endswith('VLASS2.1/')
+        or url.endswith('VLASS2.2/')
+        or url.endswith('VLASS1.2v2/')
+    ):
+        with open(ALL_FIELDS) as f:
+            result.text = f.read()
+    else:
+        raise Exception(f'wut? {url}')
+    return result
+
+
+def _query_continuum_endpoint(url, session, timeout=-1):
+    result = type('response', (), {})
+    result.text = None
+    result.close = _close
+
+    # https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T10t01/
+    # VLASS2.1.se.T10t01.J000200-013000.06.2048.v1/
+    if (
+        url.startswith('https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T')
+        and url.endswith('.06.2048.v1/')
+    ):
+        with open(SE_SINGLE_PAGE) as f:
+            result.text = f.read()
+    elif url == 'https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/':
+        with open(SE_TILE_PAGE) as f:
+            result.text = f.read()
+    elif url == storage_name.SE_URL:
+        with open(SE_TOP_PAGE) as f:
+            result.text = f.read()
+    elif url.startswith('https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T'):
+        with open(SE_OBS_ID_PAGE) as f:
+            result.text = f.read()
+    else:
+        raise Exception(f'wut? {url}')
+    return result

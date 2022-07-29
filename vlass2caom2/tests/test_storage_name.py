@@ -67,96 +67,98 @@
 # ***********************************************************************
 #
 
+from caom2pipe.manage_composable import StorageName
 from caom2pipe import name_builder_composable as nbc
-from vlass2caom2 import storage_name as sn
+from vlass2caom2.storage_name import AD_SCHEME, COLLECTION, VlassName
 
 
 def test_storage_name():
-    sn.set_use_storage_inventory(True)
-    test_bit = (
-        'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.pbcor.tt0'
-    )
-    test_url = (
-        f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T23t09/'
-        f'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/{test_bit}.subim.fits'
-    )
-    ts1 = sn.VlassName(test_url)
-    ts2 = sn.VlassName(f'{test_bit}.subim.fits')
-    for ts in [ts1, ts2]:
-        assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
-        assert (
-            ts.product_id == 'VLASS1.2.T23t09.J083851+483000.quicklook'
-        ), 'wrong product id'
-        assert ts.file_name == f'{test_bit}.subim.fits', 'wrong fname'
-        assert ts.file_id == f'{test_bit}.subim', 'wrong fid'
-        assert (
-            ts.file_uri == f'{sn.SCHEME}:VLASS/{test_bit}.subim.fits'
-        ), 'wrong uri'
-        assert (
-            ts.model_file_name == 'VLASS1.2.T23t09.J083851+483000.xml'
-        ), 'wrong model name'
-        assert (
-            ts.log_file == 'VLASS1.2.T23t09.J083851+483000.log'
-        ), 'wrong log file'
-        assert (
-            sn.VlassName.remove_extensions(ts.file_name) == f'{test_bit}.subim'
-        ), 'wrong extensions'
-        assert ts.epoch == 'VLASS1.2', 'wrong epoch'
-        assert (
-            ts.tile_url == 'https://archive-new.nrao.edu/vlass/quicklook/'
-            'VLASS1.2/T23t09/'
-        ), 'wrong tile url'
-        assert (
-            ts.rejected_url == 'https://archive-new.nrao.edu/vlass/'
-            'quicklook/VLASS1.2/QA_REJECTED/'
-        ), 'wrong rejected url'
-        assert (
-            ts.image_pointing_url == 'https://archive-new.nrao.edu/vlass/'
-            'quicklook/VLASS1.2/T23t09/VLASS1.2.ql.'
-            'T23t09.J083851+483000.10.2048.v1/'
-        ), 'wrong image pointing url'
-        assert ts.prev == f'{test_bit}.subim_prev.jpg', 'wrong preview'
-        assert ts.thumb == f'{test_bit}.subim_prev_256.jpg', 'wrong thumbnail'
-        assert (
-            ts.prev_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
-            f'{test_bit}.subim_prev.jpg'
-        ), 'wrong preview uri'
-        assert (
-            ts.thumb_uri == f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
-            f'{test_bit}.subim_prev_256.jpg'
-        ), 'wrong thumbnail uri'
-    sn.set_use_storage_inventory(False)
-    ts1 = sn.VlassName(test_url)
-    ts2 = sn.VlassName(f'{test_bit}.subim.fits')
-    for ts in [ts1, ts2]:
-        assert (
-                ts.file_uri == f'{sn.AD_SCHEME}:VLASS/{test_bit}.subim.fits'
-        ), 'wrong uri'
-        assert (
-                ts.prev_uri == f'{sn.AD_SCHEME}:{sn.COLLECTION}/'
-                               f'{test_bit}.subim_prev.jpg'
-        ), 'wrong preview uri'
-        assert (
-                ts.thumb_uri == f'{sn.AD_SCHEME}:{sn.COLLECTION}/'
-                                f'{test_bit}.subim_prev_256.jpg'
-        ), 'wrong thumbnail uri'
+    original_collection = StorageName.collection
+    original_scheme = StorageName.scheme
+    scheme = AD_SCHEME
+    try:
+        StorageName.collection = COLLECTION
+        StorageName.scheme = scheme
+        test_bit = (
+            'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.pbcor.tt0'
+        )
+        test_url = (
+            f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T23t09/'
+            f'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/{test_bit}.subim.fits'
+        )
+        ts1 = VlassName(test_url)
+        ts2 = VlassName(f'{test_bit}.subim.fits')
+        for ts in [ts1, ts2]:
+            assert ts.obs_id == 'VLASS1.2.T23t09.J083851+483000', 'wrong obs id'
+            assert (
+                ts.product_id == 'VLASS1.2.T23t09.J083851+483000.quicklook'
+            ), 'wrong product id'
+            assert ts.file_name == f'{test_bit}.subim.fits', 'wrong fname'
+            assert ts.file_id == f'{test_bit}.subim', 'wrong fid'
+            assert ts.file_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim.fits', 'wrong uri'
+            assert (
+                ts.model_file_name == 'VLASS1.2.T23t09.J083851+483000.xml'
+            ), 'wrong model name'
+            assert (
+                ts.log_file == 'VLASS1.2.T23t09.J083851+483000.log'
+            ), 'wrong log file'
+            assert (
+                VlassName.remove_extensions(ts.file_name) == f'{test_bit}.subim'
+            ), 'wrong extensions'
+            assert ts.epoch == 'VLASS1.2', 'wrong epoch'
+            assert (
+                ts.tile_url == 'https://archive-new.nrao.edu/vlass/quicklook/'
+                'VLASS1.2/T23t09/'
+            ), 'wrong tile url'
+            assert (
+                ts.rejected_url == 'https://archive-new.nrao.edu/vlass/'
+                'quicklook/VLASS1.2/QA_REJECTED/'
+            ), 'wrong rejected url'
+            assert (
+                ts.image_pointing_url == 'https://archive-new.nrao.edu/vlass/'
+                'quicklook/VLASS1.2/T23t09/VLASS1.2.ql.'
+                'T23t09.J083851+483000.10.2048.v1/'
+            ), 'wrong image pointing url'
+            assert ts.prev == f'{test_bit}.subim_prev.jpg', 'wrong preview'
+            assert ts.thumb == f'{test_bit}.subim_prev_256.jpg', 'wrong thumbnail'
+            assert ts.prev_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim_prev.jpg', 'wrong preview uri'
+            assert ts.thumb_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim_prev_256.jpg', 'wrong thumbnail uri'
+
+        ts1 = VlassName(test_url)
+        ts2 = VlassName(f'{test_bit}.subim.fits')
+        for ts in [ts1, ts2]:
+            assert ts.file_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim.fits', 'wrong uri'
+            assert ts.prev_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim_prev.jpg', 'wrong preview uri'
+            assert ts.thumb_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim_prev_256.jpg', 'wrong thumbnail uri'
+    finally:
+        StorageName.collection = original_collection
+        StorageName.scheme = original_scheme
 
 
 def test_source_names():
-    test_url = (
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T23t09/'
-        'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/VLASS1.2.ql.T23t09.'
-        'J083851+483000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-    )
-    test_f_name = (
-        'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.pbcor.'
-        'tt0.subim.fits'
-    )
-    test_subject = nbc.EntryBuilder(sn.VlassName)
-    test_result = test_subject.build(test_url)
-    assert len(test_result.source_names) == 1, 'wrong length'
-    assert test_result.source_names[0] == test_url, 'wrong result'
+    original_collection = StorageName.collection
+    original_scheme = StorageName.scheme
+    scheme = AD_SCHEME
+    try:
+        StorageName.collection = COLLECTION
+        StorageName.scheme = scheme
+        test_url = (
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T23t09/'
+            'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/VLASS1.2.ql.T23t09.'
+            'J083851+483000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+        )
+        test_f_name = (
+            'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.pbcor.'
+            'tt0.subim.fits'
+        )
+        test_subject = nbc.EntryBuilder(VlassName)
+        test_result = test_subject.build(test_url)
+        assert len(test_result.source_names) == 1, 'wrong length'
+        assert test_result.source_names[0] == test_url, 'wrong result'
 
-    test_result = test_subject.build(test_f_name)
-    assert len(test_result.source_names) == 1, 'wrong length'
-    assert test_result.source_names[0] == test_f_name, 'wrong result'
+        test_result = test_subject.build(test_f_name)
+        assert len(test_result.source_names) == 1, 'wrong length'
+        assert test_result.source_names[0] == test_f_name, 'wrong result'
+    finally:
+        StorageName.collection = original_collection
+        StorageName.scheme = original_scheme
