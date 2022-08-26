@@ -169,7 +169,7 @@ def test_parse_functions():
 def test_metadata_scrape():
     test_state = Mock()
     mock_session = Mock()
-    test_subject = WebLogMetadata(test_state, mock_session)
+    test_subject = WebLogMetadata(test_state, mock_session, [storage_name.QL_URL])
     assert test_subject is not None, 'ctor failure'
 
     with open(SINGLE_FIELD_DETAIL) as f:
@@ -232,7 +232,6 @@ def test_continuum(query_endpoint_mock):
     test_result = test_subject.get_time_box_work(
         test_start_time.timestamp(), datetime(2022, 6, 24, 0, 0, 0).timestamp()
     )
-    # test_result, test_max_date = scrape.build_todo(TEST_START_TIME)
     assert test_result is not None, 'expected dict result'
     # 36 == the same 6 files returned for each of 3 observations * 2 tiles
     assert len(test_result) == 36, 'wrong size results'

@@ -100,7 +100,7 @@ def _common_init():
     mc.StorageName.scheme = 'nrao' if config.features.supports_latest_client else 'ad'
     state = mc.State(config.state_fqn)
     session = mc.get_endpoint_session()
-    web_log_metadata = data_source.WebLogMetadata(state, session)
+    web_log_metadata = data_source.WebLogMetadata(state, session, config.data_sources)
     source = data_source.NraoPages(config)
     clients = client_composable.ClientCollection(config)
     metadata_reader = reader.VlassStorageMetadataReader(clients.data_client, source, web_log_metadata)

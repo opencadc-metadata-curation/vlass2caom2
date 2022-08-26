@@ -88,9 +88,8 @@ from caom2pipe.manage_composable import (
 from vlass2caom2 import storage_name
 
 
-__all__ = ['ContinuumImagingPage', 'NraoPages', 'QuicklookPage', 'WebLogMetadata']
+__all__ = ['ContinuumImagingPage', 'NraoPages', 'QuicklookPage', 'WebLogMetadata', 'VLASS_BOOKMARK', 'VLASS_CONTEXT']
 
-QL_WEB_LOG_URL = 'https://archive-new.nrao.edu/vlass/weblog/quicklook/'
 VLASS_BOOKMARK = 'vlass_timestamp'
 VLASS_CONTEXT = 'vlass_context'
 
@@ -599,10 +598,11 @@ class ContinuumImagingPage(QuicklookPage):
 
 
 class WebLogMetadata:
-    def __init__(self, state, session):
+    def __init__(self, state, session, data_sources):
         self._state = state
         self._session = session
         self._web_log_content = {}
+        self._data_sources = data_sources
         self._logger = getLogger(self.__class__.__name__)
 
     def init_web_log(self):
@@ -629,24 +629,32 @@ class WebLogMetadata:
             self._logger.info('Initializing weblog content.')
             # start with no timeout value due to the large number of entries on
             # the page
-            with requests.get(QL_WEB_LOG_URL, stream=True) as r:
-                ctx = etree.iterparse(r.raw, html=True)
-                for event, elem in ctx:
-                    if elem.tag == 'a':
-                        href = elem.attrib.get('href')
-                        for epoch, start_date in epochs.items():
-                            # the weblog names don't have the epoch versions in them
-                            if href.startswith(epoch.replace('v2', '')):
-                                next_elem = elem.getparent().getnext()
-                                if next_elem is not None:
-                                    dt_str = next_elem.text
-                                    if dt_str is not None:
-                                        dt = QuicklookPage.make_date_time(dt_str.strip())
-                                        if dt >= start_date:
-                                            self._web_log_content[href] = dt
-                                        break
-                    elem.clear()
-                del ctx
+            for url in self._data_sources:
+                # urls look like:
+                # https://archive-new.nrao.edu/vlass/weblog/quicklook/
+                # https://archive-new.nrao.edu/vlass/weblog/se_continuum_imaging/
+                bits = url.split('vlass')
+                web_log_url = f'{bits[0]}vlass/weblog{bits[1]}'
+                self._logger.debug(f'Querying {web_log_url}')
+                with requests.get(web_log_url, stream=True) as r:
+                    ctx = etree.iterparse(r.raw, html=True)
+                    for event, elem in ctx:
+                        if elem.tag == 'a':
+                            href = elem.attrib.get('href')
+                            for epoch, start_date in epochs.items():
+                                # the weblog names don't have the epoch versions in them
+                                if href.startswith(epoch.replace('v2', '')):
+                                    next_elem = elem.getparent().getnext()
+                                    if next_elem is not None:
+                                        dt_str = next_elem.text
+                                        if dt_str is not None:
+                                            dt = QuicklookPage.make_date_time(dt_str.strip())
+                                            if dt >= start_date:
+                                                fq_url = f'{web_log_url}{href}'
+                                                self._web_log_content[fq_url] = dt
+                                            break
+                        elem.clear()
+                    del ctx
         else:
             self._logger.debug('weblog listing already cached.')
 
@@ -660,12 +668,17 @@ class WebLogMetadata:
             self.init_web_log()
         latest_key = None
         max_ts = None
-        tz_info = tz.gettz('US/Socorro')
+        tz_info = tz.gettz('US/Mountain')
         # there may be multiple processing runs for a single obs id, use the
         # most recent
+        # key looks like this:
+        # https://archive-new.nrao.edu/vlass/weblog/quicklook/
+        # VLASS1.1_T06t31.J203544-183000_P25997v1_2018_03_06T15_51_56.299/
         for key in self._web_log_content:
-            if key.startswith(mod_obs_id):
-                dt_bits = '_'.join(ii for ii in key.replace('/', '').split('_')[3:])
+            # -2 => URLs end with '/'
+            temp = key.split('/')[-2]
+            if temp.startswith(mod_obs_id):
+                dt_bits = '_'.join(ii for ii in temp.replace('/', '').split('_')[3:])
                 dt_tz = QuicklookPage.make_date_time(dt_bits).replace(tzinfo=tz_info)
                 if max_ts is None:
                     max_ts = dt_tz
@@ -675,13 +688,13 @@ class WebLogMetadata:
                         max_ts = dt_tz
                         latest_key = key
 
-        if latest_key is not None:
-            obs_url = f'{QL_WEB_LOG_URL}{latest_key}'
+        if latest_key is None:
+            self._logger.warning(f'Found not observation like {obs_id}.')
+        else:
+            obs_url = latest_key
             self._logger.debug(f'Querying {obs_url}')
             response = None
             try:
-                import logging
-                logging.error(query_endpoint_session)
                 response = query_endpoint_session(obs_url, self._session)
                 if response is None:
                     self._logger.error(f'Could not query {obs_url}')

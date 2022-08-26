@@ -110,7 +110,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
         test_config.get_executors()
         test_config.data_sources = [storage_name.QL_URL]
         test_state = State(test_config.state_fqn)
-        test_web_log = data_source.WebLogMetadata(test_state, Mock())
+        test_web_log = data_source.WebLogMetadata(test_state, Mock(), [storage_name.QL_URL])
         test_web_log.init_web_log()
         test_name = storage_name.VlassName(
             'VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
@@ -158,7 +158,7 @@ def test_aug_visit_quality_works(query_endpoint_mock, get_mock):
     test_config.state_fqn = f'{TEST_DATA_DIR}/state.yml'
     test_config.data_sources = [storage_name.QL_URL]
     test_state = State(test_config.state_fqn)
-    test_web_log = data_source.WebLogMetadata(test_state, Mock())
+    test_web_log = data_source.WebLogMetadata(test_state, Mock(), [storage_name.QL_URL])
     test_web_log.init_web_log()
     test_source = data_source.NraoPages(test_config)
     test_start_time = data_source.QuicklookPage.make_date_time(test_data_source.TEST_START_TIME_STR)

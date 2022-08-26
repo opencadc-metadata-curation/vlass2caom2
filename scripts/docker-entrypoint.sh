@@ -13,7 +13,7 @@ then
     last_record: $yesterday
 context:
   vlass_context:
-    VLASS1.1: 01-Jan-2018 00:00
+    VLASS1.1v2: 01-Jan-2018 00:00
     VLASS1.2v2: 01-Nov-2018 00:00
     VLASS2.1: 01-Jul-2020 00:00
     VLASS2.2: 01-Sep-2021 00:00
