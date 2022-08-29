@@ -303,13 +303,12 @@ def test_store():
         test_metadata_reader = Mock()
         test_subject = ec.Store(
             test_config,
-            test_storage_name,
             observable,
             transferrer,
             clients_mock,
             test_metadata_reader,
         )
-        test_subject.execute(None)
+        test_subject.execute({'storage_name': test_storage_name})
         assert clients_mock.data_client.put.called, 'expect a call'
         clients_mock.data_client.put.assert_called_with(
             '/tmp/VLASS2.1.T10t12.J073401-033000',
