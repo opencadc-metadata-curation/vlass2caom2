@@ -113,6 +113,7 @@ def visit(observation, **kwargs):
                 artifact.uri != storage_name.file_uri
                 or artifact.product_type != ProductType.SCIENCE
                 or 'alpha' in storage_name.file_uri
+                or '.fits' not in storage_name.file_uri
             ):
                 continue
             for part in artifact.parts.values():
