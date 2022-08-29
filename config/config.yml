@@ -7,8 +7,8 @@ proxy_file_name: /usr/src/app/cadcproxy.pem
 todo_file_name: todo.txt
 # values True False
 use_local_files: False
-# values DEBUG INFO WARN ERROR
-logging_level: DEBUG
+# values DEBUG INFO WARNING ERROR
+logging_level: INFO
 # values True False
 log_to_file: True
 # fully qualified name for a directory to write log files
@@ -30,6 +30,12 @@ retry_count: 1
 collection: VLASS
 state_file_name: state.yml
 interval: 600
+data_sources:
+  - https://archive-new.nrao.edu/vlass/quicklook/
+  - https://archive-new.nrao.edu/vlass/se_continuum_imaging/
+data_source_extensions:
+  - .fits
+  - .catalog.csv
 # how to control the work that gets done
 # possible values are:
 # - scrape - read the headers, write out the xml - kind of a test mode
@@ -41,7 +47,5 @@ task_types:
   - ingest
   - modify
 features:
-  supports_latest_caom: False
-  supports_multiple_files: False
-  use_file_names: False
-  use_urls: True
+  supports_latest_client: False
+  supports_decompression: False

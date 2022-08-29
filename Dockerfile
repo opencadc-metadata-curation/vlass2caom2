@@ -12,27 +12,18 @@ RUN oldpath=`pwd` && cd /tmp && \
 
 WORKDIR /usr/src/app
 
-ARG CAOM2_BRANCH=master
-ARG CAOM2_REPO=opencadc
 ARG OPENCADC_BRANCH=master
 ARG OPENCADC_REPO=opencadc
-ARG PIPE_BRANCH=master
-ARG PIPE_REPO=opencadc
 
-RUN git clone https://github.com/opencadc/cadctools.git && \
-    cd cadctools && \
-    pip install ./cadcdata && \
-    cd ..
-
-RUN git clone https://github.com/${CAOM2_REPO}/caom2tools.git && \
+RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git && \
     cd caom2tools && \
-    git checkout ${CAOM2_BRANCH} && \
+    git checkout ${OPENCADC_BRANCH} && \
     pip install ./caom2utils && \
     cd ..
 
 RUN pip install git+https://github.com/${OPENCADC_REPO}/caom2pipe@${OPENCADC_BRANCH}#egg=caom2pipe
 
-RUN pip install git+https://github.com/${PIPE_REPO}/vlass2caom2@${PIPE_BRANCH}#egg=vlass2caom2
+RUN pip install git+https://github.com/${OPENCADC_REPO}/vlass2caom2@${OPENCADC_BRANCH}#egg=vlass2caom2
 
 FROM python:3.10-slim
 WORKDIR /usr/src/app
