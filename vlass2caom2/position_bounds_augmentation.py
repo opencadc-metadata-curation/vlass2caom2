@@ -76,7 +76,7 @@ footprint benefits from footprintfinder.py.
 """
 import logging
 
-from caom2 import Observation
+from caom2 import Observation, ProductType
 from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
@@ -109,6 +109,8 @@ def visit(observation, **kwargs):
     count = 0
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():
+            if artifact.uri != storage_name.file_uri or artifact.product_type != ProductType.SCIENCE:
+                continue
             for part in artifact.parts.values():
                 for chunk in part.chunks:
                     # -t 10 provides a margin of up to 10 pixels
