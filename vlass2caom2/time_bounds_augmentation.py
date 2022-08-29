@@ -93,6 +93,8 @@ def visit(observation, **kwargs):
     count = 0
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():
+            if artifact.uri != storage_name.file_uri:
+                continue
             if len(artifact.parts) > 0:
                 logging.debug(f'working on artifact {artifact.uri}')
                 version, reference = _augment_artifact(
