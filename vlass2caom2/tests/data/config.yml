@@ -7,7 +7,7 @@ todo_file_name: todo.txt
 # values True False
 use_local_files: False
 # values DEBUG INFO WARN ERROR
-logging_level: INFO
+logging_level: WARNING
 # values True False
 log_to_file: True
 # fully qualified name for a directory to write log files
@@ -38,6 +38,11 @@ interval: 600
 # - store - calls cadc-data to put a file from local storage (use_local_files must be set to True)
 # - ingest - read the headers, write the xml to the endpoint found by resource_id
 # - modify - create a footprint and previews for an existing CAOM model record
+data_sources:
+  - https://archive-new.nrao.edu/vlass/quicklook/
+data_source_extensions:
+  - .fits
+  - .csv
 task_types: 
   - ingest
 features:

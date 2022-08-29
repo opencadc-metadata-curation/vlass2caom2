@@ -91,17 +91,7 @@ class VlassPreview(mc.PreviewVisitor):
     """
 
     def __init__(self, **kwargs):
-        super(VlassPreview, self).__init__(
-            sn.COLLECTION, ReleaseType.META, **kwargs
-        )
-        self._science_file = self._storage_name.file_name
-        self._preview_fqn = os.path.join(
-            self._working_dir, self._storage_name.prev
-        )
-        self._thumb_fqn = os.path.join(
-            self._working_dir, self._storage_name.thumb
-        )
-        self._logger = logging.getLogger(__name__)
+        super(VlassPreview, self).__init__(sn.COLLECTION, ReleaseType.META, **kwargs)
 
     def generate_plots(self, obs_id):
         """Make a preview for a VLASS image. Tested on random sample of 16

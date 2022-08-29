@@ -1,0 +1,202 @@
+# HDU 0 in VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt1.subim.fits:
+SIMPLE  =                    T /Standard FITS                                   
+BITPIX  =                  -32 /Floating point (32 bit)                         
+NAXIS   =                    4                                                  
+NAXIS1  =                 6202                                                  
+NAXIS2  =                 6202                                                  
+NAXIS3  =                    1                                                  
+NAXIS4  =                    1                                                  
+EXTEND  =                    T                                                  
+BSCALE  =   1.000000000000E+00 /PHYSICAL = PIXEL*BSCALE + BZERO                 
+BZERO   =   0.000000000000E+00                                                  
+BMAJ    =   7.867599195904E-04                                                  
+BMIN    =   5.983460611767E-04                                                  
+BPA     =   8.472290039062E-01                                                  
+BTYPE   = 'Intensity'                                                           
+OBJECT  = 'J000200-003000'                                                      
+BUNIT   = 'Jy/beam '           /Brightness (pixel) unit                         
+EQUINOX =   2.000000000000E+03                                                  
+RADESYS = 'ICRS    '                                                            
+LONPOLE =   1.800000000000E+02                                                  
+LATPOLE =  -5.000000000000E-01                                                  
+PC1_1   =   1.000000000000E+00                                                  
+PC2_1   =   0.000000000000E+00                                                  
+PC3_1   =   0.000000000000E+00                                                  
+PC4_1   =   0.000000000000E+00                                                  
+PC1_2   =   0.000000000000E+00                                                  
+PC2_2   =   1.000000000000E+00                                                  
+PC3_2   =   0.000000000000E+00                                                  
+PC4_2   =   0.000000000000E+00                                                  
+PC1_3   =   0.000000000000E+00                                                  
+PC2_3   =   0.000000000000E+00                                                  
+PC3_3   =   1.000000000000E+00                                                  
+PC4_3   =   0.000000000000E+00                                                  
+PC1_4   =   0.000000000000E+00                                                  
+PC2_4   =   0.000000000000E+00                                                  
+PC3_4   =   0.000000000000E+00                                                  
+PC4_4   =   1.000000000000E+00                                                  
+CTYPE1  = 'RA---SIN'                                                            
+CRVAL1  =    0.499993379290412                                                  
+CDELT1  =  -1.666666666667E-04                                                  
+CRPIX1  =   3.101000000000E+03                                                  
+CUNIT1  = 'deg     '                                                            
+CTYPE2  = 'DEC--SIN'                                                            
+CRVAL2  =   -0.500047762078505                                                  
+CDELT2  =   1.666666666667E-04                                                  
+CRPIX2  =   3.101000000000E+03                                                  
+CUNIT2  = 'deg     '                                                            
+CTYPE3  = 'FREQ    '                                                            
+CRVAL3  =   3.000000000000E+09                                                  
+CDELT3  =   2.072349616162E+09                                                  
+CRPIX3  =   1.000000000000E+00                                                  
+CUNIT3  = 'Hz      '                                                            
+CTYPE4  = 'STOKES  '                                                            
+CRVAL4  =   1.000000000000E+00                                                  
+CDELT4  =   1.000000000000E+00                                                  
+CRPIX4  =   1.000000000000E+00                                                  
+CUNIT4  = '        '                                                            
+PV2_1   =   0.000000000000E+00                                                  
+PV2_2   =   0.000000000000E+00                                                  
+RESTFRQ =   2.987736447683E+09 /Rest Frequency (Hz)                             
+SPECSYS = 'LSRK    '           /Spectral reference frame                        
+ALTRVAL =  -1.230537082974E+06 /Alternate frequency reference value             
+ALTRPIX =   1.000000000000E+00 /Alternate frequency reference pixel             
+VELREF  =                  257 /1 LSR, 2 HEL, 3 OBS, +256 Radio                 
+COMMENT casacore non-standard usage: 4 LSD, 5 GEO, 6 SOU, 7 GAL                 
+TELESCOP= 'EVLA    '                                                            
+OBSERVER= 'Dr. Vlass Scientist'                                                 
+DATE-OBS= '2020-07-17T11:36:03.600000' / First scan started                     
+DATE-END= '2020-07-17T12:06:04.050001' / Last scan finished                     
+TIMESYS = 'UTC     '                                                            
+OBSRA   =   5.000000000000E-01                                                  
+OBSDEC  =  -5.000000000000E-01                                                  
+OBSGEO-X=  -1.601156673287E+06                                                  
+OBSGEO-Y=  -5.041988986066E+06                                                  
+OBSGEO-Z=   3.554879236821E+06                                                  
+INSTRUME= 'EVLA    '                                                            
+CASAVER = '6.1.3.3 '                                                            
+DISTANCE=   0.000000000000E+00                                                  
+FIELD   = '24947   '                                                            
+FILNAM01= 's13_0   '                                                            
+FILNAM02= 'VLASS2  '                                                            
+FILNAM03= '1       '                                                            
+FILNAM04= 'se      '                                                            
+FILNAM05= 'T10t01  '                                                            
+FILNAM06= 'J000200-003000'                                                      
+FILNAM07= '06      '                                                            
+FILNAM08= '2048    '                                                            
+FILNAM09= 'v1      '                                                            
+FILNAM10= 'I       '                                                            
+FILNAM11= 'iter3   '                                                            
+FILNAM12= 'image   '                                                            
+FILNAM13= 'tt1     '                                                            
+GROUP   = 'N/A     '                                                            
+INTENT  = 'TARGET  '                                                            
+ITER    =                    3                                                  
+MEMBER  = 'unknown '                                                            
+NFILNAM =                   13                                                  
+NPOL    =                    2                                                  
+NSPWNAM =                   16                                                  
+OFFDEC  =  -9.990000000000E+02                                                  
+OFFRA   =  -9.990000000000E+02                                                  
+PER_EB  =                    F                                                  
+PIPEVER = '2021.1.1.32'                                                         
+PROPCODE= 'VLASS   '                                                            
+ROBUST  =   1.000000000000E+00                                                  
+SGOAL   = 'N/A     '                                                            
+SPECMODE= 'cont    '                                                            
+SPW     = '10,11,12,13,14,15,16,17,2,3,4,5,6,7,8,9'                             
+SPWNAM01= 'EVLA_S#B0D0#10'                                                      
+SPWNAM02= 'EVLA_S#B0D0#11'                                                      
+SPWNAM03= 'EVLA_S#B0D0#12'                                                      
+SPWNAM04= 'EVLA_S#B0D0#13'                                                      
+SPWNAM05= 'EVLA_S#B0D0#14'                                                      
+SPWNAM06= 'EVLA_S#B0D0#15'                                                      
+SPWNAM07= 'EVLA_S#B0D0#16'                                                      
+SPWNAM08= 'EVLA_S#B0D0#17'                                                      
+SPWNAM09= 'EVLA_S#A0C0#2'                                                       
+SPWNAM10= 'EVLA_S#A0C0#3'                                                       
+SPWNAM11= 'EVLA_S#A0C0#4'                                                       
+SPWNAM12= 'EVLA_S#A0C0#5'                                                       
+SPWNAM13= 'EVLA_S#A0C0#6'                                                       
+SPWNAM14= 'EVLA_S#A0C0#7'                                                       
+SPWNAM15= 'EVLA_S#A0C0#8'                                                       
+SPWNAM16= 'EVLA_S#A0C0#9'                                                       
+TYPE    = 'image   '                                                            
+USEWEIGH=                    T                                                  
+DATE    = '2022-05-10T13:53:48.319000' /Date FITS file was written              
+ORIGIN  = 'CASA 6.1.3-3 CASAtools:v1.0.0'                                       
+HISTORY CASA START LOGTABLE                                                     
+HISTORY 2022-05-10T13:30:46 INFO SRCCODE='::ImagePrimaryBeamCorrector::correct (
+HISTORY >file casa-source/code/imageanalysis/ImageAnalysis/ImagePrimaryBeamCorre
+HISTORY >tor.cc, line 208)'                                                     
+HISTORY History of image /mnt/condor/execute/dir_162335/working/s13_0.VLASS2.1.s
+HISTORY >e.T10t01.J000200-003000.06.2048.v1.I.iter3.image.tt1                   
+HISTORY 2022-05-09T05:52:41 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-05-09T05:52:41 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-05-09T11:16:20 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-05-09T11:16:20 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-05-10T13:23:34 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-05-10T13:23:34 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-05-10T13:30:46 INFO SRCCODE='::ImagePrimaryBeamCorrector::correct (
+HISTORY >file casa-source/code/imageanalysis/ImageAnalysis/ImagePrimaryBeamCorre
+HISTORY >tor.cc, line 208)'                                                     
+HISTORY End history of image /mnt/condor/execute/dir_162335/working/s13_0.VLASS2
+HISTORY >.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.tt1               
+HISTORY 2022-05-10T13:30:46 INFO SRCCODE='::ImagePrimaryBeamCorrector::correct (
+HISTORY >file casa-source/code/imageanalysis/ImageAnalysis/ImagePrimaryBeamCorre
+HISTORY >tor.cc, line 208)'                                                     
+HISTORY History of image /mnt/condor/execute/dir_162335/working/s13_0.VLASS2.1.s
+HISTORY >e.T10t01.J000200-003000.06.2048.v1.I.iter3.pb.tt0                      
+HISTORY 2022-05-08T16:31:16 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-05-08T16:31:16 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-05-08T16:31:16 INFO SRCCODE='::image::setcoordsys'                 
+HISTORY Ran ia.setcoordsys                                                      
+HISTORY 2022-05-08T16:31:16 INFO SRCCODE='::image::setcoordsys'                 
+HISTORY ia.setcoordsys(csys={...})                                              
+HISTORY 2022-05-09T05:52:41 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-05-09T05:52:41 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-05-09T11:16:21 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-05-09T11:16:21 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-05-10T13:23:34 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-05-10T13:23:34 INFO SRCCODE='::image::setmiscinfo'                 
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-05-10T13:30:46 INFO SRCCODE='::ImagePrimaryBeamCorrector::correct (
+HISTORY >file casa-source/code/imageanalysis/ImageAnalysis/ImagePrimaryBeamCorre
+HISTORY >tor.cc, line 208)'                                                     
+HISTORY End history of image /mnt/condor/execute/dir_162335/working/s13_0.VLASS2
+HISTORY >.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.pb.tt0                  
+HISTORY 2022-05-10T13:30:46 INFO SRCCODE='::impbcor'                            
+HISTORY version: 6.1.3-3 CASAtools:v1.0.0                                       
+HISTORY 2022-05-10T13:30:46 INFO SRCCODE='::impbcor'                            
+HISTORY impbcor(imagename="s13_0.VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.
+HISTORY >iter3.image.tt1", pbimage="s13_0.VLASS2.1.se.T10t01.J000200-003000.06.2
+HISTORY >48.v1.I.iter3.pb.tt0", outfile="s13_0.VLASS2.1.se.T10t01.J000200-003000
+HISTORY >06.2048.v1.I.iter3.image.pbcor.tt1", overwrite=False, box="", region=""
+HISTORY > chans="", stokes="", mask="", mode="divide", cutoff=-1.0, stretch=Fals
+HISTORY >)                                                                      
+HISTORY 2022-05-10T13:52:11 INFO SRCCODE='::imsubimage'                         
+HISTORY version: 6.1.3-3 CASAtools:v1.0.0                                       
+HISTORY 2022-05-10T13:52:11 INFO SRCCODE='::imsubimage'                         
+HISTORY imsubimage(imagename="s13_0.VLASS2.1.se.T10t01.J000200-003000.06.2048.v1
+HISTORY >.I.iter3.image.pbcor.tt1", outfile="s13_0.VLASS2.1.se.T10t01.J000200-00
+HISTORY >000.06.2048.v1.I.iter3.image.pbcor.tt1.subim", box="3150.0,3150.0,9351.
+HISTORY >,9351.0", region="", chans="", stokes="", mask="", dropdeg=False, overw
+HISTORY >ite=False, verbose=True, stretch=False, keepaxes=[])                   
+HISTORY CASA END LOGTABLE                                                       
+HISTORY Uncorrected CRVAL1 = 5.000000000000E-01 deg                             
+HISTORY Uncorrected CRVAL2 = -5.000000000000E-01 deg                            
+HISTORY Position correction (-2.383E-02/cos(CRVAL2), -1.719E-01) arcsec applied 
