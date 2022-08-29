@@ -109,7 +109,11 @@ def visit(observation, **kwargs):
     count = 0
     for plane in observation.planes.values():
         for artifact in plane.artifacts.values():
-            if artifact.uri != storage_name.file_uri or artifact.product_type != ProductType.SCIENCE:
+            if (
+                artifact.uri != storage_name.file_uri
+                or artifact.product_type != ProductType.SCIENCE
+                or 'alpha' in storage_name.file_uri
+            ):
                 continue
             for part in artifact.parts.values():
                 for chunk in part.chunks:
