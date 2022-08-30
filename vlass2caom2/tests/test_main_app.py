@@ -172,7 +172,7 @@ def test_visit(header_mock, test_files):
             write_obs_to_file(observation, actual_fqn)
             compare_text = '\n'.join([r for r in compare_result])
             msg = f'Differences found in observation {expected.observation_id}\n' f'{compare_text}'
-            raise AssertionError(msg)
+            assert False, msg
         # assert False  # cause I want to see logging messages
     finally:
         StorageName.collection = original_collection

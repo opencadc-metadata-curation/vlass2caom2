@@ -162,3 +162,20 @@ def test_source_names():
     finally:
         StorageName.collection = original_collection
         StorageName.scheme = original_scheme
+
+
+def test_csv():
+    original_collection = StorageName.collection
+    original_scheme = StorageName.scheme
+    scheme = AD_SCHEME
+    try:
+        StorageName.collection = COLLECTION
+        StorageName.scheme = scheme
+        test_f_name = 'VLASS2.1.se.T11t35.J231002+033000.06.2048.v1.I.catalog.csv'
+        test_subject = nbc.EntryBuilder(VlassName)
+        test_result = test_subject.build(test_f_name)
+        assert test_result is not None, 'expect a result'
+        assert test_result.version == 1, 'wrong version'
+    finally:
+        StorageName.collection = original_collection
+        StorageName.scheme = original_scheme
