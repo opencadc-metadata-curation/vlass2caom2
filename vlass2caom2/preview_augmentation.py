@@ -67,7 +67,6 @@
 # ***********************************************************************
 #
 
-import logging
 import os
 
 import matplotlib.image as image
@@ -96,9 +95,10 @@ class VlassPreview(mc.PreviewVisitor):
     def generate_plots(self, obs_id):
         """Make a preview for a VLASS image. Tested on random sample of 16
         VLASS 1.1, 1.2, 2.1 images."""
-        if '.rms.' in self._science_file:
-            # there's two files (artifacts) per plane, the non-rms one to
+        if '.rms.' in self._science_file or '.csv' in self._science_file:
+            # '.rms.' => there's two files (artifacts) per plane, the non-rms one to
             # generates 'more dense' preview/thumbnail images
+            # '.csv' => no previews
             return 0
 
         self._logger.debug(f'Begin generate_plots for {obs_id}')
@@ -115,6 +115,8 @@ class VlassPreview(mc.PreviewVisitor):
             image_data = hdul['PRIMARY'].data[0, 0]
             interval = ZScaleInterval(contrast=0.99)
             array = interval((image_data))
+        del hdul['PRIMARY'].data
+        del hdul
         axs[0].imshow(array, cmap='gray', interpolation='none')
         axs[0].axis('off')
 
@@ -125,6 +127,8 @@ class VlassPreview(mc.PreviewVisitor):
             )
             interval = ZScaleInterval()
             array = interval(cutout_data)
+        del hdul['PRIMARY'].data
+        del hdul
         axs[1].imshow(array, cmap='gray', interpolation='none')
         axs[1].axis('off')
 
@@ -270,8 +274,8 @@ class VlassPreview(mc.PreviewVisitor):
 
             return (
                 array[
-                    x_max - x_size : x_max + x_size,
-                    y_max - y_size : y_max + y_size,
+                    x_max - x_size: x_max + x_size,
+                    y_max - y_size: y_max + y_size,
                 ],
                 x_max,
                 y_max,
@@ -282,8 +286,8 @@ class VlassPreview(mc.PreviewVisitor):
         y_max = int(array.shape[1] / 2)
         return (
             array[
-                x_max - x_size : x_max + x_size,
-                y_max - y_size : y_max + y_size,
+                x_max - x_size: x_max + x_size,
+                y_max - y_size: y_max + y_size,
             ],
             x_max,
             y_max,

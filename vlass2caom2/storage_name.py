@@ -189,8 +189,11 @@ class VlassName(mc.StorageName):
 
     def set_version(self):
         """The parameter may be a URI, or just the file name."""
-        # file name looks like:
+        # fits file name looks like:
         # 'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.pbcor.tt0.rms.subim.fits'
+        #
+        # csv file name looks like:
+        # VLASS2.1.se.T11t35.J231002+033000.06.2048.v1.I.catalog.csv
         bits = self._file_name.split('.')
         version_str = bits[7].replace('v', '')
         self._version = mc.to_int(version_str)

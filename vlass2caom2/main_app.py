@@ -114,6 +114,11 @@ class BlueprintMapping(cc.TelescopeMapping):
         # artifact level
         bp.set('Artifact.productType', ProductType.AUXILIARY)
 
+    def get_proposal_id(self, ext):
+        caom_name = mc.CaomName(self._storage_name.file_uri)
+        bits = caom_name.file_name.split('.')
+        return f'{bits[0]}.{bits[1]}'
+
 
 class QuicklookMapping(BlueprintMapping):
     def __init__(self, storage_name, headers):
@@ -183,11 +188,6 @@ class QuicklookMapping(BlueprintMapping):
             return ProductType.AUXILIARY
         else:
             return ProductType.SCIENCE
-
-    def get_proposal_id(self, ext):
-        caom_name = mc.CaomName(self._storage_name.file_uri)
-        bits = caom_name.file_name.split('.')
-        return f'{bits[0]}.{bits[1]}'
 
     def get_time_refcoord_value(self, ext):
         dateobs = self._headers[ext].get('DATE-OBS')
