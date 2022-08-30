@@ -101,11 +101,8 @@ class BlueprintMapping(cc.TelescopeMapping):
         bp.set('Observation.proposal.project', 'VLASS')
         bp.set('Observation.proposal.id', 'get_proposal_id()')
 
-        # plane level
-        # PHANGS Intensity are CUBE, calibration level PRODUCT, and the test
-        # files have BTYPE = 'Intensity'
         bp.set('Plane.calibrationLevel', CalibrationLevel.PRODUCT)
-        bp.set('Plane.dataProductType', DataProductType.CUBE)
+        bp.set('Plane.dataProductType', DataProductType.IMAGE)
 
         bp.set('Plane.provenance.producer', 'NRAO')
         # From JJK - 27-08-18 - slack
@@ -252,7 +249,7 @@ class ContinuumMapping(QuicklookMapping):
         # PHANGS Intensity are CUBE, calibration level PRODUCT, and the test
         # files have BTYPE = 'Intensity'
         bp.set('Plane.calibrationLevel', CalibrationLevel.PRODUCT)
-        bp.set('Plane.dataProductType', DataProductType.CUBE)
+        bp.set('Plane.dataProductType', DataProductType.IMAGE)
         bp.clear('Plane.provenance.runID')
         bp.add_attribute('Plane.provenance.runID', 'FILNAM09')
 

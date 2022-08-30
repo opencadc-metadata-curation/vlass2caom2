@@ -31,7 +31,7 @@
       <caom2:productID>VLASS2.1.T10t01.J000200-003000.continuum_imaging</caom2:productID>
       <caom2:metaRelease>2020-07-17T11:36:03.600</caom2:metaRelease>
       <caom2:dataRelease>2020-07-17T11:36:03.600</caom2:dataRelease>
-      <caom2:dataProductType>cube</caom2:dataProductType>
+      <caom2:dataProductType>image</caom2:dataProductType>
       <caom2:calibrationLevel>3</caom2:calibrationLevel>
       <caom2:provenance>
         <caom2:name>CASA 6.1.3-3 CASAtools:v1.0.0</caom2:name>
