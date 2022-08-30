@@ -246,8 +246,6 @@ class ContinuumMapping(QuicklookMapping):
         bp.clear('Observation.telescope.geoLocationZ')
         bp.add_attribute('Observation.telescope.geoLocationZ', 'OBSGEO-Z')
 
-        # PHANGS Intensity are CUBE, calibration level PRODUCT, and the test
-        # files have BTYPE = 'Intensity'
         bp.set('Plane.calibrationLevel', CalibrationLevel.PRODUCT)
         bp.set('Plane.dataProductType', DataProductType.IMAGE)
         bp.clear('Plane.provenance.runID')
