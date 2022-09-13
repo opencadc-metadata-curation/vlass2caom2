@@ -36,7 +36,7 @@ data_sources:
   - https://archive-new.nrao.edu/vlass/quicklook/
 data_source_extensions:
   - .fits
-  - .csv 
+  - catalog.csv 
 # how to control the work that gets done
 # possible values are:
 # - scrape - read the headers, write out the xml - kind of a test mode
