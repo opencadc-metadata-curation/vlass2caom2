@@ -73,7 +73,7 @@ from caom2pipe import reader_composable
 __all__ = ['VlassStorageMetadataReader']
 
 
-class VlassStorageMetadataReader(reader_composable.StorageClientReader):
+class VlassStorageMetadataReader(reader_composable.DelayedClientReader):
     """
     This class encapsulates the long-lived metadata retrieved from the NRAO site, as well as the individual file
     metadata. Scraping the NRAO is impolite, so cache that metadata here, in a class where an instance is made

@@ -73,6 +73,7 @@ from datetime import datetime, timezone
 from dateutil import tz
 from mock import ANY, call, patch, Mock
 
+from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe import execute_composable as ec
 from caom2pipe.manage_composable import (
@@ -204,6 +205,11 @@ def test_run_state(run_mock, query_mock, client_mock):
         os.getcwd = getcwd_orig
 
 
+# global variables for test_run_state_store_ingest mock control
+header_read_count = 0
+info_count = 0
+
+
 @patch('vlass2caom2.time_bounds_augmentation.visit')
 @patch('caom2pipe.transfer_composable.HttpTransfer')
 @patch('vlass2caom2.data_source.query_endpoint_session')
@@ -264,6 +270,12 @@ def test_run_state_store_ingest(
             for artifact in plane.artifacts.values():
                 assert artifact.content_checksum.uri == 'md5:abc', 'artifact metadata not updated'
 
+        assert client_mock.data_client.get_head.called, 'get_head called'
+        # there are four unique file names in this test, so the 8 is for the failure the first time around, and the
+        # success the second time around - using the DelayedClientReader in the inheritance tree
+        assert client_mock.data_client.get_head.call_count == 8, 'get_head call count'
+        assert client_mock.data_client.info.called, 'info called'
+        assert client_mock.data_client.info.call_count == 8, 'info call count'
     finally:
         os.getcwd = getcwd_orig
         test_rejected_fqn = f'{test_dir}/rejected.yml'
@@ -352,7 +364,13 @@ def _mock_get_file_info(arg1, arg2):
 
 
 def _mock_get_file_info_1(arg2):
-    return _mock_get_file_info(None, arg2)
+    global info_count
+    if info_count == 1:
+        info_count = 0
+        return _mock_get_file_info(None, arg2)
+    else:
+        info_count = 1
+        return None
 
 
 def _mock_get_file():
@@ -423,7 +441,13 @@ def _mock_retrieve_file(ignore, local_fqn):
 
 
 def _mock_headers_read(ignore):
-    return _mock_x(None, None, None, None)
+    global header_read_count
+    if header_read_count == 1:
+        header_read_count = 0
+        return _mock_x(None, None, None, None)
+    else:
+        header_read_count = 1
+        raise exceptions.UnexpectedException(f'{ignore} UnexpectedException')
 
 
 def _mock_visit(
