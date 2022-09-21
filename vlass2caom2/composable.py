@@ -101,7 +101,9 @@ def _common_init():
     state = mc.State(config.state_fqn)
     session = mc.get_endpoint_session()
     web_log_metadata = data_source.WebLogMetadata(state, session, config.data_sources)
-    source = data_source.NraoPages(config)
+    source = None
+    if mc.TaskType.SCRAPE not in config.task_types and not config.use_local_files:
+        source = data_source.NraoPages(config)
     clients = client_composable.ClientCollection(config)
     metadata_reader = reader.VlassStorageMetadataReader(clients.data_client, source, web_log_metadata)
 
