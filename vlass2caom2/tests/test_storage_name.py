@@ -69,13 +69,13 @@
 
 from caom2pipe.manage_composable import StorageName
 from caom2pipe import name_builder_composable as nbc
-from vlass2caom2.storage_name import AD_SCHEME, COLLECTION, VlassName
+from vlass2caom2.storage_name import SCHEME, COLLECTION, VlassName
 
 
 def test_storage_name():
     original_collection = StorageName.collection
     original_scheme = StorageName.scheme
-    scheme = AD_SCHEME
+    scheme = SCHEME
     try:
         StorageName.collection = COLLECTION
         StorageName.scheme = scheme
@@ -138,7 +138,7 @@ def test_storage_name():
 def test_source_names():
     original_collection = StorageName.collection
     original_scheme = StorageName.scheme
-    scheme = AD_SCHEME
+    scheme = SCHEME
     try:
         StorageName.collection = COLLECTION
         StorageName.scheme = scheme
@@ -167,7 +167,7 @@ def test_source_names():
 def test_csv():
     original_collection = StorageName.collection
     original_scheme = StorageName.scheme
-    scheme = AD_SCHEME
+    scheme = SCHEME
     try:
         StorageName.collection = COLLECTION
         StorageName.scheme = scheme

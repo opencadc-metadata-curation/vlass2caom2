@@ -26,9 +26,6 @@ failure_log_file_name: failure_log.txt
 retry_file_name: retries.txt
 retry_failures: False
 retry_count: 1
-# ad stream value - sorry
-stream: raw
-archive: VLASS
 collection: VLASS
 state_file_name: state.yml
 interval: 600
@@ -47,4 +44,4 @@ task_types:
   - store
   - ingest
 features:
-  supports_latest_client: False
+  supports_latest_client: True
