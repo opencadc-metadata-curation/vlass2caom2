@@ -69,11 +69,13 @@
 
 from datetime import datetime
 from dateutil import tz
+from os import chdir, getcwd
 from os.path import dirname, join, realpath
+from tempfile import TemporaryDirectory
 
-from caom2pipe.manage_composable import Config
+from caom2pipe.manage_composable import Config, ExecutionReporter, Observable, write_as_yaml
 from vlass2caom2.data_source import ContinuumImagingPage, NraoPages, QuicklookPage, WebLogMetadata
-from vlass2caom2 import storage_name
+from vlass2caom2 import storage_name, data_source
 
 from mock import Mock, patch
 
@@ -192,58 +194,81 @@ def test_metadata_scrape():
 @patch('vlass2caom2.data_source.query_endpoint_session')
 def test_quicklook(query_endpoint_mock):
     query_endpoint_mock.side_effect = _query_quicklook_endpoint
-    test_config = Config()
-    test_config.state_file_name = 'state.yml'
-    test_config.state_fqn = join(TEST_DATA_DIR, 'state.yml')
-    test_config.data_sources = [storage_name.QL_URL]
-    test_subject = NraoPages(test_config)
-    assert test_subject is not None, 'ctor failure'
-    test_start_time = QuicklookPage.make_date_time(TEST_START_TIME_STR)
-    test_subject.set_start_time(test_start_time)
-    test_result = test_subject.get_time_box_work(
-        test_start_time.timestamp(), datetime.fromtimestamp(1556311111).timestamp()
-    )
-    assert test_result is not None, 'expected dict result'
-    assert len(test_result) == 24, 'wrong size results'
-    temp = sorted([ii.entry_name for ii in test_result])
-    assert (
-        temp[0]
-        == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
-           'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
-           'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
-    ), 'wrong result'
-    assert test_subject.max_time is not None, 'expected date result'
-    assert test_subject.max_time == datetime(2019, 4, 28, 9, 18, tzinfo=test_time_zone), 'wrong date result'
+    orig_cwd = getcwd()
+    try:
+        with TemporaryDirectory() as tmp_dir_name:
+            chdir(tmp_dir_name)
+
+            test_config = Config()
+            test_config.change_working_directory(tmp_dir_name)
+            test_config.data_sources = [storage_name.QL_URL]
+            Config.write_to_file(test_config)
+            _write_state(TEST_START_TIME_STR, test_config.state_fqn)
+
+            test_subject = NraoPages(test_config)
+            assert test_subject is not None, 'ctor failure'
+            test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()), 'DEFAULT')
+            test_subject.reporter = test_reporter
+            test_start_time = QuicklookPage.make_date_time(TEST_START_TIME_STR)
+            test_subject.set_start_time(test_start_time)
+            test_result = test_subject.get_time_box_work(
+                test_start_time.timestamp(), datetime.fromtimestamp(1556311111).timestamp()
+            )
+            assert test_result is not None, 'expected dict result'
+            assert len(test_result) == 24, 'wrong size results'
+            temp = sorted([ii.entry_name for ii in test_result])
+            assert (
+                temp[0]
+                == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
+                   'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+                   'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
+            ), 'wrong result'
+            assert test_subject.max_time is not None, 'expected date result'
+            assert test_subject.max_time == datetime(2019, 4, 28, 9, 18, tzinfo=test_time_zone), 'wrong date result'
+            assert test_reporter._summary._entries_sum == 24, f'wrong entries {test_reporter._summary.report()}'
+    finally:
+        chdir(orig_cwd)
 
 
 @patch('vlass2caom2.data_source.query_endpoint_session')
 def test_continuum(query_endpoint_mock):
-    import logging
-    logging.getLogger('ContinuumImagingPage').setLevel(logging.INFO)
     query_endpoint_mock.side_effect = _query_continuum_endpoint
-    test_config = Config()
-    test_config.state_file_name = 'state.yml'
-    test_config.state_fqn = join(TEST_DATA_DIR, 'state.yml')
-    test_config.data_sources = [storage_name.SE_URL]
-    test_subject = NraoPages(test_config)
-    assert test_subject is not None, 'ctor failure'
-    test_start_time = datetime(2022, 5, 15, 0, 0, 0, tzinfo=test_time_zone)
-    test_subject.set_start_time(test_start_time)
-    test_result = test_subject.get_time_box_work(
-        test_start_time.timestamp(), datetime(2022, 6, 24, 0, 0, 0).timestamp()
-    )
-    assert test_result is not None, 'expected dict result'
-    # 36 == the same 6 files returned for each of 3 observations * 2 tiles
-    assert len(test_result) == 36, 'wrong size results'
-    temp = sorted([ii.entry_name for ii in test_result])
-    assert (
-        temp[0]
-        == 'https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T10t01/'
-           'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1/'
-           'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.alpha.error.subim.fits'
-    ), f'wrong result {temp[0]}'
-    assert test_subject.max_time is not None, 'expected date result'
-    assert test_subject.max_time == datetime(2022, 5, 16, 10, 24, tzinfo=test_time_zone), 'wrong se date result'
+    orig_cwd = getcwd()
+    try:
+        with TemporaryDirectory() as tmp_dir_name:
+            chdir(tmp_dir_name)
+
+            test_config = Config()
+            test_config.change_working_directory(tmp_dir_name)
+
+            test_config.data_sources = [storage_name.SE_URL]
+            test_start_time = datetime(2022, 5, 15, 0, 0, 0, tzinfo=test_time_zone)
+            _write_state('2022-05-15 00:00', test_config.state_fqn)
+
+            test_subject = NraoPages(test_config)
+            assert test_subject is not None, 'ctor failure'
+            test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()), 'DEFAULT')
+            test_subject.reporter = test_reporter
+            test_subject.set_start_time(test_start_time)
+
+            test_result = test_subject.get_time_box_work(
+                test_start_time.timestamp(), datetime(2022, 6, 24, 0, 0, 0).timestamp()
+            )
+            assert test_result is not None, 'expected dict result'
+            # 36 == the same 6 files returned for each of 3 observations * 2 tiles
+            assert len(test_result) == 36, 'wrong size results'
+            temp = sorted([ii.entry_name for ii in test_result])
+            assert (
+                temp[0]
+                == 'https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T10t01/'
+                   'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1/'
+                   'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.alpha.error.subim.fits'
+            ), f'wrong result {temp[0]}'
+            assert test_subject.max_time is not None, 'expected date result'
+            assert test_subject.max_time == datetime(2022, 5, 16, 10, 24, tzinfo=test_time_zone), 'wrong se date result'
+            assert test_reporter._summary._entries_sum == 36, f'wrong entries {test_reporter._summary.report()}'
+    finally:
+        chdir(orig_cwd)
 
 
 def _close():
@@ -328,3 +353,21 @@ def _query_continuum_endpoint(url, session, timeout=-1):
     else:
         raise Exception(f'wut? {url}')
     return result
+
+
+def _write_state(start_time_str, f_name):
+    test_time = data_source.QuicklookPage.make_date_time(start_time_str)
+    test_bookmark = {
+        'bookmarks': {
+            'vlass_timestamp': {'last_record': test_time},
+        },
+        'context': {
+            'vlass_context': {
+                'VLASS1.1': '01-Jan-2018 00:00',
+                'VLASS1.2v2': '01-Nov-2018 00:00',
+                'VLASS2.1': '01-Jul-2020 00:00',
+                'VLASS2.2': '01-Jul-2021 00:00',
+            },
+        },
+    }
+    write_as_yaml(test_bookmark, f_name)

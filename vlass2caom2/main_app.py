@@ -78,12 +78,12 @@ from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['BlueprintMapping', 'ContinuumMapping', 'QuicklookMapping']
+__all__ = ['mapping_factory']
 
 
 class BlueprintMapping(cc.TelescopeMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def accumulate_blueprint(self, bp, application=None):
         """Configure the VLASS-specific ObsBlueprint for the CAOM model
@@ -118,8 +118,8 @@ class BlueprintMapping(cc.TelescopeMapping):
 
 
 class QuicklookMapping(BlueprintMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def accumulate_blueprint(self, bp, application=None):
         """Configure the Quicklook ObsBlueprint for the CAOM model SpatialWCS."""
@@ -195,7 +195,7 @@ class QuicklookMapping(BlueprintMapping):
             else:
                 return None
 
-    def update(self, observation, file_info, clients=None):
+    def update(self, observation, file_info):
         """Called to fill multiple CAOM model elements and/or attributes, must
         have this signature for import_module loading and execution.
         """
@@ -232,8 +232,8 @@ class QuicklookMapping(BlueprintMapping):
 
 
 class ContinuumMapping(QuicklookMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def accumulate_blueprint(self, bp, application=None):
         super().accumulate_blueprint(bp)
@@ -252,3 +252,12 @@ class ContinuumMapping(QuicklookMapping):
         bp.add_attribute('Plane.provenance.runID', 'FILNAM09')
 
         bp.add_attribute('Chunk.energy.restfrq', 'RESTFREQ')
+
+
+def mapping_factory(storage_name, headers, clients):
+    if storage_name.is_catalog():
+        return BlueprintMapping(storage_name, headers, clients)
+    elif storage_name.is_quicklook():
+        return QuicklookMapping(storage_name, headers, clients)
+    else:
+        return ContinuumMapping(storage_name, headers, clients)

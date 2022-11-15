@@ -116,6 +116,11 @@ class NraoPages(DataSource):
             msg = f'{msg}\n{data_source.__class__.__name__}{data_source.__str__()}'
         return msg
 
+    def _capture_todo(self, todo_count):
+        self._reporter.capture_todo(todo_count, self._rejected_files, self._skipped_files)
+        self._rejected_files = 0
+        self._skipped_files = 0
+
     def _get_all_work(self):
         for data_source in self._data_sources:
             if len(data_source.todo_list) == 0:
@@ -157,6 +162,7 @@ class NraoPages(DataSource):
             if len(data_source.todo_list) > 0:
                 self._max_time = min(self._max_time, data_source.max_time)
 
+        self._capture_todo(len(temp))
         self._logger.debug('End get_time_box_work')
         return temp
 

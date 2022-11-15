@@ -75,12 +75,7 @@ class VLASSFits2caom2Visitor(cc.Fits2caom2Visitor):
         super().__init__(observation, **kwargs)
 
     def _get_mapping(self, headers):
-        if self._storage_name.is_catalog():
-            return main_app.BlueprintMapping(self._storage_name, headers)
-        elif self._storage_name.is_quicklook():
-            return main_app.QuicklookMapping(self._storage_name, headers)
-        else:
-            return main_app.ContinuumMapping(self._storage_name, headers)
+        return main_app.mapping_factory(self._storage_name, headers, self._clients)
 
 
 def visit(observation, **kwargs):

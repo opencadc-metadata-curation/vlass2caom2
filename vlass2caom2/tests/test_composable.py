@@ -71,23 +71,23 @@ import os
 
 from datetime import datetime, timezone
 from dateutil import tz
-from mock import ANY, call, patch, Mock
+from mock import ANY, patch, Mock
 
 from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe import execute_composable as ec
 from caom2pipe.manage_composable import (
-    Config, Metrics, Observable, read_obs_from_file, Rejected, StorageName, write_as_yaml, write_obs_to_file
+    Config, Metrics, Observable, read_obs_from_file, Rejected, StorageName, write_obs_to_file
 )
 from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
 from caom2 import SimpleObservation, Algorithm
 from vlass2caom2 import (
-    COLLECTION, composable, data_source, SCHEME, storage_name, VLASS_BOOKMARK, VlassName
+    COLLECTION, composable, SCHEME, VLASS_BOOKMARK, VlassName
 )
 import test_data_source
 import test_main_app
-
+from vlass2caom2.tests.test_data_source import _write_state
 
 STATE_FILE = os.path.join(test_main_app.TEST_DATA_DIR, 'state.yml')
 
@@ -159,7 +159,7 @@ def test_run_state(run_mock, query_mock, client_mock):
         )
         return a, b
 
-    _write_state('24Apr2019 12:34')
+    _write_state('24Apr2019 12:34', STATE_FILE)
     query_mock.side_effect = _mock_append_work
     run_mock.return_value = 0
     client_mock.data_client.info.side_effect = _mock_get_file_info
@@ -415,24 +415,6 @@ def _write_obs_mock():
         algorithm=Algorithm(name='exposure'),
     )
     write_obs_to_file(obs, args.out_obs_xml)
-
-
-def _write_state(start_time_str, f_name=STATE_FILE):
-    test_time = data_source.QuicklookPage.make_date_time(start_time_str)
-    test_bookmark = {
-        'bookmarks': {
-            'vlass_timestamp': {'last_record': test_time},
-        },
-        'context': {
-            'vlass_context': {
-                'VLASS1.1': '01-Jan-2018 00:00',
-                'VLASS1.2v2': '01-Nov-2018 00:00',
-                'VLASS2.1': '01-Jul-2020 00:00',
-                'VLASS2.2': '01-Jul-2021 00:00',
-            },
-        },
-    }
-    write_as_yaml(test_bookmark, f_name)
 
 
 def _mock_retrieve_file(ignore, local_fqn):
