@@ -71,7 +71,7 @@ from caom2pipe import astro_composable as ac
 from caom2pipe.manage_composable import Features, read_obs_from_file, StorageName, write_obs_to_file
 from caom2pipe import reader_composable as rdc
 from vlass2caom2 import storage_name, fits2caom2_augmentation
-from vlass2caom2.storage_name import AD_SCHEME, COLLECTION
+from vlass2caom2.storage_name import SCHEME, COLLECTION
 from caom2.diff import get_differences
 
 import os
@@ -79,8 +79,6 @@ import pytest
 
 from mock import patch
 
-
-TEST_URI = 'ad:TEST_COLLECTION/test_file.fits'
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = os.path.join(THIS_DIR, 'data')
@@ -134,7 +132,7 @@ else:
 def test_visit(header_mock, test_files):
     original_collection = StorageName.collection
     original_scheme = StorageName.scheme
-    scheme = AD_SCHEME
+    scheme = SCHEME
     try:
         StorageName.collection = COLLECTION
         StorageName.scheme = scheme

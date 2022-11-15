@@ -103,7 +103,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
     orig_collection = StorageName.collection
     try:
         StorageName.collection = storage_name.COLLECTION
-        StorageName.scheme = storage_name.AD_SCHEME
+        StorageName.scheme = storage_name.SCHEME
         get_mock.return_value.__enter__.return_value.raw = WL_INDEX
         query_endpoint_mock.side_effect = test_data_source._query_quicklook_endpoint
         test_config = Config()

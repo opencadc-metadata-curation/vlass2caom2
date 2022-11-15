@@ -73,12 +73,11 @@ from urllib.parse import urlparse
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['AD_SCHEME', 'COLLECTION', 'COLLECTION_PATTERN', 'QL_URL', 'SCHEME', 'SE_URL', 'VlassName']
+__all__ = ['COLLECTION', 'COLLECTION_PATTERN', 'QL_URL', 'SCHEME', 'SE_URL', 'VlassName']
 
 COLLECTION = 'VLASS'
 SCHEME = 'nrao'
 CADC_SCHEME = 'cadc'
-AD_SCHEME = 'ad'
 COLLECTION_PATTERN = '*'  # TODO what are acceptable naming patterns?
 
 QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
@@ -127,11 +126,6 @@ class VlassName(mc.StorageName):
         return f'{self._file_id}_prev.jpg'
 
     @property
-    def prev_uri(self):
-        temp = 'ad' if mc.StorageName.scheme == 'ad' else 'cadc'
-        return mc.build_uri(mc.StorageName.collection, self.prev, temp)
-
-    @property
     def rejected_url(self):
         return f'{self._root_url}{self.epoch}/QA_REJECTED/'
 
@@ -143,11 +137,6 @@ class VlassName(mc.StorageName):
     def thumb(self):
         return f'{self._file_id}_prev_256.jpg'
 
-    @property
-    def thumb_uri(self):
-        temp = 'ad' if mc.StorageName.scheme == 'ad' else 'cadc'
-        return mc.build_uri(mc.StorageName.collection, self.thumb, temp)
-        
     @property
     def tile(self):
         return self._file_name.split('.')[3]

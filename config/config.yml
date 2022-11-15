@@ -27,7 +27,6 @@ failure_log_file_name: failure_log.txt
 retry_file_name: retries.txt
 retry_failures: False
 retry_count: 1
-stream: default
 collection: VLASS
 state_file_name: state.yml
 interval: 600
