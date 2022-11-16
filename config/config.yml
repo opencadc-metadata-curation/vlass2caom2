@@ -28,6 +28,7 @@ retry_file_name: retries.txt
 retry_failures: False
 retry_count: 1
 collection: VLASS
+scheme: nrao
 state_file_name: state.yml
 interval: 600
 data_sources:

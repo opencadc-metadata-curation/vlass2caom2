@@ -78,7 +78,6 @@ from matplotlib.patches import ConnectionPatch, Rectangle
 
 from caom2 import ReleaseType, ProductType
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import storage_name as sn
 
 
 class VlassPreview(mc.PreviewVisitor):
@@ -90,7 +89,7 @@ class VlassPreview(mc.PreviewVisitor):
     """
 
     def __init__(self, **kwargs):
-        super(VlassPreview, self).__init__(sn.COLLECTION, ReleaseType.META, **kwargs)
+        super(VlassPreview, self).__init__(ReleaseType.META, **kwargs)
 
     def generate_plots(self, obs_id):
         """Make a preview for a VLASS image. Tested on random sample of 16

@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2022.                            (c) 2022.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,65 +67,19 @@
 # ***********************************************************************
 #
 
-import logging
+from caom2pipe.manage_composable import Config
+import pytest
 
-from caom2 import Observation
-from caom2pipe.manage_composable import check_param, StorageName
-from vlass2caom2 import storage_name as sn
+COLLECTION = 'VLASS'
+SCHEME = 'nrao'
+PREVIEW_SCHEME = 'cadc'
 
 
-def visit(observation, **kwargs):
-    """
-    NRAO reprocesses tile + image phase center files. This visitor ensures
-    the respective artifacts are removed from the observations if old versions
-    of those files are removed.
-    """
-    check_param(observation, Observation)
-    count = 0
-    for plane in observation.planes.values():
-        temp = []
-        # SG - 25-03-20 - later versions of files are replacements, so just
-        # automatically remove the 'older' artifacts.
-        #
-        # quicklook check is to cover the future case of having cubes in
-        # the collection
-        if len(plane.artifacts) > 2 and plane.product_id.endswith('quicklook'):
-            # first - get the newest version
-            max_version = 1
-            for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName(artifact.uri).version
-                    max_version = max(max_version, version)
+@pytest.fixture()
+def test_config():
+    config = Config()
+    config.collection = COLLECTION
+    config.preview_scheme = PREVIEW_SCHEME
+    config.scheme = SCHEME
+    return config
 
-            # now collect the list of artifacts not at the maximum version
-            for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName(artifact.uri).version
-                    if version != max_version:
-                        temp.append(artifact.uri)
-
-                # SG - 03-02-21 - use the full fits filename plus
-                # _prev/_prev_256 for the preview/thumbnail file names, so
-                # need to clean up the preview obs_id-based artifact URIs.
-                # The observation IDs are missing '.ql', so it's a safe
-                # way to find the artifacts to be removed.
-                if (
-                    artifact.uri.startswith(f'{StorageName.preview_scheme}:{StorageName.collection}/{observation.observation_id}')
-                    and artifact.uri.endswith('.jpg')
-                ):
-                    temp.append(artifact.uri)
-
-        delete_list = list(set(temp))
-        for entry in delete_list:
-            logging.warning(
-                f'Removing artifact {entry} from observation '
-                f'{observation.observation_id}, plane {plane.product_id}.'
-            )
-            count += 1
-            observation.planes[plane.product_id].artifacts.pop(entry)
-
-    logging.info(
-        f'Completed cleanup augmentation for {observation.observation_id}. '
-        f'Remove {count} artifacts from the observation.'
-    )
-    return observation

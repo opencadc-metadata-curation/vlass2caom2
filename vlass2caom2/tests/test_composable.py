@@ -82,9 +82,7 @@ from caom2pipe.manage_composable import (
 from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
 from caom2 import SimpleObservation, Algorithm
-from vlass2caom2 import (
-    COLLECTION, composable, SCHEME, VLASS_BOOKMARK, VlassName
-)
+from vlass2caom2 import composable, VLASS_BOOKMARK, VlassName
 import test_data_source
 import test_main_app
 from vlass2caom2.tests.test_data_source import _write_state
@@ -95,35 +93,43 @@ STATE_FILE = os.path.join(test_main_app.TEST_DATA_DIR, 'state.yml')
 @patch('caom2pipe.client_composable.ClientCollection')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
 def test_run_by_builder(exec_mock, clients_mock):
-    # clients_mock - avoid initialization errors against real services
-    exec_mock.return_value = 0
-
-    getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
-
-    test_config = Config()
-    test_config.get_executors()
-
-    test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-    with open(test_config.work_fqn, 'w') as f:
-        f.write(f'{test_f_name}\n')
-
+    orig_scheme = StorageName.scheme
+    orig_collection = StorageName.collection
     try:
-        # execution
-        test_result = composable._run()
-        assert test_result == 0, 'wrong result'
-    finally:
-        os.getcwd = getcwd_orig
-        if os.path.exists(test_config.work_fqn):
-            os.unlink(test_config.work_fqn)
+        # clients_mock - avoid initialization errors against real services
+        exec_mock.return_value = 0
 
-    assert exec_mock.called, 'expect to be called'
-    args, kwargs = exec_mock.call_args
-    arg_0 = args[0]
-    assert isinstance(arg_0, VlassName), 'wrong parameter type'
-    assert arg_0.obs_id == 'VLASS1.2.T07t13.J083838-153000', 'wrong obs id'
-    assert arg_0.source_names[0] == test_f_name, 'wrong source name'
-    assert arg_0.destination_uris[0] == f'{SCHEME}:{COLLECTION}/{test_f_name}', 'wrong destination uri'
+        getcwd_orig = os.getcwd
+        os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+
+        test_config = Config()
+        test_config.get_executors()
+        StorageName.collection = test_config.collection
+        StorageName.scheme = test_config.scheme
+
+        test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+        with open(test_config.work_fqn, 'w') as f:
+            f.write(f'{test_f_name}\n')
+
+        try:
+            # execution
+            test_result = composable._run()
+            assert test_result == 0, 'wrong result'
+        finally:
+            os.getcwd = getcwd_orig
+            if os.path.exists(test_config.work_fqn):
+                os.unlink(test_config.work_fqn)
+
+        assert exec_mock.called, 'expect to be called'
+        args, kwargs = exec_mock.call_args
+        arg_0 = args[0]
+        assert isinstance(arg_0, VlassName), 'wrong parameter type'
+        assert arg_0.obs_id == 'VLASS1.2.T07t13.J083838-153000', 'wrong obs id'
+        assert arg_0.source_names[0] == test_f_name, 'wrong source name'
+        assert arg_0.destination_uris[0] == f'{test_config.scheme}:{test_config.collection}/{test_f_name}', 'wrong destination uri'
+    finally:
+        StorageName.scheme = orig_scheme
+        StorageName.collection = orig_collection
 
 
 @patch('caom2pipe.client_composable.ClientCollection')
@@ -214,12 +220,7 @@ info_count = 0
 @patch('caom2pipe.transfer_composable.HttpTransfer')
 @patch('vlass2caom2.data_source.query_endpoint_session')
 @patch('caom2pipe.client_composable.ClientCollection')
-def test_run_state_store_ingest(
-    client_mock,
-    query_mock,
-    transferrer_mock,
-    visit_mock,
-):
+def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit_mock):
     test_dir = f'{test_main_app.TEST_DATA_DIR}/store_ingest_test'
     transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
     client_mock.data_client.get_head.side_effect = _mock_headers_read
@@ -261,7 +262,8 @@ def test_run_state_store_ingest(
         assert client_mock.data_client.put.call_count == 20, 'wrong number of puts'
         client_mock.data_client.put.assert_called_with(
             '/usr/src/app/vlass2caom2/vlass2caom2/tests/data/store_ingest_test/VLASS1.2.T21t15.J141833+413000',
-            'nrao:VLASS/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits',
+            f'{test_config.scheme}:{test_config.collection}/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.'
+            f'iter1.image.pbcor.tt0.subim.fits',
             None,
         )
 
@@ -291,13 +293,12 @@ def test_run_state_store_ingest(
             os.rmdir(test_log_dir)
 
 
-def test_store():
+def test_store(test_config):
     orig_scheme = StorageName.scheme
     orig_collection = StorageName.collection
     try:
-        StorageName.collection = COLLECTION
-        StorageName.scheme = SCHEME
-        test_config = Config()
+        StorageName.collection = test_config.collection
+        StorageName.scheme = test_config.scheme
         test_config.logging_level = 'ERROR'
         test_config.working_directory = '/tmp'
         test_url = (
@@ -324,7 +325,7 @@ def test_store():
         assert clients_mock.data_client.put.called, 'expect a call'
         clients_mock.data_client.put.assert_called_with(
             '/tmp/VLASS2.1.T10t12.J073401-033000',
-            f'{SCHEME}:VLASS/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.'
+            f'{test_config.scheme}:{test_config.collection}/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.'
             f'iter1.image.pbcor.tt0.rms.subim.fits',
             None,
         ), 'wrong put args'
@@ -341,17 +342,6 @@ def test_store():
     finally:
         StorageName.scheme = orig_scheme
         StorageName.collection = orig_collection
-
-
-def _cmd_direct_mock():
-    from caom2 import SimpleObservation, Algorithm
-
-    obs = SimpleObservation(
-        observation_id='VLASS1.2.T07t13.J083838-153000',
-        collection=COLLECTION,
-        algorithm=Algorithm(name='testing'),
-    )
-    return obs
 
 
 def _mock_service_query():

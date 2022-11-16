@@ -78,7 +78,9 @@ from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['mapping_factory']
+__all__ = ['APPLICATION', 'mapping_factory']
+
+APPLICATION = 'vlass2caom2'
 
 
 class BlueprintMapping(cc.TelescopeMapping):
@@ -89,7 +91,7 @@ class BlueprintMapping(cc.TelescopeMapping):
         """Configure the VLASS-specific ObsBlueprint for the CAOM model
         SpatialWCS."""
         self._logger.debug('Begin accumulate_wcs.')
-        super().accumulate_blueprint(bp, 'vlass2caom2')
+        super().accumulate_blueprint(bp, APPLICATION)
 
         # observation level
         bp.set('Observation.type', 'OBJECT')
@@ -124,7 +126,7 @@ class QuicklookMapping(BlueprintMapping):
     def accumulate_blueprint(self, bp, application=None):
         """Configure the Quicklook ObsBlueprint for the CAOM model SpatialWCS."""
         self._logger.debug('Begin accumulate_wcs.')
-        super().accumulate_blueprint(bp, 'vlass2caom2')
+        super().accumulate_blueprint(bp, APPLICATION)
         bp.configure_position_axes((1, 2))
         bp.configure_energy_axis(3)
         bp.configure_polarization_axis(4)

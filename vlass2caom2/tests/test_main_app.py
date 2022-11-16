@@ -71,7 +71,6 @@ from caom2pipe import astro_composable as ac
 from caom2pipe.manage_composable import Features, read_obs_from_file, StorageName, write_obs_to_file
 from caom2pipe import reader_composable as rdc
 from vlass2caom2 import storage_name, fits2caom2_augmentation
-from vlass2caom2.storage_name import SCHEME, COLLECTION
 from caom2.diff import get_differences
 
 import os
@@ -129,13 +128,12 @@ else:
 
 @pytest.mark.parametrize('test_files', test_obs)
 @patch('caom2utils.data_util.get_local_headers_from_fits')
-def test_visit(header_mock, test_files):
+def test_visit(header_mock, test_files, test_config):
     original_collection = StorageName.collection
     original_scheme = StorageName.scheme
-    scheme = SCHEME
     try:
-        StorageName.collection = COLLECTION
-        StorageName.scheme = scheme
+        StorageName.collection = test_config.collection
+        StorageName.scheme = test_config.scheme
         obs_id = test_files[0]
         header_mock.side_effect = ac.make_headers_from_file
         expected_fqn = f'{TEST_DATA_DIR}/{obs_id}.expected.xml'
