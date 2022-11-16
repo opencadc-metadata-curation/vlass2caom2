@@ -2,7 +2,7 @@ working_directory: /usr/src/app/
 # test value is ivo://cadc.nrc.ca/sc2repo
 resource_id: ivo://cadc.nrc.ca/ams
 # test value is ivo://cadc.nrc.ca/sc2tap
-tap_id: ivo://cadc.nrc.ca/argus
+tap_id: ivo://cadc.nrc.ca/ams/cirada
 proxy_file_name: /usr/src/app/cadcproxy.pem
 todo_file_name: todo.txt
 # values True False
@@ -36,6 +36,7 @@ data_sources:
 data_source_extensions:
   - .fits
   - .catalog.csv
+storage_inventory_resource_id: ivo://cadc.nrc.ca/uvic/minoc
 # how to control the work that gets done
 # possible values are:
 # - scrape - read the headers, write out the xml - kind of a test mode
@@ -46,6 +47,3 @@ task_types:
   - store
   - ingest
   - modify
-features:
-  supports_latest_client: False
-  supports_decompression: False
