@@ -71,7 +71,7 @@ import os
 
 from datetime import datetime, timezone
 from dateutil import tz
-from mock import ANY, patch, Mock
+from unittest.mock import ANY, patch, Mock
 
 from cadcutils import exceptions
 from cadcdata import FileInfo
