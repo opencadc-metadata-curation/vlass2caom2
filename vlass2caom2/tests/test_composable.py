@@ -264,7 +264,6 @@ def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit
             '/usr/src/app/vlass2caom2/vlass2caom2/tests/data/store_ingest_test/VLASS1.2.T21t15.J141833+413000',
             f'{test_config.scheme}:{test_config.collection}/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.'
             f'iter1.image.pbcor.tt0.subim.fits',
-            None,
         )
 
         test_obs_output = read_obs_from_file(f'{test_dir}/logs/VLASS1.2.T07t13.J083838-153000.xml')
@@ -327,7 +326,6 @@ def test_store(test_config):
             '/tmp/VLASS2.1.T10t12.J073401-033000',
             f'{test_config.scheme}:{test_config.collection}/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.'
             f'iter1.image.pbcor.tt0.rms.subim.fits',
-            None,
         ), 'wrong put args'
         assert transferrer.get.called, 'expect a transfer call'
         test_f_name = (
