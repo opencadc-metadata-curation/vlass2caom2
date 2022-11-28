@@ -178,7 +178,10 @@ class QuicklookMapping(BlueprintMapping):
         # From
         # https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
         # Clare Chandler via JJK - 21-08-18
-        return 3600.0 * sqrt(bmaj * bmin)
+        result = None
+        if bmaj is not None and bmaj != 'INF' and bmin is not None and bmin != 'INF':
+            result = 3600.0 * sqrt(bmaj * bmin)
+        return result
 
     def get_product_type(self, ext):
         if '.rms.' in self._storage_name.file_uri:
