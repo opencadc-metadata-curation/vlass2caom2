@@ -4,15 +4,10 @@
 import glob
 import os
 import sys
-import imp
 from setuptools.command.test import test as TestCommand
 from setuptools import find_packages
 
 from setuptools import setup
-
-import distutils.cmd
-import distutils.log
-import subprocess
 
 # read the README.md file and return as string.
 def readme():
@@ -88,7 +83,6 @@ setup(name=PACKAGENAME,
       url=URL,
       long_description=readme(),
       zip_safe=False,
-      use_2to3=False,
       setup_requires=[],
       entry_points=entry_points,
       python_requires='>=3.10.*',
