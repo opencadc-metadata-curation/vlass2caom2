@@ -72,13 +72,8 @@ from vlass2caom2 import cleanup_augmentation
 import test_main_app
 
 
-def test_visit():
-    test_url = (
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
-        'T20t12/VLASS1.2.ql.T20t12.J085530+373000.10.2048.v1/'
-        'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.'
-        'pbcor.tt0.rms.subim.fits'
-    )
+def test_visit(test_config, tmp_path):
+    test_config.change_working_directory(tmp_path.as_posix())
     test_obs_id = 'VLASS1.2.T20t12.J092604+383000'
     test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
     test_fname = f'{test_main_app.TEST_DATA_DIR}/{test_obs_id}.xml'
@@ -87,7 +82,13 @@ def test_visit():
     test_artifacts = test_obs.planes[test_product_id].artifacts
     assert len(test_artifacts) == 4, 'wrong starting conditions'
 
-    kwargs = {'url': test_url}
+    test_observable = mc.Observable(mc.Rejected(test_config.rejected_fqn), mc.Metrics(test_config))
+    kwargs = {'observable': test_observable}
     test_obs = cleanup_augmentation.visit(test_obs, **kwargs)
     assert test_obs is not None, 'wrong return value'
     assert len(test_artifacts) == 2, 'wrong ending conditions'
+    assert len(test_observable.rejected.content['old_version']) == 2, 'record capture failure'
+    test_uri1 = 'nrao:VLASS/VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.pbcor.tt0.rms.subim.fits'
+    test_uri2 = 'nrao:VLASS/VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.pbcor.tt0.subim.fits'
+    assert test_uri1 in test_observable.rejected.content['old_version'], 'uri1 rejection tracking'
+    assert test_uri2 in test_observable.rejected.content['old_version'], 'uri2 rejection tracking'

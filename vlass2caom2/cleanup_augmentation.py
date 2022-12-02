@@ -70,7 +70,7 @@
 import logging
 
 from caom2 import Observation
-from caom2pipe.manage_composable import check_param, StorageName
+from caom2pipe.manage_composable import check_param, Rejected, StorageName
 from vlass2caom2 import storage_name as sn
 
 
@@ -81,6 +81,7 @@ def visit(observation, **kwargs):
     of those files are removed.
     """
     check_param(observation, Observation)
+    observable = kwargs.get('observable')
     count = 0
     for plane in observation.planes.values():
         temp = []
@@ -104,17 +105,6 @@ def visit(observation, **kwargs):
                     if version != max_version:
                         temp.append(artifact.uri)
 
-                # SG - 03-02-21 - use the full fits filename plus
-                # _prev/_prev_256 for the preview/thumbnail file names, so
-                # need to clean up the preview obs_id-based artifact URIs.
-                # The observation IDs are missing '.ql', so it's a safe
-                # way to find the artifacts to be removed.
-                if (
-                    artifact.uri.startswith(f'{StorageName.preview_scheme}:{StorageName.collection}/{observation.observation_id}')
-                    and artifact.uri.endswith('.jpg')
-                ):
-                    temp.append(artifact.uri)
-
         delete_list = list(set(temp))
         for entry in delete_list:
             logging.warning(
@@ -123,6 +113,7 @@ def visit(observation, **kwargs):
             )
             count += 1
             observation.planes[plane.product_id].artifacts.pop(entry)
+            observable.rejected.record(Rejected.OLD_VERSION, entry)
 
     logging.info(
         f'Completed cleanup augmentation for {observation.observation_id}. '

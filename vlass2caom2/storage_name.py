@@ -90,6 +90,8 @@ class VlassName(mc.StorageName):
     While tempting, it's not possible to recreate URLs from file names,
     because some of the URLs are from the QA_REJECTED directories, hence
     the absence of that functionality in this class.
+
+    SG - 03-02-21 - use the full fits filename plus _prev/_prev_256 for the preview/thumbnail file names
     """
 
     def __init__(
