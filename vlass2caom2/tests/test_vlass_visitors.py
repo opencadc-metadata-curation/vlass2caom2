@@ -98,18 +98,18 @@ def test_aug_visit():
 
 @patch('vlass2caom2.data_source.requests.get')
 @patch('vlass2caom2.data_source.query_endpoint_session')
-def test_aug_visit_works(query_endpoint_mock, get_mock):
+def test_aug_visit_works(query_endpoint_mock, get_mock, test_config):
     orig_scheme = StorageName.scheme
     orig_collection = StorageName.collection
     try:
-        StorageName.collection = storage_name.COLLECTION
-        StorageName.scheme = storage_name.SCHEME
+        StorageName.collection = test_config.collection
+        StorageName.scheme = test_config.scheme
         get_mock.return_value.__enter__.return_value.raw = WL_INDEX
         query_endpoint_mock.side_effect = test_data_source._query_quicklook_endpoint
-        test_config = Config()
-        test_config.get_executors()
-        test_config.data_sources = [storage_name.QL_URL]
-        test_state = State(test_config.state_fqn)
+        tc = Config()
+        tc.get_executors()
+        tc.data_sources = [storage_name.QL_URL]
+        test_state = State(tc.state_fqn)
         test_web_log = data_source.WebLogMetadata(test_state, Mock(), [storage_name.QL_URL])
         test_web_log.init_web_log()
         test_name = storage_name.VlassName(
@@ -118,7 +118,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock):
         test_file = os.path.join(TEST_DATA_DIR, f'{test_name.obs_id}.xml')
         test_obs = read_obs_from_file(test_file)
         assert test_obs is not None, 'unexpected None'
-        test_source = data_source.NraoPages(test_config)
+        test_source = data_source.NraoPages(tc)
         test_metadata_reader = reader.VlassStorageMetadataReader(Mock(), test_source, test_web_log)
         kwargs = {
             'metadata_reader': test_metadata_reader,

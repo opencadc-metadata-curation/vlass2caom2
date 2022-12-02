@@ -68,28 +68,27 @@
 #
 
 from caom2pipe.manage_composable import (
-    Config, Metrics, Observable, read_obs_from_file, Rejected, StorageName
+    Metrics, Observable, read_obs_from_file, Rejected, StorageName
 )
 from vlass2caom2 import preview_augmentation, cleanup_augmentation
-from vlass2caom2.storage_name import COLLECTION, SCHEME, VlassName
+from vlass2caom2.storage_name import VlassName
 
 from mock import patch
 from test_main_app import TEST_DATA_DIR
 
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
-def test_preview_augmentation(access_mock):
+def test_preview_augmentation(access_mock, test_config):
     orig_scheme = StorageName.scheme
     orig_collection = StorageName.collection
     try:
-        StorageName.collection = COLLECTION
-        StorageName.scheme = SCHEME
+        StorageName.collection = test_config.collection
+        StorageName.scheme = test_config.scheme
         access_mock.return_value = 'https://localhost'
         test_fqn = f'{TEST_DATA_DIR}/preview_augmentation_start.xml'
         test_science_f_name = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.' 'tt0.subim.fits'
         test_storage_name = VlassName(test_science_f_name)
         test_obs = read_obs_from_file(test_fqn)
-        test_config = Config()
         test_rejected = Rejected(f'{TEST_DATA_DIR}/rejected.yml')
         test_metrics = Metrics(test_config)
         test_observable = Observable(test_rejected, test_metrics)
@@ -103,8 +102,6 @@ def test_preview_augmentation(access_mock):
         assert test_subject is not None, 'need a test subject'
         assert len(test_obs.planes) == 1, 'wrong number of planes'
         assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 4, 'wrong starting # of artifacts'
-        import logging
-        logging.getLogger('VlassPreview').setLevel(logging.DEBUG)
         test_obs = test_subject.visit(test_obs)
         assert test_obs is not None, 'expect a result'
         assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 6, 'wrong ending # of artifacts'

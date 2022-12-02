@@ -69,16 +69,17 @@
 
 from caom2pipe.manage_composable import StorageName
 from caom2pipe import name_builder_composable as nbc
-from vlass2caom2.storage_name import SCHEME, COLLECTION, VlassName
+from vlass2caom2.storage_name import VlassName
 
 
-def test_storage_name():
+def test_storage_name(test_config):
     original_collection = StorageName.collection
+    original_preview = StorageName.preview_scheme
     original_scheme = StorageName.scheme
-    scheme = SCHEME
     try:
-        StorageName.collection = COLLECTION
-        StorageName.scheme = scheme
+        StorageName.collection = test_config.collection
+        StorageName.preview_scheme = test_config.preview_scheme
+        StorageName.scheme = test_config.scheme
         test_bit = (
             'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1.I.iter1.image.pbcor.tt0'
         )
@@ -95,7 +96,7 @@ def test_storage_name():
             ), 'wrong product id'
             assert ts.file_name == f'{test_bit}.subim.fits', 'wrong fname'
             assert ts.file_id == f'{test_bit}.subim', 'wrong fid'
-            assert ts.file_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim.fits', 'wrong uri'
+            assert ts.file_uri == f'{test_config.scheme}:{test_config.collection}/{test_bit}.subim.fits', 'wrong uri'
             assert (
                 ts.model_file_name == 'VLASS1.2.T23t09.J083851+483000.xml'
             ), 'wrong model name'
@@ -121,27 +122,27 @@ def test_storage_name():
             ), 'wrong image pointing url'
             assert ts.prev == f'{test_bit}.subim_prev.jpg', 'wrong preview'
             assert ts.thumb == f'{test_bit}.subim_prev_256.jpg', 'wrong thumbnail'
-            assert ts.prev_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim_prev.jpg', 'wrong preview uri'
-            assert ts.thumb_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim_prev_256.jpg', 'wrong thumbnail uri'
+            assert ts.prev_uri == f'{test_config.preview_scheme}:{test_config.collection}/{test_bit}.subim_prev.jpg', 'wrong preview uri'
+            assert ts.thumb_uri == f'{test_config.preview_scheme}:{test_config.collection}/{test_bit}.subim_prev_256.jpg', 'wrong thumbnail uri'
 
         ts1 = VlassName(test_url)
         ts2 = VlassName(f'{test_bit}.subim.fits')
         for ts in [ts1, ts2]:
-            assert ts.file_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim.fits', 'wrong uri'
-            assert ts.prev_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim_prev.jpg', 'wrong preview uri'
-            assert ts.thumb_uri == f'{scheme}:{COLLECTION}/{test_bit}.subim_prev_256.jpg', 'wrong thumbnail uri'
+            assert ts.file_uri == f'{test_config.scheme}:{test_config.collection}/{test_bit}.subim.fits', 'wrong uri'
+            assert ts.prev_uri == f'{test_config.preview_scheme}:{test_config.collection}/{test_bit}.subim_prev.jpg', 'wrong preview uri'
+            assert ts.thumb_uri == f'{test_config.preview_scheme}:{test_config.collection}/{test_bit}.subim_prev_256.jpg', 'wrong thumbnail uri'
     finally:
         StorageName.collection = original_collection
+        StorageName.preview_scheme = original_preview
         StorageName.scheme = original_scheme
 
 
-def test_source_names():
+def test_source_names(test_config):
     original_collection = StorageName.collection
     original_scheme = StorageName.scheme
-    scheme = SCHEME
     try:
-        StorageName.collection = COLLECTION
-        StorageName.scheme = scheme
+        StorageName.collection = test_config.collection
+        StorageName.scheme = test_config.scheme
         test_url = (
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/T23t09/'
             'VLASS1.2.ql.T23t09.J083851+483000.10.2048.v1/VLASS1.2.ql.T23t09.'
@@ -164,13 +165,12 @@ def test_source_names():
         StorageName.scheme = original_scheme
 
 
-def test_csv():
+def test_csv(test_config):
     original_collection = StorageName.collection
     original_scheme = StorageName.scheme
-    scheme = SCHEME
     try:
-        StorageName.collection = COLLECTION
-        StorageName.scheme = scheme
+        StorageName.collection = test_config.collection
+        StorageName.scheme = test_config.scheme
         test_f_name = 'VLASS2.1.se.T11t35.J231002+033000.06.2048.v1.I.catalog.csv'
         test_subject = nbc.EntryBuilder(VlassName)
         test_result = test_subject.build(test_f_name)
@@ -179,3 +179,4 @@ def test_csv():
     finally:
         StorageName.collection = original_collection
         StorageName.scheme = original_scheme
+

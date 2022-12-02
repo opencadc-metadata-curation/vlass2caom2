@@ -71,7 +71,6 @@ from caom2pipe import astro_composable as ac
 from caom2pipe.manage_composable import Features, read_obs_from_file, StorageName, write_obs_to_file
 from caom2pipe import reader_composable as rdc
 from vlass2caom2 import storage_name, fits2caom2_augmentation
-from vlass2caom2.storage_name import SCHEME, COLLECTION
 from caom2.diff import get_differences
 
 import os
@@ -100,12 +99,14 @@ n = 'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt0.subim.
 o = 'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt1.rms.subim.fits.header'
 p = 'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt1.subim.fits.header'
 q = 'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.catalog.csv'
+r = 'VLASS1.1.ql.T06t24.J152614-163000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
 
 obs_id_a = 'VLASS1.1.T01t01.J000228-363000'
 obs_id_c = 'VLASS1.1.T10t12.J075402-033000'
 obs_id_e = 'VLASS1.1.T29t05.J110448+763000'
 obs_id_f = 'VLASS1.2.T07t14.J084202-123000'
 obs_id_k = 'VLASS2.1.T10t01.J000200-003000'
+obs_id_r = 'VLASS1.1.T06t24.J152614-163000'
 
 features = Features()
 features.supports_catalog = False
@@ -124,24 +125,24 @@ else:
         [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
         [obs_id_f, i, j],
         [obs_id_k, k, l, m, n, o, p, q],
+        [obs_id_r, r],
     ]
 
 
 @pytest.mark.parametrize('test_files', test_obs)
 @patch('caom2utils.data_util.get_local_headers_from_fits')
-def test_visit(header_mock, test_files):
+def test_visit(header_mock, test_files, test_config):
     original_collection = StorageName.collection
     original_scheme = StorageName.scheme
-    scheme = SCHEME
     try:
-        StorageName.collection = COLLECTION
-        StorageName.scheme = scheme
+        StorageName.collection = test_config.collection
+        StorageName.scheme = test_config.scheme
         obs_id = test_files[0]
         header_mock.side_effect = ac.make_headers_from_file
         expected_fqn = f'{TEST_DATA_DIR}/{obs_id}.expected.xml'
         expected = read_obs_from_file(expected_fqn)
-        in_fqn = expected_fqn.replace('expected.xml', '.in.xml')
-        actual_fqn = expected_fqn.replace('expected.xml', '.actual.xml')
+        in_fqn = expected_fqn.replace('expected.xml', 'in.xml')
+        actual_fqn = expected_fqn.replace('expected.xml', 'actual.xml')
         if os.path.exists(actual_fqn):
             os.unlink(actual_fqn)
 

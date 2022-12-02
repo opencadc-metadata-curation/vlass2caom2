@@ -78,18 +78,20 @@ from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['BlueprintMapping', 'ContinuumMapping', 'QuicklookMapping']
+__all__ = ['APPLICATION', 'mapping_factory']
+
+APPLICATION = 'vlass2caom2'
 
 
 class BlueprintMapping(cc.TelescopeMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def accumulate_blueprint(self, bp, application=None):
         """Configure the VLASS-specific ObsBlueprint for the CAOM model
         SpatialWCS."""
         self._logger.debug('Begin accumulate_wcs.')
-        super().accumulate_blueprint(bp, 'vlass2caom2')
+        super().accumulate_blueprint(bp, APPLICATION)
 
         # observation level
         bp.set('Observation.type', 'OBJECT')
@@ -118,13 +120,13 @@ class BlueprintMapping(cc.TelescopeMapping):
 
 
 class QuicklookMapping(BlueprintMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def accumulate_blueprint(self, bp, application=None):
         """Configure the Quicklook ObsBlueprint for the CAOM model SpatialWCS."""
         self._logger.debug('Begin accumulate_wcs.')
-        super().accumulate_blueprint(bp, 'vlass2caom2')
+        super().accumulate_blueprint(bp, APPLICATION)
         bp.configure_position_axes((1, 2))
         bp.configure_energy_axis(3)
         bp.configure_polarization_axis(4)
@@ -176,7 +178,10 @@ class QuicklookMapping(BlueprintMapping):
         # From
         # https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
         # Clare Chandler via JJK - 21-08-18
-        return 3600.0 * sqrt(bmaj * bmin)
+        result = None
+        if bmaj is not None and bmaj != 'INF' and bmin is not None and bmin != 'INF':
+            result = 3600.0 * sqrt(bmaj * bmin)
+        return result
 
     def get_product_type(self, ext):
         if '.rms.' in self._storage_name.file_uri:
@@ -195,7 +200,7 @@ class QuicklookMapping(BlueprintMapping):
             else:
                 return None
 
-    def update(self, observation, file_info, clients=None):
+    def update(self, observation, file_info):
         """Called to fill multiple CAOM model elements and/or attributes, must
         have this signature for import_module loading and execution.
         """
@@ -232,8 +237,8 @@ class QuicklookMapping(BlueprintMapping):
 
 
 class ContinuumMapping(QuicklookMapping):
-    def __init__(self, storage_name, headers):
-        super().__init__(storage_name, headers)
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
 
     def accumulate_blueprint(self, bp, application=None):
         super().accumulate_blueprint(bp)
@@ -252,3 +257,12 @@ class ContinuumMapping(QuicklookMapping):
         bp.add_attribute('Plane.provenance.runID', 'FILNAM09')
 
         bp.add_attribute('Chunk.energy.restfrq', 'RESTFREQ')
+
+
+def mapping_factory(storage_name, headers, clients):
+    if storage_name.is_catalog():
+        return BlueprintMapping(storage_name, headers, clients)
+    elif storage_name.is_quicklook():
+        return QuicklookMapping(storage_name, headers, clients)
+    else:
+        return ContinuumMapping(storage_name, headers, clients)

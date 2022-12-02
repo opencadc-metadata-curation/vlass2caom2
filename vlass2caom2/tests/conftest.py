@@ -3,7 +3,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2019.                            (c) 2019.
+#  (c) 2022.                            (c) 2022.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,19 +67,19 @@
 # ***********************************************************************
 #
 
-from datetime import datetime
+from caom2pipe.manage_composable import Config
+import pytest
 
-__all__ = ['get_bookmark']
-
-
-def get_bookmark(from_state):
-    result = from_state.get_bookmark('vlass_timestamp')
-    if isinstance(result, str):
-        result = make_time(result)
-    return result
+COLLECTION = 'VLASS'
+SCHEME = 'nrao'
+PREVIEW_SCHEME = 'cadc'
 
 
-def make_time(value):
-    # 01-May-2019 15:40 - support the format of what's visible on the
-    # web page, to make it easy to cut-and-paste
-    return datetime.strptime(value, '%d-%b-%Y %H:%M')
+@pytest.fixture()
+def test_config():
+    config = Config()
+    config.collection = COLLECTION
+    config.preview_scheme = PREVIEW_SCHEME
+    config.scheme = SCHEME
+    return config
+

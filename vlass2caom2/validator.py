@@ -240,18 +240,13 @@ class VlassValidator(mc.Validator):
         caom_client = CAOM2RepoClient(subject)
         metrics = mc.Metrics(config)
         for entry in self._source:
-            if VlassValidator._later_version_at_cadc(
-                entry, caom_client, metrics
-            ):
+            if self._later_version_at_cadc(entry, caom_client, metrics):
                 self._source.remove(entry)
 
-    @staticmethod
-    def _later_version_at_cadc(entry, caom_client, metrics):
+    def _later_version_at_cadc(self, entry, caom_client, metrics):
         later_version_found = False
         vlass_name = storage_name.VlassName(entry)
-        caom_at_cadc = clc.repo_get(
-            caom_client, storage_name.COLLECTION, vlass_name.obs_id, metrics
-        )
+        caom_at_cadc = clc.repo_get(caom_client, self._config.collection, vlass_name.obs_id, metrics)
         if caom_at_cadc is not None:
             for plane in caom_at_cadc.planes.values():
                 for artifact in plane.artifacts.values():

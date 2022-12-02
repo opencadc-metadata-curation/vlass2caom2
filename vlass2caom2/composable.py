@@ -76,7 +76,7 @@ from caom2pipe import manage_composable as mc
 from caom2pipe import name_builder_composable as nbc
 from caom2pipe import run_composable as rc
 from caom2pipe import transfer_composable as tc
-from vlass2caom2 import time_bounds_augmentation, quality_augmentation
+from vlass2caom2 import APPLICATION, time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
 from vlass2caom2 import data_source, reader, storage_name
 from vlass2caom2 import preview_augmentation, fits2caom2_augmentation
@@ -97,7 +97,7 @@ def _common_init():
     config = mc.Config()
     config.get_executors()
     mc.StorageName.collection = config.collection
-    mc.StorageName.scheme = 'nrao' if config.features.supports_latest_client else 'ad'
+    mc.StorageName.scheme = config.scheme
     state = mc.State(config.state_fqn)
     session = mc.get_endpoint_session()
     web_log_metadata = data_source.WebLogMetadata(state, session, config.data_sources)
@@ -133,6 +133,7 @@ def _run_state():
         store_transfer=tc.HttpTransfer(),
         metadata_reader=metadata_reader,
         clients=clients,
+        application=APPLICATION,
     )
 
 
@@ -180,6 +181,7 @@ def _run():
         store_transfer=tc.HttpTransfer(),
         metadata_reader=metadata_reader,
         clients=clients,
+        application=APPLICATION,
     )
 
 

@@ -27,6 +27,7 @@ retry_file_name: retries.txt
 retry_failures: False
 retry_count: 1
 collection: VLASS
+scheme: nrao
 state_file_name: state.yml
 interval: 600
 # how to control the work that gets done
@@ -42,5 +43,3 @@ data_source_extensions:
   - .csv
 task_types: 
   - ingest
-features:
-  supports_latest_client: True

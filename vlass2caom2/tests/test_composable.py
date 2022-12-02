@@ -71,37 +71,34 @@ import os
 
 from datetime import datetime, timezone
 from dateutil import tz
-from mock import ANY, call, patch, Mock
+from unittest.mock import ANY, patch, Mock
 
 from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe import execute_composable as ec
 from caom2pipe.manage_composable import (
-    Config, Metrics, Observable, read_obs_from_file, Rejected, StorageName, write_as_yaml, write_obs_to_file
+    Config, Metrics, Observable, read_obs_from_file, Rejected, StorageName, write_obs_to_file
 )
 from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
 from caom2 import SimpleObservation, Algorithm
-from vlass2caom2 import (
-    COLLECTION, composable, data_source, SCHEME, storage_name, VLASS_BOOKMARK, VlassName
-)
+from vlass2caom2 import composable, VLASS_BOOKMARK, VlassName
 import test_data_source
 import test_main_app
-
+from vlass2caom2.tests.test_data_source import _write_state
 
 STATE_FILE = os.path.join(test_main_app.TEST_DATA_DIR, 'state.yml')
 
 
 @patch('caom2pipe.client_composable.ClientCollection')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run_by_builder(exec_mock, clients_mock):
+def test_run_by_builder(exec_mock, clients_mock, test_config):
     # clients_mock - avoid initialization errors against real services
     exec_mock.return_value = 0
 
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
 
-    test_config = Config()
     test_config.get_executors()
 
     test_f_name = 'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
@@ -123,7 +120,7 @@ def test_run_by_builder(exec_mock, clients_mock):
     assert isinstance(arg_0, VlassName), 'wrong parameter type'
     assert arg_0.obs_id == 'VLASS1.2.T07t13.J083838-153000', 'wrong obs id'
     assert arg_0.source_names[0] == test_f_name, 'wrong source name'
-    assert arg_0.destination_uris[0] == f'{SCHEME}:{COLLECTION}/{test_f_name}', 'wrong destination uri'
+    assert arg_0.destination_uris[0] == f'{test_config.scheme}:{test_config.collection}/{test_f_name}', 'wrong destination uri'
 
 
 @patch('caom2pipe.client_composable.ClientCollection')
@@ -159,7 +156,7 @@ def test_run_state(run_mock, query_mock, client_mock):
         )
         return a, b
 
-    _write_state('24Apr2019 12:34')
+    _write_state('24Apr2019 12:34', STATE_FILE)
     query_mock.side_effect = _mock_append_work
     run_mock.return_value = 0
     client_mock.data_client.info.side_effect = _mock_get_file_info
@@ -214,12 +211,7 @@ info_count = 0
 @patch('caom2pipe.transfer_composable.HttpTransfer')
 @patch('vlass2caom2.data_source.query_endpoint_session')
 @patch('caom2pipe.client_composable.ClientCollection')
-def test_run_state_store_ingest(
-    client_mock,
-    query_mock,
-    transferrer_mock,
-    visit_mock,
-):
+def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit_mock):
     test_dir = f'{test_main_app.TEST_DATA_DIR}/store_ingest_test'
     transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
     client_mock.data_client.get_head.side_effect = _mock_headers_read
@@ -261,8 +253,8 @@ def test_run_state_store_ingest(
         assert client_mock.data_client.put.call_count == 20, 'wrong number of puts'
         client_mock.data_client.put.assert_called_with(
             '/usr/src/app/vlass2caom2/vlass2caom2/tests/data/store_ingest_test/VLASS1.2.T21t15.J141833+413000',
-            'nrao:VLASS/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits',
-            None,
+            f'{test_config.scheme}:{test_config.collection}/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.'
+            f'iter1.image.pbcor.tt0.subim.fits',
         )
 
         test_obs_output = read_obs_from_file(f'{test_dir}/logs/VLASS1.2.T07t13.J083838-153000.xml')
@@ -291,67 +283,46 @@ def test_run_state_store_ingest(
             os.rmdir(test_log_dir)
 
 
-def test_store():
-    orig_scheme = StorageName.scheme
-    orig_collection = StorageName.collection
-    try:
-        StorageName.collection = COLLECTION
-        StorageName.scheme = SCHEME
-        test_config = Config()
-        test_config.logging_level = 'ERROR'
-        test_config.working_directory = '/tmp'
-        test_url = (
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
-            'T10t12/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/'
-            'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.image.'
-            'pbcor.tt0.rms.subim.fits'
-        )
-        test_storage_name = VlassName(test_url)
-        transferrer = Mock()
-        clients_mock = Mock()
-        observable = Observable(
-            Rejected('/tmp/rejected.yml'), Metrics(test_config)
-        )
-        test_metadata_reader = Mock()
-        test_subject = ec.Store(
-            test_config,
-            observable,
-            transferrer,
-            clients_mock,
-            test_metadata_reader,
-        )
-        test_subject.execute({'storage_name': test_storage_name})
-        assert clients_mock.data_client.put.called, 'expect a call'
-        clients_mock.data_client.put.assert_called_with(
-            '/tmp/VLASS2.1.T10t12.J073401-033000',
-            f'{SCHEME}:VLASS/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.'
-            f'iter1.image.pbcor.tt0.rms.subim.fits',
-            None,
-        ), 'wrong put args'
-        assert transferrer.get.called, 'expect a transfer call'
-        test_f_name = (
-            'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.'
-            'image.pbcor.tt0.rms.subim.fits'
-        )
-        transferrer.get.assert_called_with(
-            f'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T10t12/'
-            f'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/{test_f_name}',
-            f'/tmp/VLASS2.1.T10t12.J073401-033000/{test_f_name}',
-        ), 'wrong transferrer args'
-    finally:
-        StorageName.scheme = orig_scheme
-        StorageName.collection = orig_collection
-
-
-def _cmd_direct_mock():
-    from caom2 import SimpleObservation, Algorithm
-
-    obs = SimpleObservation(
-        observation_id='VLASS1.2.T07t13.J083838-153000',
-        collection=COLLECTION,
-        algorithm=Algorithm(name='testing'),
+def test_store(test_config):
+    test_config.logging_level = 'ERROR'
+    test_config.working_directory = '/tmp'
+    test_url = (
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
+        'T10t12/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/'
+        'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.image.'
+        'pbcor.tt0.rms.subim.fits'
     )
-    return obs
+    test_storage_name = VlassName(test_url)
+    transferrer = Mock()
+    clients_mock = Mock()
+    observable = Observable(
+        Rejected('/tmp/rejected.yml'), Metrics(test_config)
+    )
+    test_metadata_reader = Mock()
+    test_subject = ec.Store(
+        test_config,
+        observable,
+        transferrer,
+        clients_mock,
+        test_metadata_reader,
+    )
+    test_subject.execute({'storage_name': test_storage_name})
+    assert clients_mock.data_client.put.called, 'expect a call'
+    clients_mock.data_client.put.assert_called_with(
+        '/tmp/VLASS2.1.T10t12.J073401-033000',
+        f'{test_config.scheme}:{test_config.collection}/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.'
+        f'iter1.image.pbcor.tt0.rms.subim.fits',
+    ), 'wrong put args'
+    assert transferrer.get.called, 'expect a transfer call'
+    test_f_name = (
+        'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1.I.iter1.'
+        'image.pbcor.tt0.rms.subim.fits'
+    )
+    transferrer.get.assert_called_with(
+        f'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T10t12/'
+        f'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/{test_f_name}',
+        f'/tmp/VLASS2.1.T10t12.J073401-033000/{test_f_name}',
+    ), 'wrong transferrer args'
 
 
 def _mock_service_query():
@@ -415,24 +386,6 @@ def _write_obs_mock():
         algorithm=Algorithm(name='exposure'),
     )
     write_obs_to_file(obs, args.out_obs_xml)
-
-
-def _write_state(start_time_str, f_name=STATE_FILE):
-    test_time = data_source.QuicklookPage.make_date_time(start_time_str)
-    test_bookmark = {
-        'bookmarks': {
-            'vlass_timestamp': {'last_record': test_time},
-        },
-        'context': {
-            'vlass_context': {
-                'VLASS1.1': '01-Jan-2018 00:00',
-                'VLASS1.2v2': '01-Nov-2018 00:00',
-                'VLASS2.1': '01-Jul-2020 00:00',
-                'VLASS2.2': '01-Jul-2021 00:00',
-            },
-        },
-    }
-    write_as_yaml(test_bookmark, f_name)
 
 
 def _mock_retrieve_file(ignore, local_fqn):

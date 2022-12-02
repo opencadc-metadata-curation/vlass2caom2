@@ -70,7 +70,7 @@
 import logging
 
 from caom2 import Observation
-from caom2pipe import manage_composable as mc
+from caom2pipe.manage_composable import check_param, StorageName
 from vlass2caom2 import storage_name as sn
 
 
@@ -80,7 +80,7 @@ def visit(observation, **kwargs):
     the respective artifacts are removed from the observations if old versions
     of those files are removed.
     """
-    mc.check_param(observation, Observation)
+    check_param(observation, Observation)
     count = 0
     for plane in observation.planes.values():
         temp = []
@@ -109,10 +109,10 @@ def visit(observation, **kwargs):
                 # need to clean up the preview obs_id-based artifact URIs.
                 # The observation IDs are missing '.ql', so it's a safe
                 # way to find the artifacts to be removed.
-                if artifact.uri.startswith(
-                    f'{sn.CADC_SCHEME}:{sn.COLLECTION}/'
-                    f'{observation.observation_id}'
-                ) and artifact.uri.endswith('.jpg'):
+                if (
+                    artifact.uri.startswith(f'{StorageName.preview_scheme}:{StorageName.collection}/{observation.observation_id}')
+                    and artifact.uri.endswith('.jpg')
+                ):
                     temp.append(artifact.uri)
 
         delete_list = list(set(temp))

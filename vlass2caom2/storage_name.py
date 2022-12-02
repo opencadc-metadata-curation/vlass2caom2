@@ -73,11 +73,8 @@ from urllib.parse import urlparse
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['COLLECTION', 'COLLECTION_PATTERN', 'QL_URL', 'SCHEME', 'SE_URL', 'VlassName']
+__all__ = ['COLLECTION_PATTERN', 'QL_URL', 'SE_URL', 'VlassName']
 
-COLLECTION = 'VLASS'
-SCHEME = 'nrao'
-CADC_SCHEME = 'cadc'
 COLLECTION_PATTERN = '*'  # TODO what are acceptable naming patterns?
 
 QL_URL = 'https://archive-new.nrao.edu/vlass/quicklook/'
