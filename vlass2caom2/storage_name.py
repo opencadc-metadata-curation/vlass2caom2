@@ -88,8 +88,10 @@ class VlassName(mc.StorageName):
     Isolate the zipped/unzipped nature of the file names.
 
     While tempting, it's not possible to recreate URLs from file names,
-    because some of the URLs are from the QA_REJECTED directories, hence
+    because some URLs are from the QA_REJECTED directories, hence
     the absence of that functionality in this class.
+
+    SG - 03-02-21 - use the full fits filename plus _prev/_prev_256 for the preview/thumbnail file names
     """
 
     def __init__(
@@ -175,14 +177,18 @@ class VlassName(mc.StorageName):
 
     def set_version(self):
         """The parameter may be a URI, or just the file name."""
+        self._version = VlassName.extract_version(self._file_name)
+
+    @staticmethod
+    def extract_version(file_name):
         # fits file name looks like:
         # 'VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.pbcor.tt0.rms.subim.fits'
         #
         # csv file name looks like:
         # VLASS2.1.se.T11t35.J231002+033000.06.2048.v1.I.catalog.csv
-        bits = self._file_name.split('.')
+        bits = file_name.split('.')
         version_str = bits[7].replace('v', '')
-        self._version = mc.to_int(version_str)
+        return mc.to_int(version_str)
 
     @staticmethod
     def get_obs_id_from_file_name(file_name):

@@ -67,10 +67,11 @@
 # ***********************************************************************
 #
 
+from caom2pipe.caom_composable import get_all_artifact_keys
 from caom2pipe.manage_composable import (
     Metrics, Observable, read_obs_from_file, Rejected, StorageName
 )
-from vlass2caom2 import preview_augmentation, cleanup_augmentation
+from vlass2caom2 import preview_augmentation
 from vlass2caom2.storage_name import VlassName
 
 from mock import patch
@@ -79,49 +80,37 @@ from test_main_app import TEST_DATA_DIR
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 def test_preview_augmentation(access_mock, test_config):
-    orig_scheme = StorageName.scheme
-    orig_collection = StorageName.collection
-    try:
-        StorageName.collection = test_config.collection
-        StorageName.scheme = test_config.scheme
-        access_mock.return_value = 'https://localhost'
-        test_fqn = f'{TEST_DATA_DIR}/preview_augmentation_start.xml'
-        test_science_f_name = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.' 'tt0.subim.fits'
-        test_storage_name = VlassName(test_science_f_name)
-        test_obs = read_obs_from_file(test_fqn)
-        test_rejected = Rejected(f'{TEST_DATA_DIR}/rejected.yml')
-        test_metrics = Metrics(test_config)
-        test_observable = Observable(test_rejected, test_metrics)
-        kwargs = {
-            'stream': None,
-            'observable': test_observable,
-            'storage_name': test_storage_name,
-            'working_directory': '/test_files',
-        }
-        test_subject = preview_augmentation.VlassPreview(**kwargs)
-        assert test_subject is not None, 'need a test subject'
-        assert len(test_obs.planes) == 1, 'wrong number of planes'
-        assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 4, 'wrong starting # of artifacts'
-        test_obs = test_subject.visit(test_obs)
-        assert test_obs is not None, 'expect a result'
-        assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 6, 'wrong ending # of artifacts'
-        test_report = test_subject.report
-        assert test_report is not None
-        assert 'artifacts' in test_report
-        assert test_report.get('artifacts') == 2, 'wrong report count'
-
-        # does artifact re-naming work?
-        test_url = (
-            f'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
-            f'T01t01/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/'
-            f'{test_science_f_name}'
-        )
-        kwargs = {'url': test_url}
-        test_obs = cleanup_augmentation.visit(test_obs, **kwargs)
-        test_artifacts = test_obs.planes[test_storage_name.product_id].artifacts
-        assert len(test_artifacts) == 4, 'wrong ending conditions'
-        assert test_storage_name.prev_uri in test_artifacts, 'missing preview'
-        assert test_storage_name.thumb_uri in test_artifacts, 'missing thumbnail'
-    finally:
-        StorageName.scheme = orig_scheme
-        StorageName.collection = orig_collection
+    access_mock.return_value = 'https://localhost'
+    test_fqn = f'{TEST_DATA_DIR}/preview_augmentation_start.xml'
+    test_science_f_name = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.' 'tt0.subim.fits'
+    test_storage_name = VlassName(test_science_f_name)
+    test_obs = read_obs_from_file(test_fqn)
+    test_rejected = Rejected(f'{TEST_DATA_DIR}/rejected.yml')
+    test_metrics = Metrics(test_config)
+    test_observable = Observable(test_rejected, test_metrics)
+    kwargs = {
+        'stream': None,
+        'observable': test_observable,
+        'storage_name': test_storage_name,
+        'working_directory': '/test_files',
+    }
+    test_subject = preview_augmentation.VlassPreview(**kwargs)
+    assert test_subject is not None, 'need a test subject'
+    assert len(test_obs.planes) == 1, 'wrong number of planes'
+    assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 2, 'wrong starting # of artifacts'
+    test_obs = test_subject.visit(test_obs)
+    assert test_obs is not None, 'expect a result'
+    assert len(test_obs.planes[test_storage_name.product_id].artifacts) == 4, 'wrong ending # of artifacts'
+    all_artifacts = get_all_artifact_keys(test_obs)
+    assert (
+        'cadc:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim_prev.jpg'
+        in all_artifacts
+    ), f'preview key {all_artifacts}'
+    assert (
+        'cadc:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim_prev_256.jpg'
+        in all_artifacts
+    ), f'thumb key {all_artifacts}'
+    test_report = test_subject.report
+    assert test_report is not None
+    assert 'artifacts' in test_report
+    assert test_report.get('artifacts') == 2, 'wrong report count'

@@ -129,6 +129,7 @@ class NraoPages(DataSource):
     def get_all_file_urls(self):
         """API for Validation.
         :returns dict with key: fully-qualified url to a file, value: timestamp"""
+        self._logger.debug('Begin get_all_file_urls')
         self._get_all_work()
         temp = defaultdict(list)
         for data_source in self._data_sources:
@@ -137,6 +138,7 @@ class NraoPages(DataSource):
         for timestamp, urls in temp.items():
             for url in urls:
                 result[url] = timestamp
+        self._logger.debug('End get_all_file_urls')
         return result
 
     def get_time_box_work(self, prev_exec_time, exec_time):
@@ -231,6 +233,7 @@ class QuicklookPage(DataSource):
 
     def append_work(self):
         """Predict the URLs for the quicklook images."""
+        self._logger.debug('Begin append_work')
         result = defaultdict(list)
         todo_list, max_date = self._build_todo()
         if len(todo_list) > 0:
@@ -244,6 +247,7 @@ class QuicklookPage(DataSource):
                     result[timestamp].append(f2)
         self._todo_list = result
         self._max_time = max_date
+        self._logger.debug('End append_work')
 
     def _build_good_todo(self):
         """Create the list of work, based on timestamps from the NRAO
@@ -252,6 +256,7 @@ class QuicklookPage(DataSource):
         :return a dict, where keys are timestamps, and values are lists
            of URLs.
         """
+        self._logger.debug('Begin _build_good_todo')
         temp = defaultdict(list)
         max_date = self._start_time
 
@@ -294,6 +299,7 @@ class QuicklookPage(DataSource):
         finally:
             if response is not None:
                 response.close()
+        self._logger.debug('End _build_good_todo')
         return temp, max_date
 
     def _build_obs_list(self, temp, observations, max_date, tile_url):
@@ -526,8 +532,10 @@ class ContinuumImagingPage(QuicklookPage):
 
     def append_work(self):
         """Find the exact URLs for the continuum images."""
+        self._logger.debug('Begin append_work')
         self._todo_list, self._max_time = self._build_todo()
         self._logger.info(f'Found {len(self._todo_list)} files, with max_time {self._max_time}')
+        self._logger.debug('End append_work')
 
     def _build_obs_list(self, temp, observations, max_date, tile_url):
         """
@@ -561,7 +569,7 @@ class ContinuumImagingPage(QuicklookPage):
         result = defaultdict(list)
         for timestamp, urls in good.items():
             result[timestamp] += list(set(urls))
-        self._logger.info(f'End _build_todo with {len(result)} records, date {good_date}')
+        self._logger.debug(f'End _build_todo with {len(result)} records, date {good_date}')
         return result, good_date
 
     def _list_files_on_page(self, url):
