@@ -73,6 +73,7 @@ from datetime import datetime
 
 from caom2 import SimpleObservation, Algorithm
 from caom2pipe import manage_composable as mc
+from caom2pipe.validator_composable import VALIDATE_OUTPUT
 from vlass2caom2 import composable, data_source, storage_name, validator
 
 from mock import patch, Mock
@@ -88,21 +89,18 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
     caps_mock.return_value = 'https://sc2.canfar.net/sc2repo'
     response = Mock()
     response.status_code = 200
-    caom_answer = [
-        b'uri\n'
-        b'nrao:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits\n'
-        b'nrao:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits\n'
-        b'nrao:VLASS/VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
-    ]
 
-    # should be the last entry from the source list
+    # the first entry should be the last entry from the source list
+    # the second entry is a made-up one to make sure the DATA -> SOURCE check finds something
     storage_answer = [
         b'uri\tcontentLastModified\n'
         b'nrao:VLASS/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+        b'\t2017-12-12 00:00:00.000\n'
+        b'nrao:VLASS/VLASS1.2.ql.T00t00.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
         b'\t2017-12-12 00:00:00.000'
     ]
 
-    response.iter_content.side_effect = [caom_answer, storage_answer]
+    response.iter_content.side_effect = [storage_answer]
     post_mock.return_value.__enter__.return_value = response
     repo_get_mock.side_effect = _mock_repo_read
     http_mock.side_effect = test_data_source._query_quicklook_endpoint
@@ -123,27 +121,31 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
         mc.State.write_bookmark(test_config.state_fqn, composable.VLASS_BOOKMARK, datetime.utcnow())
 
         test_subject = validator.VlassValidator()
-        test_listing_fqn = f'{test_subject._config.working_directory}/{mc.VALIDATE_OUTPUT}'
+        test_listing_fqn = f'{test_subject._config.working_directory}/{VALIDATE_OUTPUT}'
         test_source_list_fqn = f'{test_subject._config.working_directory}/{validator.NRAO_STATE}'
 
-        test_source, test_meta, test_data = test_subject.validate()
-        assert test_source is not None, 'expected source result'
-        assert test_meta is not None, 'expected destination result'
-        assert len(test_source) == 176, f'wrong number of source results {len(test_source)}'
+        test_source_missing, test_data_missing, test_data_older = test_subject.validate()
+        assert test_source_missing is not None, 'expected source result'
+        assert test_data_missing is not None, 'expected destination result'
+        # 176 is the number of entries returned by the mock doing tile count * file name count
+        # 175 is the answer, because DATA claims to have one of those files
+        assert len(test_source_missing) == 175, f'wrong number of source results {len(test_source_missing)}'
+        assert (
+            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
+            == test_source_missing.loc[174, 'f_name']
+        ), f'wrong source content {test_source_missing.loc[174, "f_name"]}'
+        assert len(test_data_missing) == 1, 'wrong # of destination results'
+        import logging
+        logging.error(test_data_missing)
+        assert (
+            'VLASS1.2.ql.T00t00.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+            == test_data_missing.loc[1, 'f_name']
+        ), f'wrong destination content {test_data_missing.loc[1, "f_name"]}'
+        assert len(test_data_older) == 1, 'wrong # of destination data results'
         assert (
             'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-            == test_source.loc[175, 'f_name']
-        ), f'wrong source content {test_source.loc[175, "f_name"]}'
-        assert len(test_meta) == 3, 'wrong # of destination results'
-        assert (
-            'VLASS1.1.ql.T01t01.J000230-373000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
-            == test_meta.loc[2, 'f_name']
-        ), f'wrong destination content {test_meta.loc[2, "f_name"]}'
-        assert len(test_data) == 1, 'wrong # of destination data results'
-        assert (
-            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-            == test_data.loc[0, 'f_name']
-        ), f'wrong destination data content {test_data.loc[0, "f_name"]}'
+            == test_data_older.loc[0, 'f_name']
+        ), f'wrong destination data content {test_data_older.loc[0, "f_name"]}'
         assert os.path.exists(test_listing_fqn), 'should create file record'
 
         test_subject.write_todo()
@@ -154,11 +156,11 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
 
         with open(store_fqn, 'r') as f:
             content = f.readlines()
-        assert len(content) == 176, 'wrong number of entries'
+        assert len(content) == 175, 'wrong number of entries'
         compare = (
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/QA_REJECTED/'
             'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
-            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits\n'
+            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits\n'
         )
         assert compare in content, 'unexpected content'
         with open(ingest_fqn, 'r') as f:

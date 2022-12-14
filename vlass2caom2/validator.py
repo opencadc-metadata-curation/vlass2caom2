@@ -191,17 +191,16 @@ class VlassValidator(Validator):
         nrao_state_fqn = os.path.join(self._config.working_directory, NRAO_STATE)
         # columns are url, timestamp
         temp = read_file_url_list_from_nrao(nrao_state_fqn)
-        temp['f_name'] = temp.url.apply(Validator.filter_meta)
+        temp['f_name'] = temp.url.apply(Validator.filter_column)
         # columns are url, timestamp, f_name
         self._logger.debug('End read_from_source')
         return temp
 
     def write_todo(self):
         source_fqn = self._config.work_fqn.replace('todo', 'store_todo')
-        self._source['url'].to_csv(source_fqn, header=False, index=False)
+        self._source_missing['url'].to_csv(source_fqn, header=False, index=False)
         destination_fqn = self._config.work_fqn.replace('todo', 'ingest_todo')
-        logging.error(self._destination_data.info())
-        self._destination_data['f_name'].to_csv(destination_fqn, header=False, index=False)
+        self._destination_older['f_name'].to_csv(destination_fqn, header=False, index=False)
 
     def _filter_result(self, dest_meta_temp):
         # self._version_check_query()
