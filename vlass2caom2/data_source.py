@@ -103,7 +103,7 @@ class NraoPages(DataSource):
     def __init__(self, config):
         super(NraoPages, self).__init__()
         self._data_sources = []
-        self._max_time = datetime.now().astimezone(tz=tz.gettz('US/Mountain'))
+        self._max_time = datetime.now().astimezone(tz=QuicklookPage.timezone)
         for url in config.data_sources:
             if 'quicklook' in url:
                 self._data_sources.append(QuicklookPage(config, url))
@@ -686,7 +686,6 @@ class WebLogMetadata:
             self.init_web_log()
         latest_key = None
         max_ts = None
-        tz_info = tz.gettz('US/Mountain')
         # there may be multiple processing runs for a single obs id, use the
         # most recent
         # key looks like this:
@@ -697,7 +696,7 @@ class WebLogMetadata:
             temp = key.split('/')[-2]
             if temp.startswith(mod_obs_id):
                 dt_bits = '_'.join(ii for ii in temp.replace('/', '').split('_')[3:])
-                dt_tz = QuicklookPage.make_date_time(dt_bits).replace(tzinfo=tz_info)
+                dt_tz = QuicklookPage.make_date_time(dt_bits).replace(tzinfo=QuicklookPage.timezone)
                 if max_ts is None:
                     max_ts = dt_tz
                     latest_key = key
