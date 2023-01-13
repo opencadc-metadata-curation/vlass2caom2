@@ -73,7 +73,6 @@ from datetime import datetime
 
 from caom2 import SimpleObservation, Algorithm
 from caom2pipe import manage_composable as mc
-from caom2pipe.validator_composable import VALIDATE_OUTPUT
 from vlass2caom2 import composable, data_source, storage_name, validator
 
 from mock import patch, Mock
@@ -135,8 +134,6 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
             == test_source_missing.loc[174, 'f_name']
         ), f'wrong source content {test_source_missing.loc[174, "f_name"]}'
         assert len(test_data_missing) == 1, 'wrong # of destination results'
-        import logging
-        logging.error(test_data_missing)
         assert (
             'VLASS1.2.ql.T00t00.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
             == test_data_missing.loc[1, 'f_name']
