@@ -5,7 +5,7 @@ RUN apt-get update --no-install-recommends && \
     apt-get install -y build-essential git libcfitsio-bin && \
     rm -rf /var/lib/apt/lists/ /tmp/* /var/tmp/*
 
-ARG FINDER_PATH=/usr/local/lib/python${OPENCADC_PYTHON_VERSION}/site-packages/footprintfinder.py
+ARG FINDER_PATH=/usr/local/lib/python3.11/site-packages/footprintfinder.py
 ADD http://www.eso.org/~fstoehr/footprintfinder.py ${FINDER_PATH}
 RUN chmod 644 ${FINDER_PATH}
 
