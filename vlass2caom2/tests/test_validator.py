@@ -73,7 +73,6 @@ from datetime import datetime
 
 from caom2 import SimpleObservation, Algorithm
 from caom2pipe import manage_composable as mc
-from caom2pipe.validator_composable import VALIDATE_OUTPUT
 from vlass2caom2 import composable, data_source, storage_name, validator
 
 from mock import patch, Mock
@@ -82,7 +81,7 @@ import test_main_app
 
 
 @patch('caom2pipe.client_composable.repo_get')
-@patch('cadcdata.core.net.BaseWsClient.post')
+@patch('cadcutils.net.BaseWsClient.post')
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
 @patch('vlass2caom2.data_source.query_endpoint_session')
 def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, tmp_path):
@@ -121,7 +120,7 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
         mc.State.write_bookmark(test_config.state_fqn, composable.VLASS_BOOKMARK, datetime.utcnow())
 
         test_subject = validator.VlassValidator()
-        test_listing_fqn = f'{test_subject._config.working_directory}/{VALIDATE_OUTPUT}'
+        test_listing_fqn = f'{test_subject._config.working_directory}/not_at_cadc.txt'
         test_source_list_fqn = f'{test_subject._config.working_directory}/{validator.NRAO_STATE}'
 
         test_source_missing, test_data_missing, test_data_older = test_subject.validate()
@@ -135,8 +134,6 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
             == test_source_missing.loc[174, 'f_name']
         ), f'wrong source content {test_source_missing.loc[174, "f_name"]}'
         assert len(test_data_missing) == 1, 'wrong # of destination results'
-        import logging
-        logging.error(test_data_missing)
         assert (
             'VLASS1.2.ql.T00t00.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
             == test_data_missing.loc[1, 'f_name']
@@ -147,6 +144,11 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
             == test_data_older.loc[0, 'f_name']
         ), f'wrong destination data content {test_data_older.loc[0, "f_name"]}'
         assert os.path.exists(test_listing_fqn), 'should create file record'
+        test_source_fqn = f'{test_subject._config.working_directory}/not_at_NRAO.txt'
+        test_newer_fqn = f'{test_subject._config.working_directory}/newer_at_NRAO.txt'
+        assert os.path.exists(test_listing_fqn), 'should create file record'
+        assert os.path.exists(test_source_fqn), 'should create source file record'
+        assert os.path.exists(test_newer_fqn), 'should create newer source file record'
 
         test_subject.write_todo()
         store_fqn = test_subject._config.work_fqn.replace('todo', 'store_todo')

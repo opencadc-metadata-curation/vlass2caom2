@@ -113,15 +113,13 @@ def read_file_url_list_from_nrao(nrao_state_fqn):
     logging.debug(f'Begin read_file_url_list_from_nrao with {nrao_state_fqn}')
     if os.path.exists(nrao_state_fqn):
         vlass_dict = pd.read_csv(nrao_state_fqn)
-        # vlass_dict['timestamp'] = vlass_dict['timestamp'].apply(pd.Timestamp.fromtimestamp)
     else:
         config = mc.Config()
         config.get_executors()
         source = data_source.NraoPages(config)
-        for entry in source._data_sources:
-            # want all the files, so set the timestamps to VLASS survey beginning
-            # 1514764800.0 is 2018-01-01 00:00:00, timezone is Socorro, NM, USA
-            entry._start_time = datetime.fromtimestamp(1514764800.0, tz=tz.gettz('US/Mountain'))
+        # want all the files, so set the timestamps to VLASS survey beginning
+        # 1514764800.0 is 2018-01-01 00:00:00, timezone is Socorro, NM, USA
+        source.set_start_time(datetime.fromtimestamp(1514764800.0, tz=data_source.QuicklookPage.timezone))
         temp = source.get_all_file_urls()
         vlass_dict = pd.DataFrame({'url': temp.keys(), 'timestamp': temp.values()})
         vlass_dict['timestamp'] = vlass_dict['timestamp'].apply(pd.Timestamp.fromtimestamp)
@@ -180,7 +178,7 @@ def _get_max_version(entries):
 
 class VlassValidator(Validator):
     def __init__(self):
-        super(VlassValidator, self).__init__(source_name='NRAO', source_tz=tz.gettz('US/Mountain'))
+        super(VlassValidator, self).__init__(source_name='NRAO', source_tz=data_source.QuicklookPage.timezone)
         # a dictionary where the file name is the key, and the fully-qualified
         # file name at the HTTP site is the value
         self._fully_qualified_list = None

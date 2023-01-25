@@ -103,7 +103,7 @@ class NraoPages(DataSource):
     def __init__(self, config):
         super(NraoPages, self).__init__()
         self._data_sources = []
-        self._max_time = datetime.now().astimezone(tz=tz.gettz('US/Mountain'))
+        self._max_time = datetime.now().astimezone(tz=QuicklookPage.timezone)
         for url in config.data_sources:
             if 'quicklook' in url:
                 self._data_sources.append(QuicklookPage(config, url))
@@ -131,14 +131,16 @@ class NraoPages(DataSource):
         :returns dict with key: fully-qualified url to a file, value: timestamp"""
         self._logger.debug('Begin get_all_file_urls')
         self._get_all_work()
-        temp = defaultdict(list)
-        for data_source in self._data_sources:
-            temp = temp | data_source.todo_list
         result = {}
-        for timestamp, urls in temp.items():
-            for url in urls:
-                result[url] = timestamp
+        for data_source in self._data_sources:
+            # change a defaultdict(list) with key:timestamp, value list[urls]
+            # into a dict with key: url, value: timestamp
+            for timestamp, urls in data_source.todo_list.items():
+                for url in urls:
+                    result[url] = timestamp
+            self._logger.error(f'{type(data_source)} {len(data_source.todo_list)} {len(result)}')
         self._logger.debug('End get_all_file_urls')
+        self._logger.error(f'len result {len(result)}')
         return result
 
     def get_time_box_work(self, prev_exec_time, exec_time):
@@ -196,16 +198,18 @@ class NraoPages(DataSource):
 
 class QuicklookPage(DataSource):
 
+    # timezone for Socorro, NM
+    timezone = tz.gettz('US/Mountain')
+
     def __init__(self, config, base_url):
         super().__init__(None)
         self._data_source_extensions = config.data_source_extensions
         self._epochs = None
         self._session = get_endpoint_session()
         self._state = State(config.state_fqn)
-        # timezone for Socorro, NM
         self._start_time = increment_time(
             self._state.get_bookmark(VLASS_BOOKMARK), 0
-        ).astimezone(tz=tz.gettz('US/Mountain'))
+        ).astimezone(tz=QuicklookPage.timezone)
         self._todo_list = defaultdict(list)
         self._max_time = None
         self._base_url = base_url
@@ -518,7 +522,7 @@ class QuicklookPage(DataSource):
                 dt = None
         if dt is None:
             raise CadcException(f'Could not make datetime from {from_str}')
-        return dt.astimezone(tz=tz.gettz('US/Mountain'))
+        return dt.astimezone(tz=QuicklookPage.timezone)
 
 
 class ContinuumImagingPage(QuicklookPage):
@@ -682,7 +686,6 @@ class WebLogMetadata:
             self.init_web_log()
         latest_key = None
         max_ts = None
-        tz_info = tz.gettz('US/Mountain')
         # there may be multiple processing runs for a single obs id, use the
         # most recent
         # key looks like this:
@@ -693,7 +696,7 @@ class WebLogMetadata:
             temp = key.split('/')[-2]
             if temp.startswith(mod_obs_id):
                 dt_bits = '_'.join(ii for ii in temp.replace('/', '').split('_')[3:])
-                dt_tz = QuicklookPage.make_date_time(dt_bits).replace(tzinfo=tz_info)
+                dt_tz = QuicklookPage.make_date_time(dt_bits).replace(tzinfo=QuicklookPage.timezone)
                 if max_ts is None:
                     max_ts = dt_tz
                     latest_key = key
