@@ -212,7 +212,7 @@ def test_quicklook(query_endpoint_mock):
             test_start_time = QuicklookPage.make_date_time(TEST_START_TIME_STR)
             test_subject.set_start_time(test_start_time)
             test_result = test_subject.get_time_box_work(
-                test_start_time.timestamp(), datetime.fromtimestamp(1556311111).timestamp()
+                test_start_time, datetime.fromtimestamp(1556311111, tz=test_time_zone)
             )
             assert test_result is not None, 'expected dict result'
             assert len(test_result) == 24, 'wrong size results'
@@ -252,7 +252,7 @@ def test_continuum(query_endpoint_mock):
             test_subject.set_start_time(test_start_time)
 
             test_result = test_subject.get_time_box_work(
-                test_start_time.timestamp(), datetime(2022, 6, 24, 0, 0, 0).timestamp()
+                test_start_time, datetime(2022, 6, 24, 0, 0, 0, tzinfo=test_time_zone)
             )
             assert test_result is not None, 'expected dict result'
             # 36 == the same 6 files returned for each of 3 observations * 2 tiles

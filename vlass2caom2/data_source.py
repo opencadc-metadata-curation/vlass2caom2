@@ -101,9 +101,10 @@ class NraoPages(DataSource):
     """
 
     def __init__(self, config):
-        super(NraoPages, self).__init__()
+        super(NraoPages, self).__init__(zone=QuicklookPage.timezone)
         self._data_sources = []
-        self._max_time = datetime.now().astimezone(tz=QuicklookPage.timezone)
+        # datetime
+        self._max_time = datetime.now().astimezone(tz=self._timezone)
         for url in config.data_sources:
             if 'quicklook' in url:
                 self._data_sources.append(QuicklookPage(config, url))
@@ -128,27 +129,27 @@ class NraoPages(DataSource):
 
     def get_all_file_urls(self):
         """API for Validation.
-        :returns dict with key: fully-qualified url to a file, value: timestamp"""
+        :returns dict with key: fully-qualified url to a file, value: datetime"""
         self._logger.debug('Begin get_all_file_urls')
         self._get_all_work()
         result = {}
         for data_source in self._data_sources:
-            # change a defaultdict(list) with key:timestamp, value list[urls]
-            # into a dict with key: url, value: timestamp
-            for timestamp, urls in data_source.todo_list.items():
+            # change a defaultdict(list) with key:datetime, value list[urls]
+            # into a dict with key: url, value: datetime
+            for dt, urls in data_source.todo_list.items():
                 for url in urls:
-                    result[url] = timestamp
+                    result[url] = dt
             self._logger.error(f'{type(data_source)} {len(data_source.todo_list)} {len(result)}')
         self._logger.debug('End get_all_file_urls')
         self._logger.error(f'len result {len(result)}')
         return result
 
-    def get_time_box_work(self, prev_exec_time, exec_time):
+    def get_time_box_work(self, prev_exec_dt, exec_dt):
         """
         Time-boxing the file url list returned from the site scrape.
 
-        :param prev_exec_time timestamp start of the timestamp chunk
-        :param exec_time timestamp end of the timestamp chunk
+        :param prev_exec_dt datetime start of the time-box chunk
+        :param exec_dt datetime end of the time-box chunk
         :return: a list of StateRunnerMeta instances, for file names with
             time they were modified
         """
@@ -158,10 +159,10 @@ class NraoPages(DataSource):
 
         temp = deque()
         for data_source in self._data_sources:
-            for timestamp in data_source.todo_list:
-                if prev_exec_time < timestamp <= exec_time:
-                    for entry in data_source.todo_list[timestamp]:
-                        temp.append(StateRunnerMeta(entry, timestamp))
+            for dt in data_source.todo_list:
+                if prev_exec_dt < dt <= exec_dt:
+                    for entry in data_source.todo_list[dt]:
+                        temp.append(StateRunnerMeta(entry, dt))
 
             if len(data_source.todo_list) > 0:
                 self._max_time = min(self._max_time, data_source.max_time)
@@ -187,6 +188,7 @@ class NraoPages(DataSource):
     def set_start_time(self, start_time):
         """
         Validation requires over-riding the start time from the default value obtained from the bookmark file.
+        :param start_time datetime
         """
         for data_source in self._data_sources:
             data_source._start_time = start_time
@@ -207,6 +209,7 @@ class QuicklookPage(DataSource):
         self._epochs = None
         self._session = get_endpoint_session()
         self._state = State(config.state_fqn)
+        # datetime
         self._start_time = increment_time(
             self._state.get_bookmark(VLASS_BOOKMARK), 0
         ).astimezone(tz=QuicklookPage.timezone)
@@ -241,23 +244,23 @@ class QuicklookPage(DataSource):
         result = defaultdict(list)
         todo_list, max_date = self._build_todo()
         if len(todo_list) > 0:
-            for timestamp, urls in todo_list.items():
+            for dt, urls in todo_list.items():
                 for url in urls:
                     # -2 because NRAO URLs always end in /
                     f_prefix = url.split('/')[-2]
                     f1 = f'{url}{f_prefix}.I.iter1.image.pbcor.tt0.rms.subim.fits'
                     f2 = f'{url}{f_prefix}.I.iter1.image.pbcor.tt0.subim.fits'
-                    result[timestamp].append(f1)
-                    result[timestamp].append(f2)
+                    result[dt].append(f1)
+                    result[dt].append(f2)
         self._todo_list = result
         self._max_time = max_date
         self._logger.debug('End append_work')
 
     def _build_good_todo(self):
-        """Create the list of work, based on timestamps from the NRAO
+        """Create the list of work, based on datetimes from the NRAO
         Quicklook page.
 
-        :return a dict, where keys are timestamps, and values are lists
+        :return a dict, where keys are datetimes, and values are lists
            of URLs.
         """
         self._logger.debug('Begin _build_good_todo')
@@ -308,7 +311,7 @@ class QuicklookPage(DataSource):
 
     def _build_obs_list(self, temp, observations, max_date, tile_url):
         """
-        :param temp: dict with key: timestamp, value: list of fully-qualified URLs
+        :param temp: dict with key: datetime, value: list of fully-qualified URLs
         :param observations: list of partials URLs to look through
         :param max_date: datetime: track the max date that's going to be processed
         :param tile_url: str the initial bit of the URL for looking through
@@ -317,15 +320,15 @@ class QuicklookPage(DataSource):
         # for each tile, get the list of observations
         for observation in observations:
             obs_url = f'{tile_url}{observation}'
-            dt_as_s = observations[observation].timestamp()
-            temp[dt_as_s].append(obs_url)
+            dt = observations[observation]
+            temp[dt].append(obs_url)
         if len(observations.values()) > 0:
             max_date = max(max_date, max(observations.values()))
         return max_date
 
     def build_qa_rejected_todo(self):
         """
-        :return a dict, where keys are timestamps, and values are lists
+        :return a dict, where keys are datetimes, and values are lists
            of URLs.
         """
         max_date = self._start_time
@@ -361,7 +364,7 @@ class QuicklookPage(DataSource):
         """Take the list of good files, and the list of rejected files,
         and make them into one todo list.
 
-        :return a dict, where keys are timestamps, and values are lists
+        :return a dict, where keys are datetimes, and values are lists
            of URLs.
         """
         self._logger.debug(f'Begin build_todo with date {self._start_time}')
@@ -389,7 +392,7 @@ class QuicklookPage(DataSource):
 
     def _parse_id_page(self, html_string):
         """
-        :return a dict, where keys are URLs, and values are timestamps
+        :return a dict, where keys are URLs, and values are datetimes
         """
         result = {}
         soup = BeautifulSoup(html_string, features='lxml')
@@ -405,7 +408,7 @@ class QuicklookPage(DataSource):
 
     def _parse_rejected_page(self, html_string, epoch, url):
         """
-        :return a dict, where keys are timestamps, and values are lists
+        :return a dict, where keys are datetimes, and values are lists
            of URLs.
         """
         result = defaultdict(list)
@@ -418,7 +421,7 @@ class QuicklookPage(DataSource):
             if dt >= self._start_time:
                 new_url = f'{url}{ii.get_text()}'
                 self._logger.debug(f'Adding rejected {new_url}')
-                result[dt.timestamp()].append(new_url)
+                result[dt].append(new_url)
                 max_date = max(max_date, dt)
         return result, max_date
 
@@ -434,7 +437,7 @@ class QuicklookPage(DataSource):
         """
         Parse the page which lists the tiles viewed during an epoch.
 
-        :return a dict, where keys are URLs, and values are timestamps
+        :return a dict, where keys are URLs, and values are datetimes
         """
         result = {}
         soup = BeautifulSoup(html_string, features='lxml')
@@ -453,7 +456,7 @@ class QuicklookPage(DataSource):
         """
         Parse the page which lists the epochs.
 
-        :return a dict, where keys are URLs, and values are timestamps
+        :return a dict, where keys are URLs, and values are datetimes
         """
         result = {}
         soup = BeautifulSoup(html_string, features='lxml')
@@ -543,7 +546,7 @@ class ContinuumImagingPage(QuicklookPage):
 
     def _build_obs_list(self, temp, observations, max_date, tile_url):
         """
-        :param temp: dict with key: timestamp, value: list of fully-qualified URLs
+        :param temp: dict with key: datetime, value: list of fully-qualified URLs
         :param observations: list of partials URLs to look through
         :param max_date: datetime: track the max date that's going to be processed
         :param tile_url: str the initial bit of the URL for looking through
@@ -556,28 +559,28 @@ class ContinuumImagingPage(QuicklookPage):
                 x = self._list_files_on_page(obs_url)
                 for key, value in x.items():
                     # switch dict structure from:
-                    # key: url, timestamp: value
+                    # key: url, datetime: value
                     # to
-                    # key:timestamp, value: list of urls
-                    temp[value.timestamp()].append(f'{obs_url}{key}')
+                    # key:datetime, value: list of urls
+                    temp[value].append(f'{obs_url}{key}')
                     max_date = max(max_date, value)
         return max_date
 
     def _build_todo(self):
         """
-        :return a dict, where keys are timestamps, and values are lists
+        :return a dict, where keys are datetimes, and values are lists
            of URLs.
         """
         self._logger.debug(f'Begin _build_todo with date {self._start_time}')
         good, good_date = self._build_good_todo()
         result = defaultdict(list)
-        for timestamp, urls in good.items():
-            result[timestamp] += list(set(urls))
+        for dt, urls in good.items():
+            result[dt] += list(set(urls))
         self._logger.debug(f'End _build_todo with {len(result)} records, date {good_date}')
         return result, good_date
 
     def _list_files_on_page(self, url):
-        """:return a dict, where keys are URLS, and values are timestamps, from
+        """:return a dict, where keys are URLS, and values are datetimes, from
         a specific page listing at NRAO."""
         response = None
         try:
@@ -596,7 +599,7 @@ class ContinuumImagingPage(QuicklookPage):
 
     def _parse_specific_file_list_page(self, html_string):
         """
-        :return: a dict, where keys are URLS, and values are timestamps
+        :return: a dict, where keys are URLS, and values are datetime
         """
         result = {}
         soup = BeautifulSoup(html_string, features='lxml')

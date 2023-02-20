@@ -94,7 +94,7 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
     storage_answer = [
         b'uri\tcontentLastModified\n'
         b'nrao:VLASS/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-        b'\t2017-12-12 00:00:00.000\n'
+        b'\t2019-12-12 00:00:00.000\n'
         b'nrao:VLASS/VLASS1.2.ql.T00t00.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
         b'\t2017-12-12 00:00:00.000'
     ]
@@ -138,7 +138,7 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
             'VLASS1.2.ql.T00t00.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
             == test_data_missing.loc[1, 'f_name']
         ), f'wrong destination content {test_data_missing.loc[1, "f_name"]}'
-        assert len(test_data_older) == 1, 'wrong # of destination data results'
+        assert len(test_data_older) == 1, 'wrong # of destination older results'
         assert (
             'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
             == test_data_older.loc[0, 'f_name']
@@ -205,8 +205,8 @@ def test_multiple_versions():
             f'T23t13{key}/{key.strip("/")}.I.iter1.image.pbcor.tt0.'
             f'rms.subim.fits'
         )
-        test_content[test_key1] = value.timestamp()
-        test_content[test_key2] = value.timestamp()
+        test_content[test_key1] = value
+        test_content[test_key2] = value
     (
         test_result,
         test_validate_dict_result,

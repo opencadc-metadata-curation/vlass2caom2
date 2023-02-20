@@ -69,7 +69,7 @@
 
 import os
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from dateutil import tz
 from unittest.mock import ANY, patch, Mock
 
@@ -130,17 +130,15 @@ def test_run_state(run_mock, query_mock, client_mock):
 
     def _mock_append_work():
         a = {
-            # 2019-04-24 12:34:00 UTC
-            1556109240.0: [
+            datetime(2019, 4, 24, 12, 34, tzinfo=timezone.utc): [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
                 'T07t13/VLASS1.1.ql.T07t13.J083838-153000.10.2048.v1/',
             ],
-            1556175640.0: [
+            datetime(2019, 4, 24, 12, 34, tzinfo=timezone.utc) - timedelta(seconds=2000): [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
                 'T07t13/VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/',
             ],
-            # 2019-04-25 12:34:00 UTC
-            1556195640.0: [
+            datetime(2019, 4, 25, 12, 34, tzinfo=timezone.utc): [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
                 'T07t13/VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1/',
             ],

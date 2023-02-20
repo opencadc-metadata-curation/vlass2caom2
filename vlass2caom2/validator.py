@@ -76,7 +76,6 @@ import pandas as pd
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from dateutil import tz
 
 from caom2pipe import client_composable as clc
 from caom2pipe import manage_composable as mc
@@ -117,13 +116,12 @@ def read_file_url_list_from_nrao(nrao_state_fqn):
         config = mc.Config()
         config.get_executors()
         source = data_source.NraoPages(config)
-        # want all the files, so set the timestamps to VLASS survey beginning
-        # 1514764800.0 is 2018-01-01 00:00:00, timezone is Socorro, NM, USA
-        source.set_start_time(datetime.fromtimestamp(1514764800.0, tz=data_source.QuicklookPage.timezone))
+        # want all the files, so set the start times to VLASS survey beginning
+        # timezone is Socorro, NM, USA
+        source.set_start_time(datetime(2017, 1, 1, tzinfo=data_source.QuicklookPage.timezone))
         temp = source.get_all_file_urls()
-        vlass_dict = pd.DataFrame({'url': temp.keys(), 'timestamp': temp.values()})
-        vlass_dict['timestamp'] = vlass_dict['timestamp'].apply(pd.Timestamp.fromtimestamp)
-        pd.DataFrame(vlass_dict).to_csv(nrao_state_fqn, header=True, index=False)
+        vlass_dict = pd.DataFrame({'url': temp.keys(), 'dt': temp.values()})
+        vlass_dict.to_csv(nrao_state_fqn, header=True, index=False)
     logging.debug('End read_file_url_list_from_nrao.')
     return vlass_dict
 
@@ -132,9 +130,8 @@ def get_file_url_list_max_versions(nrao_dict):
     """
     SG - 22-10-20 - ignore old versions for validation
 
-    :param nrao_dict: dict, keys are NRAO URLs, values are seconds since epoch
-        timestamp of the URL at NRAO
-    :return: result dict key : file name, value: timestamp
+    :param nrao_dict: dict, keys are NRAO URLs, values are datetime of the URL at NRAO
+    :return: result dict key : file name, value: datetime
              validate_dict dict key: file name, value: url
     """
     obs_id_dict = defaultdict(list)
@@ -187,10 +184,10 @@ class VlassValidator(Validator):
     def read_from_source(self):
         self._logger.debug('Begin read_from_source')
         nrao_state_fqn = os.path.join(self._config.working_directory, NRAO_STATE)
-        # columns are url, timestamp
+        # columns are url, dt
         temp = read_file_url_list_from_nrao(nrao_state_fqn)
         temp['f_name'] = temp.url.apply(Validator.filter_column)
-        # columns are url, timestamp, f_name
+        # columns are url, dt, f_name
         self._logger.debug('End read_from_source')
         return temp
 
