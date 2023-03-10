@@ -73,9 +73,9 @@ from os import chdir, getcwd
 from os.path import dirname, join, realpath
 from tempfile import TemporaryDirectory
 
-from caom2pipe.manage_composable import Config, ExecutionReporter, Observable, write_as_yaml
-from vlass2caom2.data_source import ContinuumImagingPage, NraoPages, QuicklookPage, WebLogMetadata
-from vlass2caom2 import storage_name, data_source
+from caom2pipe.manage_composable import Config, ExecutionReporter, make_datetime_tz, Observable, write_as_yaml
+from vlass2caom2.data_source import ContinuumImagingPage, NraoPages, WebLogMetadata
+from vlass2caom2 import storage_name
 
 from mock import Mock, patch
 
@@ -107,7 +107,7 @@ def test_parse_functions():
     test_config.state_fqn = join(TEST_DATA_DIR, 'state.yml')
     test_subject = ContinuumImagingPage(test_config, storage_name.QL_URL)
     assert test_subject is not None, 'ctor failure'
-    test_subject._start_time = QuicklookPage.make_date_time(TEST_START_TIME_STR)
+    test_subject._start_time = make_datetime_tz(TEST_START_TIME_STR, test_time_zone)
 
     with open(SINGLE_TILE) as f:
         test_content = f.read()
@@ -209,7 +209,7 @@ def test_quicklook(query_endpoint_mock):
             assert test_subject is not None, 'ctor failure'
             test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()), 'DEFAULT')
             test_subject.reporter = test_reporter
-            test_start_time = QuicklookPage.make_date_time(TEST_START_TIME_STR)
+            test_start_time = make_datetime_tz(TEST_START_TIME_STR, test_time_zone)
             test_subject.set_start_time(test_start_time)
             test_result = test_subject.get_time_box_work(
                 test_start_time, datetime.fromtimestamp(1556311111, tz=test_time_zone)
@@ -356,7 +356,7 @@ def _query_continuum_endpoint(url, session, timeout=-1):
 
 
 def _write_state(start_time_str, f_name):
-    test_time = data_source.QuicklookPage.make_date_time(start_time_str)
+    test_time = make_datetime_tz(start_time_str, test_time_zone)
     test_bookmark = {
         'bookmarks': {
             'vlass_timestamp': {'last_record': test_time},

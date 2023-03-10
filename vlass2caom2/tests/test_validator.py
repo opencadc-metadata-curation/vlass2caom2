@@ -187,7 +187,7 @@ def test_multiple_versions():
         f'{test_main_app.TEST_DATA_DIR}/multiple_versions_tile.html', 'r'
     ) as f:
         test_string = f.read()
-    test_start_date = data_source.QuicklookPage.make_date_time('2018-01-01 00:00')
+    test_start_date = mc.make_datetime_tz('2018-01-01 00:00', data_source.QuicklookPage.timezone)
     test_config = mc.Config()
     test_config.state_fqn = os.path.join(test_main_app.TEST_DATA_DIR, 'state.yml')
     test_subject = data_source.QuicklookPage(test_config, storage_name.QL_URL)

@@ -81,7 +81,7 @@ from caom2pipe.data_source_composable import DataSource, StateRunnerMeta
 from caom2pipe.manage_composable import (
     CadcException,
     get_endpoint_session,
-    increment_time,
+    make_datetime_tz,
     query_endpoint_session,
     State,
 )
@@ -208,11 +208,9 @@ class QuicklookPage(DataSource):
         self._data_source_extensions = config.data_source_extensions
         self._epochs = None
         self._session = get_endpoint_session()
-        self._state = State(config.state_fqn)
+        self._state = State(config.state_fqn, QuicklookPage.timezone)
         # datetime
-        self._start_time = increment_time(
-            self._state.get_bookmark(VLASS_BOOKMARK), 0
-        ).astimezone(tz=QuicklookPage.timezone)
+        self._start_time = self._state.get_bookmark(VLASS_BOOKMARK)
         self._todo_list = defaultdict(list)
         self._max_time = None
         self._base_url = base_url
@@ -400,7 +398,7 @@ class QuicklookPage(DataSource):
         for ii in hrefs:
             y = ii.get('href')
             z = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = QuicklookPage.make_date_time(z)
+            dt = make_datetime_tz(z, self.timezone)
             if dt >= self._start_time:
                 self._logger.debug(f'Adding ID Page: {y}')
                 result[y] = dt
@@ -417,7 +415,7 @@ class QuicklookPage(DataSource):
         rejected = soup.find_all('a', string=re.compile(epoch.replace('v2', '')))
         for ii in rejected:
             temp = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = QuicklookPage.make_date_time(temp)
+            dt = make_datetime_tz(temp, self.timezone)
             if dt >= self._start_time:
                 new_url = f'{url}{ii.get_text()}'
                 self._logger.debug(f'Adding rejected {new_url}')
@@ -446,7 +444,7 @@ class QuicklookPage(DataSource):
             y = ii.get('href')
             if y.startswith('T'):
                 z = ii.next_element.next_element.string.replace('-', '').strip()
-                dt = QuicklookPage.make_date_time(z)
+                dt = make_datetime_tz(z, self.timezone)
                 if dt >= self._start_time:
                     self._logger.debug(f'Adding Tile Page: {y}')
                     result[y] = dt
@@ -465,7 +463,7 @@ class QuicklookPage(DataSource):
             y = ii.get('href')
             if y.startswith('VLASS') and y.endswith('/'):
                 z = ii.next_element.next_element.string.replace('-', '').strip()
-                dt = QuicklookPage.make_date_time(z)
+                dt = make_datetime_tz(z, self.timezone)
                 result[y] = dt
 
         # NRAO introduced a directory named VLASS1.2v2, with this explanation:
@@ -508,24 +506,6 @@ class QuicklookPage(DataSource):
             self._logger.info(f'Adding epoch: {entry}')
 
         return result
-
-    @staticmethod
-    def make_date_time(from_str):
-        for fmt in [
-            '%d%b%Y %H:%M',
-            '%Y-%m-%d %H:%M',
-            '%Y%m%d %H:%M',
-            '%d-%b-%Y %H:%M',
-            '%Y_%m_%dT%H_%M_%S.%f',
-        ]:
-            try:
-                dt = datetime.strptime(from_str, fmt)
-                break
-            except ValueError:
-                dt = None
-        if dt is None:
-            raise CadcException(f'Could not make datetime from {from_str}')
-        return dt.astimezone(tz=QuicklookPage.timezone)
 
 
 class ContinuumImagingPage(QuicklookPage):
@@ -609,7 +589,7 @@ class ContinuumImagingPage(QuicklookPage):
                 # looks like 16-Apr-2018 15:43   53M, make it into a datetime
                 # for comparison
                 temp = ii.next_element.next_element.string.split()
-                dt = QuicklookPage.make_date_time(f'{temp[0]} {temp[1]}')
+                dt = make_datetime_tz(f'{temp[0]} {temp[1]}', self.timezone)
                 if dt >= self._start_time:
                     # the hrefs are fully-qualified URLS
                     f_url = ii.get('href')
@@ -634,7 +614,7 @@ class WebLogMetadata:
         """
         epochs = self._state.get_context(VLASS_CONTEXT)
         for key, value in epochs.items():
-            epochs[key] = QuicklookPage.make_date_time(value)
+            epochs[key] = make_datetime_tz(value, QuicklookPage.timezone)
             self._logger.info(f'Initialize weblog listing from NRAO for epoch {key} starting at {value}.')
         self.init_web_log_content(epochs)
 
@@ -669,7 +649,7 @@ class WebLogMetadata:
                                     if next_elem is not None:
                                         dt_str = next_elem.text
                                         if dt_str is not None:
-                                            dt = QuicklookPage.make_date_time(dt_str.strip())
+                                            dt = make_datetime_tz(dt_str.strip(), QuicklookPage.timezone)
                                             if dt >= start_date:
                                                 fq_url = f'{web_log_url}{href}'
                                                 self._web_log_content[fq_url] = dt
@@ -699,7 +679,7 @@ class WebLogMetadata:
             temp = key.split('/')[-2]
             if temp.startswith(mod_obs_id):
                 dt_bits = '_'.join(ii for ii in temp.replace('/', '').split('_')[3:])
-                dt_tz = QuicklookPage.make_date_time(dt_bits).replace(tzinfo=QuicklookPage.timezone)
+                dt_tz = make_datetime_tz(dt_bits, QuicklookPage.timezone)
                 if max_ts is None:
                     max_ts = dt_tz
                     latest_key = key

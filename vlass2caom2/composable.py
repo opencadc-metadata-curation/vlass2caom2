@@ -98,7 +98,7 @@ def _common_init():
     config.get_executors()
     mc.StorageName.collection = config.collection
     mc.StorageName.scheme = config.scheme
-    state = mc.State(config.state_fqn)
+    state = mc.State(config.state_fqn, data_source.QuicklookPage.timezone)
     session = mc.get_endpoint_session()
     web_log_metadata = data_source.WebLogMetadata(state, session, config.data_sources)
     source = None
