@@ -137,10 +137,8 @@ def _augment_artifact(obs_id, artifact, metadata_reader, storage_name):
 def _build_time(start, end, tos):
     bounds = CoordBounds1D()
     if start is not None and end is not None:
-        start_date = ac.get_datetime(start)
-        start_date.format = 'mjd'
-        end_date = ac.get_datetime(end)
-        end_date.format = 'mjd'
+        start_date = ac.get_datetime_mjd(start)
+        end_date = ac.get_datetime_mjd(end)
         start_ref_coord = RefCoord(0.5, start_date.value)
         end_ref_coord = RefCoord(1.5, end_date.value)
         bounds.samples.append(CoordRange1D(start_ref_coord, end_ref_coord))
