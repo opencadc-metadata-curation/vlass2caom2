@@ -1,1 +1,0 @@
-https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T08t20.J130619-093000.10.2048.v1/VLASS1.2.ql.T08t20.J130619-093000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits

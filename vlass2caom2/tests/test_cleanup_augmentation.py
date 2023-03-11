@@ -74,9 +74,8 @@ import test_main_app
 
 def test_visit(test_config, tmp_path):
     test_config.change_working_directory(tmp_path.as_posix())
-    test_obs_id = 'VLASS1.2.T20t12.J092604+383000'
     test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
-    test_fname = f'{test_main_app.TEST_DATA_DIR}/{test_obs_id}.xml'
+    test_fname = f'{test_main_app.TEST_DATA_DIR}/visit_start.xml'
     test_obs = mc.read_obs_from_file(test_fname)
 
     test_artifacts = test_obs.planes[test_product_id].artifacts
