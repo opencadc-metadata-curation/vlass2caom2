@@ -91,3 +91,27 @@ def test_visit(test_config, tmp_path):
     test_uri2 = 'nrao:VLASS/VLASS1.2.ql.T20t12.J092604+383000.10.2048.v2.I.iter1.image.pbcor.tt0.subim.fits'
     assert test_uri1 in test_observable.rejected.content['old_version'], 'uri1 rejection tracking'
     assert test_uri2 in test_observable.rejected.content['old_version'], 'uri2 rejection tracking'
+
+
+def test_clean_up_old_thumbnails_visit(test_config, tmp_path):
+    test_config.change_working_directory(tmp_path.as_posix())
+    test_product_id = 'VLASS1.1.T06t32.J211902-193000.quicklook'
+    test_fname = f'{test_main_app.TEST_DATA_DIR}/too_many_artifacts.xml'
+    test_obs = mc.read_obs_from_file(test_fname)
+
+    test_artifacts = test_obs.planes[test_product_id].artifacts
+    assert len(test_artifacts) == 6, 'wrong pre-conditions'
+
+    test_observable = mc.Observable(mc.Rejected(test_config.rejected_fqn), mc.Metrics(test_config))
+    kwargs = {'observable': test_observable}
+    test_obs = cleanup_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'wrong return value'
+    assert len(test_artifacts) == 4, 'wrong post-conditions'
+    test_uri1 = 'cadc:VLASS/VLASS1.1.ql.T06t32.J211902-193000.10.2048.v2.I.iter1.image.pbcor.tt0.subim_prev.jpg'
+    test_uri2 = 'cadc:VLASS/VLASS1.1.ql.T06t32.J211902-193000.10.2048.v2.I.iter1.image.pbcor.tt0.subim_prev_256.jpg'
+    test_uri3 = 'nrao:VLASS/VLASS1.1.ql.T06t32.J211902-193000.10.2048.v2.I.iter1.image.pbcor.tt0.subim.fits'
+    test_uri4 = 'nrao:VLASS/VLASS1.1.ql.T06t32.J211902-193000.10.2048.v2.I.iter1.image.pbcor.tt0.rms.subim.fits'
+    assert test_uri1 in test_obs.planes[test_product_id].artifacts.keys(), 'uri1'
+    assert test_uri2 in test_obs.planes[test_product_id].artifacts.keys(), 'uri2'
+    assert test_uri3 in test_obs.planes[test_product_id].artifacts.keys(), 'uri3'
+    assert test_uri4 in test_obs.planes[test_product_id].artifacts.keys(), 'uri4'

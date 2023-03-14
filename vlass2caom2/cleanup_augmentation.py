@@ -94,16 +94,14 @@ def visit(observation, **kwargs):
             # first - get the newest version
             max_version = 1
             for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName(artifact.uri).version
-                    max_version = max(max_version, version)
+                version = sn.VlassName(artifact.uri).version
+                max_version = max(max_version, version)
 
             # now collect the list of artifacts not at the maximum version
             for artifact in plane.artifacts.values():
-                if len(artifact.parts) > 0:  # check only fits uris
-                    version = sn.VlassName(artifact.uri).version
-                    if version != max_version:
-                        temp.append(artifact.uri)
+                version = sn.VlassName(artifact.uri).version
+                if version != max_version:
+                    temp.append(artifact.uri)
 
         delete_list = list(set(temp))
         for entry in delete_list:
