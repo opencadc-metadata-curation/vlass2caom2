@@ -113,14 +113,6 @@ class VlassName(mc.StorageName):
         return f'{bits[0]}.{bits[1]}'
 
     @property
-    def image_pointing_url(self):
-        bits = self._file_name.split('.')
-        if self.is_quicklook():
-            return f'{self.tile_url}{self.epoch}.ql.{self.tile}.{bits[4]}.{bits[5]}.{bits[6]}.{bits[7]}/'
-        else:
-            return f'{self.tile_url}{self.epoch}.se.{self.tile}.{bits[4]}.{bits[5]}.{bits[6]}.{bits[7]}/'
-
-    @property
     def prev(self):
         return f'{self._file_id}_prev.jpg'
 
@@ -144,9 +136,15 @@ class VlassName(mc.StorageName):
     def tile_url(self):
         return f'{self._root_url}{self.epoch}/{self.tile}/'
 
+    @property
     def is_catalog(self):
         return '.catalog.' in self._file_name
 
+    @property
+    def is_channel_cube(self):
+        return '.cc.' in self._file_name
+
+    @property
     def is_quicklook(self):
         return '.ql.' in self._file_name
 
@@ -165,14 +163,16 @@ class VlassName(mc.StorageName):
 
     def set_product_id(self, **kwargs):
         """The product id is made of the obs id plus the string 'quicklook'."""
-        if self.is_quicklook():
+        if self.is_quicklook:
             self._product_id = f'{self._obs_id}.quicklook'
+        elif self.is_channel_cube:
+            self._product_id = f'{self._obs_id}.channel_cube'
         else:
             self._product_id = f'{self._obs_id}.continuum_imaging'
 
     def set_root_url(self):
         self._root_url = SE_URL
-        if self.is_quicklook():
+        if self.is_quicklook:
             self._root_url = QL_URL
 
     def set_version(self):
@@ -186,9 +186,14 @@ class VlassName(mc.StorageName):
         #
         # csv file name looks like:
         # VLASS2.1.se.T11t35.J231002+033000.06.2048.v1.I.catalog.csv
-        bits = file_name.split('.')
-        version_str = bits[7].replace('v', '')
-        return mc.to_int(version_str)
+        #
+        # VLASS2.1.cc.T10t02.J005000-023000.06.2048.V_mean_minmaxrej.subim.fits.header
+        result = 1
+        if 'minmaxrej' not in file_name:
+            bits = file_name.split('.')
+            version_str = bits[7].replace('v', '')
+            result = mc.to_int(version_str)
+        return result
 
     @staticmethod
     def get_obs_id_from_file_name(file_name):

@@ -100,6 +100,94 @@ o = 'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt1.rms.su
 p = 'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt1.subim.fits.header'
 q = 'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.catalog.csv'
 r = 'VLASS1.1.ql.T06t24.J152614-163000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits.header'
+s = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.V_mean_minmaxrej.subim.fits.header'
+t = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw10.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+u = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw10.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# v = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw10.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+w = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw11.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+x = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw11.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# y = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw11.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+z = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw12.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+aa = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw12.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# ab = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw12.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+be = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw13.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+ad = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw13.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# ae = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw13.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+af = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw14.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+ag = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw14.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# ah = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw14.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+ai = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw15.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+aj = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw15.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# ak = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw15.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+al = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw2.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+am = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw2.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# an = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw2.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+ao = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw5.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+ap = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw5.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# aq = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw5.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+ar = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw6.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+au = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw6.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# av = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw6.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+aw = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw7.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# ax = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw7.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+ay = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw8.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+az = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw8.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# ba = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw8.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+bb = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw9.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+bc = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw9.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+# bd = 'VLASS2.1.cc.T10t02.J005000-023000.06.2048.v1.spw9.IQU.iter3.image.pbcor.tt0.subim.fits.header'
+
+da = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw10.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+db = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw10.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+dc = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw11.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dd = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw11.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+de = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw12.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+df = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw12.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+dg = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw13.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dh = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw13.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+di = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw14.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dj = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw14.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+dk = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw15.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dl = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw15.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+dm = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw2.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dn = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw2.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+do = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw5.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dp = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw5.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+dq = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw6.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dr = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw6.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+ds = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw7.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dt = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw7.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+du = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw8.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dv = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw8.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+dw = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw9.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+dx = 'VLASS2.1.cc.T10t35.J230600-003000.06.2048.v1.spw9.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+
+
+ga = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.V_mean_minmaxrej.subim.fits.header'
+gb = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw2.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gc = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw10.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gd = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw2.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+ge = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw10.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gf = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gg = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw11.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gh = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gi = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw11.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gj = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw6.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gk = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw12.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gl = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw6.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gm = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw12.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gn = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw7.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+go = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw13.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gp = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw7.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gq = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw13.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gr = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw8.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gs = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw14.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gt = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw8.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gu = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw14.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gv = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw9.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gw = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw15.IQU.iter3.image.pbcor.tt0.rms.subim.fits.header'
+gx = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw9.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
+gy = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw15.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
 
 obs_id_a = 'VLASS1.1.T01t01.J000228-363000'
 obs_id_c = 'VLASS1.1.T10t12.J075402-033000'
@@ -107,72 +195,68 @@ obs_id_e = 'VLASS1.1.T29t05.J110448+763000'
 obs_id_f = 'VLASS1.2.T07t14.J084202-123000'
 obs_id_k = 'VLASS2.1.T10t01.J000200-003000'
 obs_id_r = 'VLASS1.1.T06t24.J152614-163000'
+obs_id_s = 'VLASS2.1.T10t02.J005000-023000'
+obs_id_d = 'VLASS2.1.T10t35.J230600-003000'
+obs_id_g = 'VLASS2.1.T10t29.J184200-033000'
 
-features = Features()
-features.supports_catalog = False
-if features.supports_catalog:
-    test_obs = [
-        [obs_id_a, a, b],
-        [obs_id_c, c, d],
-        [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
-        [obs_id_e, e, f, g, h],
-        [obs_id_f, i, j],
-    ]
-else:
-    test_obs = [
-        [obs_id_a, a, b],
-        [obs_id_c, c, d],
-        [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
-        [obs_id_f, i, j],
-        [obs_id_k, k, l, m, n, o, p, q],
-        [obs_id_r, r],
-    ]
+test_obs = [
+    [obs_id_a, a, b],
+    [obs_id_c, c, d],
+    [obs_id_c + 'r', c.replace('v1', 'v2'), d.replace('v1', 'v2')],
+    [obs_id_f, i, j],
+    [obs_id_k, k, l, m, n, o, p, q],
+    [obs_id_r, r],
+    # [obs_id_s, t, u, v, w, x, y, z, aa, ab, be, ad, ae, af, ag, ah, ai, aj, ak, al, am, an, ao, ap, aq, ar, au,
+    #  av, aw, ax, ay, az, ba, bb, bc, bd],
+    [obs_id_s, t, u, w, x, z, aa, be, ad, af, ag, ai, aj, al, am, ao, ap, ar, au, aw, ay, az, bb, bc],
+    [obs_id_d, da, db, dc, dd, de, df, dg, dh, di, dj, dk, dl, dm, dn, do, dp, dq, dr, ds, dt, du, dv, dw, dx],
+    # no minmaxrej file in the 'g' list
+    [obs_id_g, gb, gc, gd, ge, gf, gg, gh, gi, gj, gk, gl, gm, gn, go, gp, gq, gr, gs, gt, gu, gv, gw, gx],
+]
 
 
 @pytest.mark.parametrize('test_files', test_obs)
 @patch('caom2utils.data_util.get_local_headers_from_fits')
 def test_visit(header_mock, test_files, test_config):
-    original_collection = StorageName.collection
-    original_scheme = StorageName.scheme
-    try:
-        StorageName.collection = test_config.collection
-        StorageName.scheme = test_config.scheme
-        obs_id = test_files[0]
-        header_mock.side_effect = ac.make_headers_from_file
-        expected_fqn = f'{TEST_DATA_DIR}/{obs_id}.expected.xml'
+    obs_id = test_files[0]
+    header_mock.side_effect = ac.make_headers_from_file
+    expected_fqn = f'{TEST_DATA_DIR}/{obs_id}.expected.xml'
+    expected = None
+    if os.path.exists(expected_fqn):
         expected = read_obs_from_file(expected_fqn)
-        in_fqn = expected_fqn.replace('expected.xml', 'in.xml')
-        actual_fqn = expected_fqn.replace('expected.xml', 'actual.xml')
-        if os.path.exists(actual_fqn):
-            os.unlink(actual_fqn)
+    in_fqn = expected_fqn.replace('expected.xml', 'in.xml')
+    actual_fqn = expected_fqn.replace('expected.xml', 'actual.xml')
+    if os.path.exists(actual_fqn):
+        os.unlink(actual_fqn)
 
-        observation = None
-        if os.path.exists(in_fqn):
-            observation = read_obs_from_file(in_fqn)
+    observation = None
+    if os.path.exists(in_fqn):
+        observation = read_obs_from_file(in_fqn)
 
-        for f_name in test_files[1:]:
-            temp_fqn = f'{TEST_DATA_DIR}/{f_name}'
-            vlass_name = storage_name.VlassName(entry=temp_fqn)
-            metadata_reader = rdc.FileMetadataReader()
-            metadata_reader.set(vlass_name)
-            file_type = 'application/fits'
-            metadata_reader.file_info[vlass_name.file_uri].file_type = file_type
-            kwargs = {
-                'storage_name': vlass_name,
-                'metadata_reader': metadata_reader,
-            }
-            observation = fits2caom2_augmentation.visit(observation, **kwargs)
-        try:
+    for f_name in test_files[1:]:
+        temp_fqn = f'{TEST_DATA_DIR}/{f_name}'
+        vlass_name = storage_name.VlassName(entry=temp_fqn)
+        metadata_reader = rdc.FileMetadataReader()
+        metadata_reader.set(vlass_name)
+        file_type = 'application/fits'
+        metadata_reader.file_info[vlass_name.file_uri].file_type = file_type
+        kwargs = {
+            'storage_name': vlass_name,
+            'metadata_reader': metadata_reader,
+        }
+        observation = fits2caom2_augmentation.visit(observation, **kwargs)
+    try:
+        if expected is None:
+            write_obs_to_file(observation, actual_fqn)
+            assert False, f'{observation.observation_id} no expected to compare to'
+        else:
             compare_result = get_differences(expected, observation)
-        except Exception as e:
-            write_obs_to_file(observation, actual_fqn)
-            raise e
-        if compare_result is not None:
-            write_obs_to_file(observation, actual_fqn)
-            compare_text = '\n'.join([r for r in compare_result])
-            msg = f'Differences found in observation {expected.observation_id}\n' f'{compare_text}'
-            assert False, msg
-        # assert False  # cause I want to see logging messages
-    finally:
-        StorageName.collection = original_collection
-        StorageName.scheme = original_scheme
+    except Exception as exc:
+        write_obs_to_file(observation, actual_fqn)
+        raise exc
+    if compare_result is not None:
+        write_obs_to_file(observation, actual_fqn)
+        compare_text = '\n'.join([r for r in compare_result])
+        msg = f'Differences found in observation {observation.observation_id}\n' f'{compare_text}'
+        assert False, msg
+    # assert False  # cause I want to see logging messages
