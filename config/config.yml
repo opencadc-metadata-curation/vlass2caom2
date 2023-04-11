@@ -34,6 +34,7 @@ interval: 600
 data_sources:
   - https://archive-new.nrao.edu/vlass/quicklook/
   - https://archive-new.nrao.edu/vlass/se_continuum_imaging/
+  - https://archive-new.nrao.edu/vlass/se_calibration/
 data_source_extensions:
   - .fits
   - .catalog.csv
@@ -48,3 +49,4 @@ task_types:
   - store
   - ingest
   - modify
+time_zone: US/Mountain

@@ -1,0 +1,1711 @@
+SIMPLE  =                    T / Standard FITS                                  
+BITPIX  =                  -32 / Floating point (32 bit)                        
+NAXIS   =                    4                                                  
+NAXIS1  =                 6202                                                  
+NAXIS2  =                 6202                                                  
+NAXIS3  =                    1                                                  
+NAXIS4  =                    3                                                  
+EXTEND  =                    T                                                  
+BSCALE  =   1.000000000000E+00 / PHYSICAL = PIXEL*BSCALE + BZERO                
+BZERO   =   0.000000000000E+00                                                  
+BMAJ    =   1.164321356673E-03                                                  
+BMIN    =   9.298515585714E-04                                                  
+BPA     =  -1.309502887726E+01                                                  
+BTYPE   = 'Intensity'                                                           
+OBJECT  = 'J184200-033000'                                                      
+BUNIT   = 'Jy/beam '           / Brightness (pixel) unit                        
+EQUINOX =   2.000000000000E+03                                                  
+RADESYS = 'ICRS    '                                                            
+LONPOLE =   1.800000000000E+02                                                  
+LATPOLE =  -3.500000000000E+00                                                  
+PC1_1   =   1.000000000000E+00                                                  
+PC2_1   =   0.000000000000E+00                                                  
+PC3_1   =   0.000000000000E+00                                                  
+PC4_1   =   0.000000000000E+00                                                  
+PC1_2   =   0.000000000000E+00                                                  
+PC2_2   =   1.000000000000E+00                                                  
+PC3_2   =   0.000000000000E+00                                                  
+PC4_2   =   0.000000000000E+00                                                  
+PC1_3   =   0.000000000000E+00                                                  
+PC2_3   =   0.000000000000E+00                                                  
+PC3_3   =   1.000000000000E+00                                                  
+PC4_3   =   0.000000000000E+00                                                  
+PC1_4   =   0.000000000000E+00                                                  
+PC2_4   =   0.000000000000E+00                                                  
+PC3_4   =   0.000000000000E+00                                                  
+PC4_4   =   1.000000000000E+00                                                  
+CTYPE1  = 'RA---SIN'                                                            
+CRVAL1  =   2.805006875000E+02                                                  
+CDELT1  =  -1.666666666667E-04                                                  
+CRPIX1  =   3.101000000000E+03                                                  
+CUNIT1  = 'deg     '                                                            
+CTYPE2  = 'DEC--SIN'                                                            
+CRVAL2  =  -3.500000000000E+00                                                  
+CDELT2  =   1.666666666667E-04                                                  
+CRPIX2  =   3.101000000000E+03                                                  
+CUNIT2  = 'deg     '                                                            
+CTYPE3  = 'FREQ    '                                                            
+CRVAL3  =   2.412000000000E+09                                                  
+CDELT3  =   1.280346895873E+08                                                  
+CRPIX3  =   1.000000000000E+00                                                  
+CUNIT3  = 'Hz      '                                                            
+CTYPE4  = 'STOKES  '                                                            
+CRVAL4  =   1.000000000000E+00                                                  
+CDELT4  =   1.000000000000E+00                                                  
+CRPIX4  =   1.000000000000E+00                                                  
+CUNIT4  = '        '                                                            
+PV2_1   =   0.000000000000E+00                                                  
+PV2_2   =   0.000000000000E+00                                                  
+RESTFRQ =   2.411985415745E+09 / Rest Frequency (Hz)                            
+SPECSYS = 'LSRK    '           / Spectral reference frame                       
+ALTRVAL =  -1.812707110804E+03 / Alternate frequency reference value            
+ALTRPIX =   1.000000000000E+00 / Alternate frequency reference pixel            
+VELREF  =                    1 / 1 LSR, 2 HEL, 3 OBS, +256 Radio                
+COMMENT casacore non-standard usage: 4 LSD, 5 GEO, 6 SOU, 7 GAL                 
+TELESCOP= 'EVLA    '                                                            
+OBSERVER= 'Dr. Vlass Scientist'                                                 
+DATE-OBS= '2020-08-05T04:05:29.850000' / First scan started                     
+DATE-END= '2020-08-05T04:42:02.699999' / Last scan finished                     
+TIMESYS = 'UTC     '                                                            
+OBSRA   =   2.805006875000E+02                                                  
+OBSDEC  =  -3.500000000000E+00                                                  
+OBSGEO-X=  -1.601156673287E+06                                                  
+OBSGEO-Y=  -5.041988986066E+06                                                  
+OBSGEO-Z=   3.554879236821E+06                                                  
+DATE    = '2022-12-04T23:39:13.413161' / Date FITS file was written             
+ORIGIN  = 'CASA 6.4.1-12 CASAtools:v1.0.0'                                      
+HISTORY CASA START LOGTABLE                                                     
+HISTORY 2022-12-04T20:17:34 INFO SRCCODE='::ImagePrimaryBeamCorrector::correct (
+HISTORY >file src/code/imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.cc,
+HISTORY > line 208)'                                                            
+HISTORY History of image /mnt/condor/execute/dir_139044/working/s7_0.VLASS2.1.cc
+HISTORY >.T10t29.J184200-033000.06.2048.v1.spw5.IQUV.iter3.image.tt0            
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY taskname=tclean                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vis         = ['VLASS2.1.sb38546349.eb38559922.59066.15098736111_split_s
+HISTORY >plit.ms']                                                              
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY selectdata  = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY field       = "5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
+HISTORY >,26,27,28,29,30,383,384,385,386,387,388,389,390,391,392,393,394,395,396
+HISTORY >397,398,399,400,401,402,403,404,405,406,407,408,411,412,413,414,415,416
+HISTORY >417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434
+HISTORY >435,436,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804
+HISTORY >805,806,807,808,809,810,811,812,813,814,817,818,819,820,821,822,823,824
+HISTORY >825,826,827,828,829,830,831,832,833,834,835,836,837,838,839,840,841,842
+HISTORY >1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1
+HISTORY >34,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1398,1399,140
+HISTORY >,1401,1402,1403,1404,1405,1406,1407,1408,1409,1410,1411,1412,1413,1414,
+HISTORY >415,1416,1417,1418,1419,1420,1421,1422,1423,1426,1427,1428,1429,1430,14
+HISTORY >1,1432,1433,1434,1435,1436,1437,1438,1439,1440,1441,1442,1443,1444,1445
+HISTORY >1446,1447,1448,1449,1450,1451,1804,1805,1806,1807,1808,1809,1810,1811,1
+HISTORY >12,1813,1814,1815,1816,1817,1818,1819,1820,1821,1822,1823,1824,1825,182
+HISTORY >,1827,1828,1829,1832,1833,1834,1835,1836,1837,1838,1839,1840,1841,1842,
+HISTORY >843,1844,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1855,1856,18
+HISTORY >7,2210,2211,2212,2213,2214,2215,2216,2217,2218,2219,2220,2221,2222,2223
+HISTORY >2224,2225,2226,2227,2228,2229,2230,2231,2232,2233,2234,2235"           
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY spw         = ['5']                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY timerange   = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvrange     = "<12km"                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY antenna     = ['0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+HISTORY >22,23,24&']                                                            
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scan        = ['9,12,15,18,21,25,28,31,34,37,40']                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY observation = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY intent      = "OBSERVE_TARGET#UNSPECIFIED"                              
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY datacolumn  = "corrected"                                               
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imagename   = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter1"                                                              
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imsize      = [12500, 12500]                                            
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cell        = "0.6arcsec"                                               
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY phasecenter = "J2000 18:42:0.165 -03.30.0.0000"                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY stokes      = "IQUV"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY projection  = "SIN"                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY startmodel  = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY specmode    = "mfs"                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY reffreq     = "2.412GHz"                                                
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nchan       = -1                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY start       = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY width       = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outframe    = "LSRK"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY veltype     = "radio"                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restfreq    = []                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interpolation = "linear"                                                
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY perchanweightdensity = False                                            
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gridder     = "mosaic"                                                  
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY facets      = 1                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfphasecenter = ""                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wprojplanes = 1                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vptable     = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mosweight   = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY aterm       = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psterm      = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wbawp       = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY conjbeams   = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cfcache     = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usepointing = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY computepastep = 360.0                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY rotatepastep = 5.0                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pointingoffsetsigdev = [300, 30]                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pblimit     = 0.1                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY normtype    = "flatnoise"                                               
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY deconvolver = "mtmfs"                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scales      = [0, 5, 12]                                                
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nterms      = 1                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smallscalebias = 0.4                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoration = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoringbeam = "common"                                                
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbcor       = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outlierfile = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY weighting   = "briggs"                                                  
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY robust      = 1.0                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noise       = "1.0Jy"                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY npixels     = 0                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvtaper     = ['']                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY niter       = 20000                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gain        = 0.1                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY threshold   = "0Jy"                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nsigma      = 3.0                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cycleniter  = 500                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cyclefactor = 3.0                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpsffraction = 0.05                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY maxpsffraction = 0.8                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interactive = 0                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usemask     = "user"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mask        = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter1.cleanmask"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbmask      = 0.0                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY sidelobethreshold = 3.0                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noisethreshold = 5.0                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY lownoisethreshold = 1.5                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY negativethreshold = 0.0                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smoothfactor = 1.0                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minbeamfrac = 0.3                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cutthreshold = 0.01                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY growiterations = 75                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY dogrowprune = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpercentchange = -1.0                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY verbose     = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY fastnoise   = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restart     = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY savemodel   = "none"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcres     = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcpsf     = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfcutoff   = 0.5                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY parallel    = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=0, imagename="")                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=1, imagename="")                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=2, imagename="")                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=3, imagename="")                    
+HISTORY 2022-12-02T06:35:03 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T06:35:03 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY taskname=tclean                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vis         = ['VLASS2.1.sb38546349.eb38559922.59066.15098736111_split_s
+HISTORY >plit.ms']                                                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY selectdata  = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY field       = "5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
+HISTORY >,26,27,28,29,30,383,384,385,386,387,388,389,390,391,392,393,394,395,396
+HISTORY >397,398,399,400,401,402,403,404,405,406,407,408,411,412,413,414,415,416
+HISTORY >417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434
+HISTORY >435,436,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804
+HISTORY >805,806,807,808,809,810,811,812,813,814,817,818,819,820,821,822,823,824
+HISTORY >825,826,827,828,829,830,831,832,833,834,835,836,837,838,839,840,841,842
+HISTORY >1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1
+HISTORY >34,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1398,1399,140
+HISTORY >,1401,1402,1403,1404,1405,1406,1407,1408,1409,1410,1411,1412,1413,1414,
+HISTORY >415,1416,1417,1418,1419,1420,1421,1422,1423,1426,1427,1428,1429,1430,14
+HISTORY >1,1432,1433,1434,1435,1436,1437,1438,1439,1440,1441,1442,1443,1444,1445
+HISTORY >1446,1447,1448,1449,1450,1451,1804,1805,1806,1807,1808,1809,1810,1811,1
+HISTORY >12,1813,1814,1815,1816,1817,1818,1819,1820,1821,1822,1823,1824,1825,182
+HISTORY >,1827,1828,1829,1832,1833,1834,1835,1836,1837,1838,1839,1840,1841,1842,
+HISTORY >843,1844,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1855,1856,18
+HISTORY >7,2210,2211,2212,2213,2214,2215,2216,2217,2218,2219,2220,2221,2222,2223
+HISTORY >2224,2225,2226,2227,2228,2229,2230,2231,2232,2233,2234,2235"           
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY spw         = ['5']                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY timerange   = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvrange     = "<12km"                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY antenna     = ['0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+HISTORY >22,23,24&']                                                            
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scan        = ['9,12,15,18,21,25,28,31,34,37,40']                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY observation = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY intent      = "OBSERVE_TARGET#UNSPECIFIED"                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY datacolumn  = "corrected"                                               
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imagename   = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter2"                                                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imsize      = [12500, 12500]                                            
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cell        = "0.6arcsec"                                               
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY phasecenter = "J2000 18:42:0.165 -03.30.0.0000"                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY stokes      = "IQUV"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY projection  = "SIN"                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY startmodel  = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY specmode    = "mfs"                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY reffreq     = "2.412GHz"                                                
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nchan       = -1                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY start       = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY width       = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outframe    = "LSRK"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY veltype     = "radio"                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restfreq    = []                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interpolation = "linear"                                                
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY perchanweightdensity = False                                            
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gridder     = "mosaic"                                                  
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY facets      = 1                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfphasecenter = ""                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wprojplanes = 1                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vptable     = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mosweight   = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY aterm       = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psterm      = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wbawp       = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY conjbeams   = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cfcache     = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usepointing = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY computepastep = 360.0                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY rotatepastep = 5.0                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pointingoffsetsigdev = [300, 30]                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pblimit     = 0.1                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY normtype    = "flatnoise"                                               
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY deconvolver = "mtmfs"                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scales      = [0, 5, 12]                                                
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nterms      = 1                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smallscalebias = 0.4                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoration = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoringbeam = "common"                                                
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbcor       = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outlierfile = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY weighting   = "briggs"                                                  
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY robust      = 1.0                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noise       = "1.0Jy"                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY npixels     = 0                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvtaper     = ['']                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY niter       = 20000                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gain        = 0.1                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY threshold   = "0Jy"                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nsigma      = 3.0                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cycleniter  = 500                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cyclefactor = 3.0                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpsffraction = 0.05                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY maxpsffraction = 0.8                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interactive = 0                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usemask     = "user"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mask        = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter2.cleanmask"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbmask      = 0.0                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY sidelobethreshold = 3.0                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noisethreshold = 5.0                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY lownoisethreshold = 1.5                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY negativethreshold = 0.0                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smoothfactor = 1.0                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minbeamfrac = 0.3                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cutthreshold = 0.01                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY growiterations = 75                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY dogrowprune = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpercentchange = -1.0                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY verbose     = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY fastnoise   = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restart     = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY savemodel   = "none"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcres     = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcpsf     = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfcutoff   = 0.5                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY parallel    = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=0, imagename="")                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=1, imagename="")                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=2, imagename="")                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=3, imagename="")                    
+HISTORY 2022-12-02T10:36:16 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T10:36:16 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY taskname=tclean                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vis         = ['VLASS2.1.sb38546349.eb38559922.59066.15098736111_split_s
+HISTORY >plit.ms']                                                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY selectdata  = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY field       = "5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
+HISTORY >,26,27,28,29,30,383,384,385,386,387,388,389,390,391,392,393,394,395,396
+HISTORY >397,398,399,400,401,402,403,404,405,406,407,408,411,412,413,414,415,416
+HISTORY >417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434
+HISTORY >435,436,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804
+HISTORY >805,806,807,808,809,810,811,812,813,814,817,818,819,820,821,822,823,824
+HISTORY >825,826,827,828,829,830,831,832,833,834,835,836,837,838,839,840,841,842
+HISTORY >1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1
+HISTORY >34,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1398,1399,140
+HISTORY >,1401,1402,1403,1404,1405,1406,1407,1408,1409,1410,1411,1412,1413,1414,
+HISTORY >415,1416,1417,1418,1419,1420,1421,1422,1423,1426,1427,1428,1429,1430,14
+HISTORY >1,1432,1433,1434,1435,1436,1437,1438,1439,1440,1441,1442,1443,1444,1445
+HISTORY >1446,1447,1448,1449,1450,1451,1804,1805,1806,1807,1808,1809,1810,1811,1
+HISTORY >12,1813,1814,1815,1816,1817,1818,1819,1820,1821,1822,1823,1824,1825,182
+HISTORY >,1827,1828,1829,1832,1833,1834,1835,1836,1837,1838,1839,1840,1841,1842,
+HISTORY >843,1844,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1855,1856,18
+HISTORY >7,2210,2211,2212,2213,2214,2215,2216,2217,2218,2219,2220,2221,2222,2223
+HISTORY >2224,2225,2226,2227,2228,2229,2230,2231,2232,2233,2234,2235"           
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY spw         = ['5']                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY timerange   = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvrange     = "<12km"                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY antenna     = ['0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+HISTORY >22,23,24&']                                                            
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scan        = ['9,12,15,18,21,25,28,31,34,37,40']                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY observation = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY intent      = "OBSERVE_TARGET#UNSPECIFIED"                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY datacolumn  = "corrected"                                               
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imagename   = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter3"                                                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imsize      = [12500, 12500]                                            
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cell        = "0.6arcsec"                                               
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY phasecenter = "J2000 18:42:0.165 -03.30.0.0000"                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY stokes      = "IQUV"                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY projection  = "SIN"                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY startmodel  = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY specmode    = "mfs"                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY reffreq     = "2.412GHz"                                                
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nchan       = -1                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY start       = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY width       = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outframe    = "LSRK"                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY veltype     = "radio"                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restfreq    = []                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interpolation = "linear"                                                
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY perchanweightdensity = False                                            
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gridder     = "mosaic"                                                  
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY facets      = 1                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfphasecenter = ""                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wprojplanes = 1                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vptable     = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mosweight   = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY aterm       = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psterm      = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wbawp       = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY conjbeams   = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cfcache     = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usepointing = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY computepastep = 360.0                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY rotatepastep = 5.0                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pointingoffsetsigdev = [300, 30]                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pblimit     = 0.1                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY normtype    = "flatnoise"                                               
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY deconvolver = "mtmfs"                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scales      = [0, 5, 12]                                                
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nterms      = 1                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smallscalebias = 0.4                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoration = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoringbeam = "common"                                                
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbcor       = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outlierfile = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY weighting   = "briggs"                                                  
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY robust      = 1.0                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noise       = "1.0Jy"                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY npixels     = 0                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvtaper     = ['']                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY niter       = 20000                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gain        = 0.1                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY threshold   = "0Jy"                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nsigma      = 4.5                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cycleniter  = 100                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cyclefactor = 3.0                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpsffraction = 0.05                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY maxpsffraction = 0.8                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interactive = 0                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usemask     = "pb"                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mask        = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbmask      = 0.4                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY sidelobethreshold = 3.0                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noisethreshold = 5.0                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY lownoisethreshold = 1.5                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY negativethreshold = 0.0                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smoothfactor = 1.0                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minbeamfrac = 0.3                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cutthreshold = 0.01                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY growiterations = 75                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY dogrowprune = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpercentchange = -1.0                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY verbose     = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY fastnoise   = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restart     = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY savemodel   = "none"                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcres     = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcpsf     = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfcutoff   = 0.5                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY parallel    = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=0, imagename="")                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=1, imagename="")                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=2, imagename="")                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY Ran ia.setrestoringbeam                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setrestoringbeam::MPIServer-2
+HISTORY >'                                                                      
+HISTORY ia.setrestoringbeam(major=[], minor=[], pa=[], beam={'major': {'value': 
+HISTORY > 3.49607, 'unit': 'arcsec'}, 'minor': {'value': 2.71492, 'unit': 'arcse
+HISTORY >'}, 'positionangle': {'value': -11.7542, 'unit': 'deg'}}, remove=false,
+HISTORY > log=true, channel=0, polarization=3, imagename="")                    
+HISTORY 2022-12-02T14:17:54 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T14:17:54 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-04T20:17:34 INFO SRCCODE='::ImagePrimaryBeamCorrector::correct (
+HISTORY >file src/code/imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.cc,
+HISTORY > line 208)'                                                            
+HISTORY End history of image /mnt/condor/execute/dir_139044/working/s7_0.VLASS2.
+HISTORY >1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQUV.iter3.image.tt0        
+HISTORY 2022-12-04T20:17:34 INFO SRCCODE='::ImagePrimaryBeamCorrector::correct (
+HISTORY >file src/code/imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.cc,
+HISTORY > line 208)'                                                            
+HISTORY History of image /mnt/condor/execute/dir_139044/working/s7_0.VLASS2.1.cc
+HISTORY >.T10t29.J184200-033000.06.2048.v1.spw5.IQUV.iter3.pb.tt0               
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY taskname=tclean                                                         
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vis         = ['VLASS2.1.sb38546349.eb38559922.59066.15098736111_split_s
+HISTORY >plit.ms']                                                              
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY selectdata  = True                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY field       = "5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
+HISTORY >,26,27,28,29,30,383,384,385,386,387,388,389,390,391,392,393,394,395,396
+HISTORY >397,398,399,400,401,402,403,404,405,406,407,408,411,412,413,414,415,416
+HISTORY >417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434
+HISTORY >435,436,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804
+HISTORY >805,806,807,808,809,810,811,812,813,814,817,818,819,820,821,822,823,824
+HISTORY >825,826,827,828,829,830,831,832,833,834,835,836,837,838,839,840,841,842
+HISTORY >1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1
+HISTORY >34,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1398,1399,140
+HISTORY >,1401,1402,1403,1404,1405,1406,1407,1408,1409,1410,1411,1412,1413,1414,
+HISTORY >415,1416,1417,1418,1419,1420,1421,1422,1423,1426,1427,1428,1429,1430,14
+HISTORY >1,1432,1433,1434,1435,1436,1437,1438,1439,1440,1441,1442,1443,1444,1445
+HISTORY >1446,1447,1448,1449,1450,1451,1804,1805,1806,1807,1808,1809,1810,1811,1
+HISTORY >12,1813,1814,1815,1816,1817,1818,1819,1820,1821,1822,1823,1824,1825,182
+HISTORY >,1827,1828,1829,1832,1833,1834,1835,1836,1837,1838,1839,1840,1841,1842,
+HISTORY >843,1844,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1855,1856,18
+HISTORY >7,2210,2211,2212,2213,2214,2215,2216,2217,2218,2219,2220,2221,2222,2223
+HISTORY >2224,2225,2226,2227,2228,2229,2230,2231,2232,2233,2234,2235"           
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY spw         = ['5']                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY timerange   = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvrange     = "<12km"                                                   
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY antenna     = ['0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+HISTORY >22,23,24&']                                                            
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scan        = ['9,12,15,18,21,25,28,31,34,37,40']                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY observation = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY intent      = "OBSERVE_TARGET#UNSPECIFIED"                              
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY datacolumn  = "corrected"                                               
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imagename   = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter0"                                                              
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imsize      = [12500, 12500]                                            
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cell        = "0.6arcsec"                                               
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY phasecenter = "J2000 18:42:0.165 -03.30.0.0000"                         
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY stokes      = "IQUV"                                                    
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY projection  = "SIN"                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY startmodel  = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY specmode    = "mfs"                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY reffreq     = "2.412GHz"                                                
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nchan       = -1                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY start       = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY width       = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outframe    = "LSRK"                                                    
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY veltype     = "radio"                                                   
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restfreq    = []                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interpolation = "linear"                                                
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY perchanweightdensity = False                                            
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gridder     = "mosaic"                                                  
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY facets      = 1                                                         
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfphasecenter = ""                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wprojplanes = 1                                                         
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vptable     = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mosweight   = False                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY aterm       = True                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psterm      = False                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wbawp       = True                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY conjbeams   = False                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cfcache     = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usepointing = False                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY computepastep = 360.0                                                   
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY rotatepastep = 5.0                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pointingoffsetsigdev = [300, 30]                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pblimit     = 0.1                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY normtype    = "flatnoise"                                               
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY deconvolver = "mtmfs"                                                   
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scales      = []                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nterms      = 1                                                         
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smallscalebias = 0.4                                                    
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoration = False                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoringbeam = "common"                                                
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbcor       = False                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outlierfile = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY weighting   = "briggs"                                                  
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY robust      = 1.0                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noise       = "1.0Jy"                                                   
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY npixels     = 0                                                         
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvtaper     = ['']                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY niter       = 0                                                         
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gain        = 0.1                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY threshold   = "0.0mJy"                                                  
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nsigma      = 2.0                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cycleniter  = 500                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cyclefactor = 3.0                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpsffraction = 0.05                                                   
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY maxpsffraction = 0.8                                                    
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interactive = 0                                                         
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usemask     = "user"                                                    
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mask        = ""                                                        
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbmask      = 0.0                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY sidelobethreshold = 3.0                                                 
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noisethreshold = 5.0                                                    
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY lownoisethreshold = 1.5                                                 
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY negativethreshold = 0.0                                                 
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smoothfactor = 1.0                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minbeamfrac = 0.3                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cutthreshold = 0.01                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY growiterations = 75                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY dogrowprune = True                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpercentchange = -1.0                                                 
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY verbose     = False                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY fastnoise   = True                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restart     = True                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY savemodel   = "none"                                                    
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcres     = True                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcpsf     = True                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfcutoff   = 0.5                                                       
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY parallel    = False                                                     
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::image::setcoordsys::MPIServer-2'    
+HISTORY Ran ia.setcoordsys                                                      
+HISTORY 2022-12-01T20:23:30 INFO SRCCODE='::image::setcoordsys::MPIServer-2'    
+HISTORY ia.setcoordsys(csys={...})                                              
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY taskname=tclean                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vis         = ['VLASS2.1.sb38546349.eb38559922.59066.15098736111_split_s
+HISTORY >plit.ms']                                                              
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY selectdata  = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY field       = "5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
+HISTORY >,26,27,28,29,30,383,384,385,386,387,388,389,390,391,392,393,394,395,396
+HISTORY >397,398,399,400,401,402,403,404,405,406,407,408,411,412,413,414,415,416
+HISTORY >417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434
+HISTORY >435,436,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804
+HISTORY >805,806,807,808,809,810,811,812,813,814,817,818,819,820,821,822,823,824
+HISTORY >825,826,827,828,829,830,831,832,833,834,835,836,837,838,839,840,841,842
+HISTORY >1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1
+HISTORY >34,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1398,1399,140
+HISTORY >,1401,1402,1403,1404,1405,1406,1407,1408,1409,1410,1411,1412,1413,1414,
+HISTORY >415,1416,1417,1418,1419,1420,1421,1422,1423,1426,1427,1428,1429,1430,14
+HISTORY >1,1432,1433,1434,1435,1436,1437,1438,1439,1440,1441,1442,1443,1444,1445
+HISTORY >1446,1447,1448,1449,1450,1451,1804,1805,1806,1807,1808,1809,1810,1811,1
+HISTORY >12,1813,1814,1815,1816,1817,1818,1819,1820,1821,1822,1823,1824,1825,182
+HISTORY >,1827,1828,1829,1832,1833,1834,1835,1836,1837,1838,1839,1840,1841,1842,
+HISTORY >843,1844,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1855,1856,18
+HISTORY >7,2210,2211,2212,2213,2214,2215,2216,2217,2218,2219,2220,2221,2222,2223
+HISTORY >2224,2225,2226,2227,2228,2229,2230,2231,2232,2233,2234,2235"           
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY spw         = ['5']                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY timerange   = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvrange     = "<12km"                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY antenna     = ['0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+HISTORY >22,23,24&']                                                            
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scan        = ['9,12,15,18,21,25,28,31,34,37,40']                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY observation = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY intent      = "OBSERVE_TARGET#UNSPECIFIED"                              
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY datacolumn  = "corrected"                                               
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imagename   = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter1"                                                              
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imsize      = [12500, 12500]                                            
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cell        = "0.6arcsec"                                               
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY phasecenter = "J2000 18:42:0.165 -03.30.0.0000"                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY stokes      = "IQUV"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY projection  = "SIN"                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY startmodel  = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY specmode    = "mfs"                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY reffreq     = "2.412GHz"                                                
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nchan       = -1                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY start       = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY width       = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outframe    = "LSRK"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY veltype     = "radio"                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restfreq    = []                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interpolation = "linear"                                                
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY perchanweightdensity = False                                            
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gridder     = "mosaic"                                                  
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY facets      = 1                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfphasecenter = ""                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wprojplanes = 1                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vptable     = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mosweight   = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY aterm       = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psterm      = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wbawp       = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY conjbeams   = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cfcache     = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usepointing = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY computepastep = 360.0                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY rotatepastep = 5.0                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pointingoffsetsigdev = [300, 30]                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pblimit     = 0.1                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY normtype    = "flatnoise"                                               
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY deconvolver = "mtmfs"                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scales      = [0, 5, 12]                                                
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nterms      = 1                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smallscalebias = 0.4                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoration = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoringbeam = "common"                                                
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbcor       = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outlierfile = ""                                                        
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY weighting   = "briggs"                                                  
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY robust      = 1.0                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noise       = "1.0Jy"                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY npixels     = 0                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvtaper     = ['']                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY niter       = 20000                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gain        = 0.1                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY threshold   = "0Jy"                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nsigma      = 3.0                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cycleniter  = 500                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cyclefactor = 3.0                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpsffraction = 0.05                                                   
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY maxpsffraction = 0.8                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interactive = 0                                                         
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usemask     = "user"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mask        = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter1.cleanmask"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbmask      = 0.0                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY sidelobethreshold = 3.0                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noisethreshold = 5.0                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY lownoisethreshold = 1.5                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY negativethreshold = 0.0                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smoothfactor = 1.0                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minbeamfrac = 0.3                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cutthreshold = 0.01                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY growiterations = 75                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY dogrowprune = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpercentchange = -1.0                                                 
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY verbose     = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY fastnoise   = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restart     = True                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY savemodel   = "none"                                                    
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcres     = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcpsf     = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfcutoff   = 0.5                                                       
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY parallel    = False                                                     
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T06:32:50 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-02T06:32:52 INFO SRCCODE='::image::setcoordsys::MPIServer-2'    
+HISTORY Ran ia.setcoordsys                                                      
+HISTORY 2022-12-02T06:32:52 INFO SRCCODE='::image::setcoordsys::MPIServer-2'    
+HISTORY ia.setcoordsys(csys={...})                                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY taskname=tclean                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vis         = ['VLASS2.1.sb38546349.eb38559922.59066.15098736111_split_s
+HISTORY >plit.ms']                                                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY selectdata  = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY field       = "5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
+HISTORY >,26,27,28,29,30,383,384,385,386,387,388,389,390,391,392,393,394,395,396
+HISTORY >397,398,399,400,401,402,403,404,405,406,407,408,411,412,413,414,415,416
+HISTORY >417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434
+HISTORY >435,436,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804
+HISTORY >805,806,807,808,809,810,811,812,813,814,817,818,819,820,821,822,823,824
+HISTORY >825,826,827,828,829,830,831,832,833,834,835,836,837,838,839,840,841,842
+HISTORY >1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1
+HISTORY >34,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1398,1399,140
+HISTORY >,1401,1402,1403,1404,1405,1406,1407,1408,1409,1410,1411,1412,1413,1414,
+HISTORY >415,1416,1417,1418,1419,1420,1421,1422,1423,1426,1427,1428,1429,1430,14
+HISTORY >1,1432,1433,1434,1435,1436,1437,1438,1439,1440,1441,1442,1443,1444,1445
+HISTORY >1446,1447,1448,1449,1450,1451,1804,1805,1806,1807,1808,1809,1810,1811,1
+HISTORY >12,1813,1814,1815,1816,1817,1818,1819,1820,1821,1822,1823,1824,1825,182
+HISTORY >,1827,1828,1829,1832,1833,1834,1835,1836,1837,1838,1839,1840,1841,1842,
+HISTORY >843,1844,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1855,1856,18
+HISTORY >7,2210,2211,2212,2213,2214,2215,2216,2217,2218,2219,2220,2221,2222,2223
+HISTORY >2224,2225,2226,2227,2228,2229,2230,2231,2232,2233,2234,2235"           
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY spw         = ['5']                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY timerange   = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvrange     = "<12km"                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY antenna     = ['0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+HISTORY >22,23,24&']                                                            
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scan        = ['9,12,15,18,21,25,28,31,34,37,40']                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY observation = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY intent      = "OBSERVE_TARGET#UNSPECIFIED"                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY datacolumn  = "corrected"                                               
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imagename   = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter2"                                                              
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imsize      = [12500, 12500]                                            
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cell        = "0.6arcsec"                                               
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY phasecenter = "J2000 18:42:0.165 -03.30.0.0000"                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY stokes      = "IQUV"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY projection  = "SIN"                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY startmodel  = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY specmode    = "mfs"                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY reffreq     = "2.412GHz"                                                
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nchan       = -1                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY start       = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY width       = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outframe    = "LSRK"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY veltype     = "radio"                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restfreq    = []                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interpolation = "linear"                                                
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY perchanweightdensity = False                                            
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gridder     = "mosaic"                                                  
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY facets      = 1                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfphasecenter = ""                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wprojplanes = 1                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vptable     = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mosweight   = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY aterm       = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psterm      = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wbawp       = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY conjbeams   = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cfcache     = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usepointing = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY computepastep = 360.0                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY rotatepastep = 5.0                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pointingoffsetsigdev = [300, 30]                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pblimit     = 0.1                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY normtype    = "flatnoise"                                               
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY deconvolver = "mtmfs"                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scales      = [0, 5, 12]                                                
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nterms      = 1                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smallscalebias = 0.4                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoration = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoringbeam = "common"                                                
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbcor       = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outlierfile = ""                                                        
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY weighting   = "briggs"                                                  
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY robust      = 1.0                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noise       = "1.0Jy"                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY npixels     = 0                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvtaper     = ['']                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY niter       = 20000                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gain        = 0.1                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY threshold   = "0Jy"                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nsigma      = 3.0                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cycleniter  = 500                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cyclefactor = 3.0                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpsffraction = 0.05                                                   
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY maxpsffraction = 0.8                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interactive = 0                                                         
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usemask     = "user"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mask        = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter2.cleanmask"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbmask      = 0.0                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY sidelobethreshold = 3.0                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noisethreshold = 5.0                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY lownoisethreshold = 1.5                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY negativethreshold = 0.0                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smoothfactor = 1.0                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minbeamfrac = 0.3                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cutthreshold = 0.01                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY growiterations = 75                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY dogrowprune = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpercentchange = -1.0                                                 
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY verbose     = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY fastnoise   = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restart     = True                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY savemodel   = "none"                                                    
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcres     = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcpsf     = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfcutoff   = 0.5                                                       
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY parallel    = False                                                     
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T10:34:14 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-02T10:34:17 INFO SRCCODE='::image::setcoordsys::MPIServer-2'    
+HISTORY Ran ia.setcoordsys                                                      
+HISTORY 2022-12-02T10:34:17 INFO SRCCODE='::image::setcoordsys::MPIServer-2'    
+HISTORY ia.setcoordsys(csys={...})                                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY taskname=tclean                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vis         = ['VLASS2.1.sb38546349.eb38559922.59066.15098736111_split_s
+HISTORY >plit.ms']                                                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY selectdata  = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY field       = "5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
+HISTORY >,26,27,28,29,30,383,384,385,386,387,388,389,390,391,392,393,394,395,396
+HISTORY >397,398,399,400,401,402,403,404,405,406,407,408,411,412,413,414,415,416
+HISTORY >417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434
+HISTORY >435,436,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804
+HISTORY >805,806,807,808,809,810,811,812,813,814,817,818,819,820,821,822,823,824
+HISTORY >825,826,827,828,829,830,831,832,833,834,835,836,837,838,839,840,841,842
+HISTORY >1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1
+HISTORY >34,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1398,1399,140
+HISTORY >,1401,1402,1403,1404,1405,1406,1407,1408,1409,1410,1411,1412,1413,1414,
+HISTORY >415,1416,1417,1418,1419,1420,1421,1422,1423,1426,1427,1428,1429,1430,14
+HISTORY >1,1432,1433,1434,1435,1436,1437,1438,1439,1440,1441,1442,1443,1444,1445
+HISTORY >1446,1447,1448,1449,1450,1451,1804,1805,1806,1807,1808,1809,1810,1811,1
+HISTORY >12,1813,1814,1815,1816,1817,1818,1819,1820,1821,1822,1823,1824,1825,182
+HISTORY >,1827,1828,1829,1832,1833,1834,1835,1836,1837,1838,1839,1840,1841,1842,
+HISTORY >843,1844,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1855,1856,18
+HISTORY >7,2210,2211,2212,2213,2214,2215,2216,2217,2218,2219,2220,2221,2222,2223
+HISTORY >2224,2225,2226,2227,2228,2229,2230,2231,2232,2233,2234,2235"           
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY spw         = ['5']                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY timerange   = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvrange     = "<12km"                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY antenna     = ['0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+HISTORY >22,23,24&']                                                            
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scan        = ['9,12,15,18,21,25,28,31,34,37,40']                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY observation = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY intent      = "OBSERVE_TARGET#UNSPECIFIED"                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY datacolumn  = "corrected"                                               
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imagename   = "s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQ
+HISTORY >UV.iter3"                                                              
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY imsize      = [12500, 12500]                                            
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cell        = "0.6arcsec"                                               
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY phasecenter = "J2000 18:42:0.165 -03.30.0.0000"                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY stokes      = "IQUV"                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY projection  = "SIN"                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY startmodel  = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY specmode    = "mfs"                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY reffreq     = "2.412GHz"                                                
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nchan       = -1                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY start       = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY width       = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outframe    = "LSRK"                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY veltype     = "radio"                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restfreq    = []                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interpolation = "linear"                                                
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY perchanweightdensity = False                                            
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gridder     = "mosaic"                                                  
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY facets      = 1                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfphasecenter = ""                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wprojplanes = 1                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY vptable     = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mosweight   = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY aterm       = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psterm      = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY wbawp       = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY conjbeams   = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cfcache     = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usepointing = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY computepastep = 360.0                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY rotatepastep = 5.0                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pointingoffsetsigdev = [300, 30]                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pblimit     = 0.1                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY normtype    = "flatnoise"                                               
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY deconvolver = "mtmfs"                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY scales      = [0, 5, 12]                                                
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nterms      = 1                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smallscalebias = 0.4                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoration = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restoringbeam = "common"                                                
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbcor       = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY outlierfile = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY weighting   = "briggs"                                                  
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY robust      = 1.0                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noise       = "1.0Jy"                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY npixels     = 0                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY uvtaper     = ['']                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY niter       = 20000                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY gain        = 0.1                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY threshold   = "0Jy"                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY nsigma      = 4.5                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cycleniter  = 100                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cyclefactor = 3.0                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpsffraction = 0.05                                                   
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY maxpsffraction = 0.8                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY interactive = 0                                                         
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY usemask     = "pb"                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY mask        = ""                                                        
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY pbmask      = 0.4                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY sidelobethreshold = 3.0                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY noisethreshold = 5.0                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY lownoisethreshold = 1.5                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY negativethreshold = 0.0                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY smoothfactor = 1.0                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minbeamfrac = 0.3                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY cutthreshold = 0.01                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY growiterations = 75                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY dogrowprune = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY minpercentchange = -1.0                                                 
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY verbose     = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY fastnoise   = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY restart     = True                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY savemodel   = "none"                                                    
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcres     = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY calcpsf     = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY psfcutoff   = 0.5                                                       
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::tclean::MPIServer-2'                
+HISTORY parallel    = False                                                     
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY Ran ia.setmiscinfo                                                      
+HISTORY 2022-12-02T14:16:25 INFO SRCCODE='::image::setmiscinfo::MPIServer-2'    
+HISTORY ia.setmiscinfo(info={...})                                              
+HISTORY 2022-12-02T14:16:27 INFO SRCCODE='::image::setcoordsys::MPIServer-2'    
+HISTORY Ran ia.setcoordsys                                                      
+HISTORY 2022-12-02T14:16:27 INFO SRCCODE='::image::setcoordsys::MPIServer-2'    
+HISTORY ia.setcoordsys(csys={...})                                              
+HISTORY 2022-12-04T20:17:34 INFO SRCCODE='::ImagePrimaryBeamCorrector::correct (
+HISTORY >file src/code/imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.cc,
+HISTORY > line 208)'                                                            
+HISTORY End history of image /mnt/condor/execute/dir_139044/working/s7_0.VLASS2.
+HISTORY >1.cc.T10t29.J184200-033000.06.2048.v1.spw5.IQUV.iter3.pb.tt0           
+HISTORY 2022-12-04T20:17:34 INFO SRCCODE='::impbcor'                            
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-04T20:17:34 INFO SRCCODE='::impbcor'                            
+HISTORY impbcor(imagename="s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw
+HISTORY >5.IQUV.iter3.image.tt0", pbimage="s7_0.VLASS2.1.cc.T10t29.J184200-03300
+HISTORY >.06.2048.v1.spw5.IQUV.iter3.pb.tt0", outfile="s7_0.VLASS2.1.cc.T10t29.J
+HISTORY >84200-033000.06.2048.v1.spw5.IQUV.iter3.image.pbcor.tt0", overwrite=Fal
+HISTORY >e, box="", region="", chans="", stokes="", mask="", mode="divide", cuto
+HISTORY >f=-1.0, stretch=False)                                                 
+HISTORY 2022-12-04T23:12:37 INFO SRCCODE='::imsubimage'                         
+HISTORY version: 6.4.1-12 CASAtools:v1.0.0                                      
+HISTORY 2022-12-04T23:12:37 INFO SRCCODE='::imsubimage'                         
+HISTORY imsubimage(imagename="s7_0.VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.
+HISTORY >spw5.IQUV.iter3.image.pbcor.tt0", outfile="s7_0.VLASS2.1.cc.T10t29.J184
+HISTORY >00-033000.06.2048.v1.spw5.IQUV.iter3.image.pbcor.tt0.subim", box="3150.
+HISTORY >,3150.0,9351.0,9351.0", region="", chans="", stokes="", mask="", dropde
+HISTORY >=False, overwrite=False, verbose=True, stretch=False, keepaxes=[])     
+HISTORY 2022-12-04T23:39:06 INFO SRCCODE='::image::_convolve2d'                 
+HISTORY Ran ia.convolve2d                                                       
+HISTORY 2022-12-04T23:39:06 INFO SRCCODE='::image::_convolve2d'                 
+HISTORY ia.convolve2d(outfile="", axes=[0,1], type="gaussian", major="", minor="
+HISTORY >", pa="", scale=-1.000000, region={...}, mask="", overwrite=false, stre
+HISTORY >ch=false, targetres=true, beam={...})                                  
+HISTORY 2022-12-04T23:39:06 INFO SRCCODE='::Image2DConvolver::_logBeamInfo'     
+HISTORY Original /mnt/condor/execute/dir_139044/working/s7_0.VLASS2.1.cc.T10t29.
+HISTORY >J184200-033000.06.2048.v1.spw5.IQUV.iter3.image.pbcor.tt0.subim has mul
+HISTORY >iple beams. Min area beam: major: 3.49607 arcsec, minor: 2.71492 arcsec
+HISTORY > pa: -11.7542 deg. Max area beam: major: 3.49607 arcsec, minor: 2.71492
+HISTORY > arcsec, pa: -11.7542 deg. Median area beam major: 3.49607 arcsec, mino
+HISTORY >: 2.71492 arcsec, pa: -11.7542 deg                                     
+HISTORY 2022-12-04T23:39:06 INFO SRCCODE='::Image2DConvolver::_logBeamInfo'     
+HISTORY Output  resolution major: 4.19156 arcsec, minor: 3.34747 arcsec, pa: -13
+HISTORY >.095 deg                                                               
+HISTORY 2022-12-04T23:39:06 INFO SRCCODE='::image::setcoordsys'                 
+HISTORY Ran ia.setcoordsys                                                      
+HISTORY 2022-12-04T23:39:06 INFO SRCCODE='::image::setcoordsys'                 
+HISTORY ia.setcoordsys(csys={...})                                              
+HISTORY 2022-12-04T23:39:13 INFO SRCCODE='::image::regrid'                      
+HISTORY Ran ia.regrid                                                           
+HISTORY 2022-12-04T23:39:13 INFO SRCCODE='::image::regrid'                      
+HISTORY ia.regrid(outfile="", shape=[-1], csys={...}, axes=[0,1], region={...}, 
+HISTORY > mask="", method="linear", decimate=10, replicate=false, doref=true, dr
+HISTORY >pdegen=false, overwrite=true, force=false, asvelocity=false, stretch=fa
+HISTORY >se)                                                                    
+HISTORY CASA END LOGTABLE                                                       
+END                                                                             

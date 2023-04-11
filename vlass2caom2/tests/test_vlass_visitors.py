@@ -71,11 +71,12 @@ import os
 import pytest
 import shutil
 
+from datetime import datetime
 from mock import Mock, patch
 
 from caom2 import Status
 from caom2pipe.manage_composable import (
-    CadcException, Config, make_datetime_tz, read_obs_from_file, State, StorageName
+    CadcException, Config, make_datetime, read_obs_from_file, State, StorageName
 )
 
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
@@ -101,69 +102,60 @@ def test_aug_visit():
 @patch('vlass2caom2.data_source.requests.get')
 @patch('vlass2caom2.data_source.query_endpoint_session')
 def test_aug_visit_works(query_endpoint_mock, get_mock, test_config):
-    orig_scheme = StorageName.scheme
-    orig_collection = StorageName.collection
-    try:
-        StorageName.collection = test_config.collection
-        StorageName.scheme = test_config.scheme
-        get_mock.return_value.__enter__.return_value.raw = WL_INDEX
-        query_endpoint_mock.side_effect = test_data_source._query_quicklook_endpoint
-        tc = Config()
-        tc.get_executors()
-        tc.data_sources = [storage_name.QL_URL]
-        test_state = State(tc.state_fqn, data_source.QuicklookPage.timezone)
-        test_web_log = data_source.WebLogMetadata(test_state, Mock(), [storage_name.QL_URL])
-        test_web_log.init_web_log()
-        test_name = storage_name.VlassName(
-            'VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-        )
-        test_file = os.path.join(TEST_DATA_DIR, 'aug_visit_works_start.xml')
-        test_obs = read_obs_from_file(test_file)
-        assert test_obs is not None, 'unexpected None'
-        test_source = data_source.NraoPages(tc)
-        test_metadata_reader = reader.VlassStorageMetadataReader(Mock(), test_source, test_web_log)
-        kwargs = {
-            'metadata_reader': test_metadata_reader,
-            'storage_name': test_name,
-        }
-        test_obs = time_bounds_augmentation.visit(test_obs, **kwargs)
-        assert test_obs is not None, 'unexpected modification'
-        plane = test_obs.planes[test_name.product_id]
-        chunk = plane.artifacts[test_name.file_uri].parts['0'].chunks[0]
-        assert chunk is not None
-        assert chunk.time is not None, 'no time information'
-        assert chunk.time.axis is not None, 'no axis information'
-        assert chunk.time.axis.bounds is not None, 'no bounds information'
-        assert (
-            len(chunk.time.axis.bounds.samples) == 1
-        ), 'wrong amount of bounds info'
-        # if exposure == 206, that's the original, unchanged (so the test didn't work) value
-        assert chunk.time.exposure == 234.0, 'wrong exposure value'
-    finally:
-        StorageName.scheme = orig_scheme
-        StorageName.collection = orig_collection
+    get_mock.return_value.__enter__.return_value.raw = WL_INDEX
+    query_endpoint_mock.side_effect = test_data_source._query_quicklook_endpoint
+    test_config.working_directory = TEST_DATA_DIR
+    test_config.state_file_name = 'state.yml'
+    test_config.data_sources = [storage_name.QL_URL]
+    test_state = State(test_config.state_fqn, test_config.time_zone)
+    test_web_log = data_source.WebLogMetadata(test_state, Mock(), [storage_name.QL_URL])
+    test_web_log.init_web_log()
+    test_name = storage_name.VlassName(
+        'VLASS1.2.ql.T07t13.J081828-133000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+    )
+    test_file = os.path.join(TEST_DATA_DIR, 'aug_visit_works_start.xml')
+    test_obs = read_obs_from_file(test_file)
+    assert test_obs is not None, 'unexpected None'
+    test_source = data_source.NraoPages(test_config)
+    test_metadata_reader = reader.VlassStorageMetadataReader(Mock(), test_source, test_web_log)
+    kwargs = {
+        'metadata_reader': test_metadata_reader,
+        'storage_name': test_name,
+    }
+    test_obs = time_bounds_augmentation.visit(test_obs, **kwargs)
+    assert test_obs is not None, 'unexpected modification'
+    plane = test_obs.planes[test_name.product_id]
+    chunk = plane.artifacts[test_name.file_uri].parts['0'].chunks[0]
+    assert chunk is not None
+    assert chunk.time is not None, 'no time information'
+    assert chunk.time.axis is not None, 'no axis information'
+    assert chunk.time.axis.bounds is not None, 'no bounds information'
+    assert (
+        len(chunk.time.axis.bounds.samples) == 1
+    ), 'wrong amount of bounds info'
+    # if exposure == 206, that's the original, unchanged (so the test didn't work) value
+    assert chunk.time.exposure == 234.0, 'wrong exposure value'
 
 
 @patch('vlass2caom2.data_source.requests.get')
 @patch('vlass2caom2.data_source.query_endpoint_session')
-def test_aug_visit_quality_works(query_endpoint_mock, get_mock):
+def test_aug_visit_quality_works(query_endpoint_mock, get_mock, test_config):
     query_endpoint_mock.side_effect = test_data_source._query_quicklook_endpoint
     get_mock.return_value.__enter__.return_value.raw = WL_INDEX
 
     test_file = os.path.join(TEST_DATA_DIR, 'aug_visit_quality_start.xml')
     test_obs = read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
-    test_config = Config()
     test_config.state_file_name = 'state.yml'
     test_config.state_fqn = f'{TEST_DATA_DIR}/state.yml'
     test_config.data_sources = [storage_name.QL_URL]
-    test_state = State(test_config.state_fqn, data_source.QuicklookPage.timezone)
+    test_state = State(test_config.state_fqn, test_config.time_zone)
     test_web_log = data_source.WebLogMetadata(test_state, Mock(), [storage_name.QL_URL])
     test_web_log.init_web_log()
-    test_source = data_source.NraoPages(test_config)
-    test_start_time = make_datetime_tz(test_data_source.TEST_START_TIME_STR, data_source.QuicklookPage.timezone)
+    test_source = data_source.NraoPages(test_config, test_config.time_zone)
+    test_start_time = make_datetime(test_data_source.TEST_START_TIME_STR)
     test_source.set_start_time(test_start_time)
-    test_source._get_all_work()
+    test_source.initialize_end_dt()
     test_metadata_reader = reader.VlassStorageMetadataReader(Mock(), test_source, test_web_log)
     test_name = storage_name.VlassName(
         'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'

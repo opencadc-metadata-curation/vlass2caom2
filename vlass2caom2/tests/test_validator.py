@@ -73,7 +73,7 @@ from datetime import datetime
 
 from caom2 import SimpleObservation, Algorithm
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import composable, data_source, storage_name, validator
+from vlass2caom2 import data_source, storage_name, validator
 
 from mock import patch, Mock
 import test_data_source
@@ -117,7 +117,7 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
         with open(test_config.proxy_fqn, 'w') as f:
             f.write('proxy content')
         # need the state.yml file for the DataSource specializations, timestamp gets over-ridden
-        mc.State.write_bookmark(test_config.state_fqn, composable.VLASS_BOOKMARK, datetime.utcnow())
+        mc.State.write_bookmark(test_config.state_fqn, test_config.bookmark, datetime.utcnow())
 
         test_subject = validator.VlassValidator()
         test_listing_fqn = f'{test_subject._config.working_directory}/not_at_cadc.txt'
@@ -182,16 +182,15 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
         os.chdir(orig_cwd)
 
 
-def test_multiple_versions():
+def test_multiple_versions(test_config):
     with open(
         f'{test_main_app.TEST_DATA_DIR}/multiple_versions_tile.html', 'r'
     ) as f:
         test_string = f.read()
-    test_start_date = mc.make_datetime_tz('2018-01-01 00:00', data_source.QuicklookPage.timezone)
+    test_start_date = mc.make_datetime('2018-01-01 00:00')
     test_config = mc.Config()
     test_config.state_fqn = os.path.join(test_main_app.TEST_DATA_DIR, 'state.yml')
-    test_subject = data_source.QuicklookPage(test_config, storage_name.QL_URL)
-    test_subject._start_time = test_start_date
+    test_subject = data_source.QuicklookPage(test_config, storage_name.QL_URL, test_start_date)
     start_content = test_subject._parse_id_page(test_string)
     test_content = {}
     for key, value in start_content.items():

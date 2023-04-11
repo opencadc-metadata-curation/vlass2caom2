@@ -118,7 +118,7 @@ def read_file_url_list_from_nrao(nrao_state_fqn):
         source = data_source.NraoPages(config)
         # want all the files, so set the start times to VLASS survey beginning
         # timezone is Socorro, NM, USA
-        source.set_start_time(datetime(2017, 1, 1, tzinfo=data_source.QuicklookPage.timezone))
+        source.set_start_time(datetime(2017, 1, 1))
         temp = source.get_all_file_urls()
         vlass_dict = pd.DataFrame({'url': temp.keys(), 'dt': temp.values()})
         vlass_dict.to_csv(nrao_state_fqn, header=True, index=False)
@@ -175,7 +175,7 @@ def _get_max_version(entries):
 
 class VlassValidator(Validator):
     def __init__(self):
-        super(VlassValidator, self).__init__(source_name='NRAO', source_tz=data_source.QuicklookPage.timezone)
+        super(VlassValidator, self).__init__(source_name='NRAO')
         # a dictionary where the file name is the key, and the fully-qualified
         # file name at the HTTP site is the value
         self._fully_qualified_list = None

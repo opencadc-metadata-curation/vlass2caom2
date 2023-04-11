@@ -67,22 +67,23 @@
 # ***********************************************************************
 #
 
+import logging
 import os
+import traceback
 
-from datetime import datetime, timedelta, timezone
-from dateutil import tz
+from datetime import datetime, timedelta
 from unittest.mock import ANY, patch, Mock
 
 from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe import execute_composable as ec
 from caom2pipe.manage_composable import (
-    Config, Metrics, Observable, read_obs_from_file, Rejected, StorageName, write_obs_to_file
+    Config, Metrics, Observable, read_obs_from_file, Rejected, State, StorageName, write_obs_to_file
 )
 from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
 from caom2 import SimpleObservation, Algorithm
-from vlass2caom2 import composable, VLASS_BOOKMARK, VlassName
+from vlass2caom2 import composable, VlassName
 import test_data_source
 import test_main_app
 from vlass2caom2.tests.test_data_source import _write_state
@@ -120,41 +121,37 @@ def test_run_by_builder(exec_mock, clients_mock, test_config):
     assert isinstance(arg_0, VlassName), 'wrong parameter type'
     assert arg_0.obs_id == 'VLASS1.2.T07t13.J083838-153000', 'wrong obs id'
     assert arg_0.source_names[0] == test_f_name, 'wrong source name'
-    assert arg_0.destination_uris[0] == f'{test_config.scheme}:{test_config.collection}/{test_f_name}', 'wrong destination uri'
+    assert (
+        arg_0.destination_uris[0] == f'{test_config.scheme}:{test_config.collection}/{test_f_name}'
+    ), 'wrong destination uri'
 
 
 @patch('caom2pipe.client_composable.ClientCollection')
 @patch('vlass2caom2.data_source.QuicklookPage._build_todo')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run_state(run_mock, query_mock, client_mock):
+def test_run_state(run_mock, query_mock, client_mock, test_config):
 
+    # the test case where one URL has updated files, and one URL does not
+    # QuicklookPage has new files, ContinuumPage has no updates
     def _mock_append_work():
         a = {
-            datetime(2019, 4, 24, 12, 34, tzinfo=timezone.utc): [
+            datetime(2019, 4, 24, 12, 34): [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/'
                 'T07t13/VLASS1.1.ql.T07t13.J083838-153000.10.2048.v1/',
             ],
-            datetime(2019, 4, 24, 12, 34, tzinfo=timezone.utc) - timedelta(seconds=2000): [
+            datetime(2019, 4, 24, 12, 34) - timedelta(seconds=2000): [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2/'
                 'T07t13/VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/',
             ],
-            datetime(2019, 4, 25, 12, 34, tzinfo=timezone.utc): [
+            datetime(2019, 4, 25, 12, 34): [
                 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
                 'T07t13/VLASS2.1.ql.T07t13.J083838-153000.10.2048.v1/',
             ],
         }
-        b = datetime(
-            year=2019,
-            month=4,
-            day=25,
-            hour=12,
-            minute=34,
-            second=0,
-            tzinfo=timezone.utc,
-        )
+        b = datetime(year=2019, month=4, day=25, hour=12, minute=34)
         return a, b
 
-    _write_state('24Apr2019 12:34', STATE_FILE)
+    _write_state('24Apr2019 12:34', STATE_FILE, test_config)
     query_mock.side_effect = _mock_append_work
     run_mock.return_value = 0
     client_mock.data_client.info.side_effect = _mock_get_file_info
@@ -167,16 +164,13 @@ def test_run_state(run_mock, query_mock, client_mock):
     try:
         # execution
         test_config, test_metadata_reader, test_source, test_name_builder, ignore_clients = composable._common_init()
-        test_source._max_time = datetime(2019, 4, 27, tzinfo=tz.gettz('US/Mountain'))
         test_metadata_reader._client = client_mock.data_client
         test_result = run_composable.run_by_state(
             config=test_config,
-            bookmark_name=VLASS_BOOKMARK,
             meta_visitors=composable.META_VISITORS,
             data_visitors=composable.DATA_VISITORS,
             name_builder=test_name_builder,
             source=test_source,
-            end_time=test_source.max_time,
             store_transfer=transfer_composable.HttpTransfer(),
             metadata_reader=test_metadata_reader,
             clients=client_mock,
@@ -193,9 +187,62 @@ def test_run_state(run_mock, query_mock, client_mock):
         assert test_storage.source_names[0].startswith(
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS'
         ), f'wrong url start format {test_storage.url}'
-        assert test_storage.source_names[0].endswith(
-            '.fits'
-        ), f'wrong url end format {test_storage.url}'
+        assert test_storage.source_names[0].endswith('.fits'), f'wrong url end format {test_storage.url}'
+        test_state_end = State(test_config.state_fqn, test_config.time_zone)
+        test_end_bookmark = test_state_end.get_bookmark(test_config.bookmark)
+        assert (
+            test_source.end_dt == test_end_bookmark
+        ), f'wrong end time max {test_source.end_dt} end {test_end_bookmark}'
+    except Exception as e:
+        logging.error(e)
+        logging.error(traceback.format_exc())
+        raise e
+    finally:
+        os.getcwd = getcwd_orig
+
+
+@patch('caom2pipe.client_composable.ClientCollection')
+@patch('vlass2caom2.data_source.QuicklookPage._build_todo')
+@patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
+def test_run_state_zero_records(run_mock, query_mock, client_mock, test_config):
+
+    def _mock_append_work():
+        a = {}
+        b = datetime(year=2019, month=4, day=24, hour=12, minute=34)
+        return a, b
+
+    _write_state('24Apr2019 12:34', STATE_FILE, test_config)
+    query_mock.side_effect = _mock_append_work
+    run_mock.return_value = 0
+    client_mock.data_client.info.side_effect = _mock_get_file_info
+    getcwd_orig = os.getcwd
+    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+
+    try:
+        # execution
+        test_config, test_metadata_reader, test_source, test_name_builder, ignore_clients = composable._common_init()
+        test_source._end_dt = datetime(2019, 4, 27)
+        test_metadata_reader._client = client_mock.data_client
+        test_result = run_composable.run_by_state(
+            config=test_config,
+            meta_visitors=composable.META_VISITORS,
+            data_visitors=composable.DATA_VISITORS,
+            name_builder=test_name_builder,
+            source=test_source,
+            store_transfer=transfer_composable.HttpTransfer(),
+            metadata_reader=test_metadata_reader,
+            clients=client_mock,
+        )
+        assert test_result == 0, 'mocking correct execution'
+        assert not run_mock.called, 'zero records, should not have been called'
+        test_state_end = State(test_config.state_fqn, test_config.time_zone)
+        test_end_bookmark = test_state_end.get_bookmark(test_config.bookmark)
+        assert (
+            test_source.end_dt == test_end_bookmark
+        ), f'wrong end time max {test_source.end_dt} end {test_end_bookmark}'
+    except Exception as e:
+        logging.error(traceback.format_exc())
+        raise e
     finally:
         os.getcwd = getcwd_orig
 
@@ -209,30 +256,29 @@ info_count = 0
 @patch('caom2pipe.transfer_composable.HttpTransfer')
 @patch('vlass2caom2.data_source.query_endpoint_session')
 @patch('caom2pipe.client_composable.ClientCollection')
-def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit_mock):
+def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit_mock, test_config):
     test_dir = f'{test_main_app.TEST_DATA_DIR}/store_ingest_test'
     transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
     client_mock.data_client.get_head.side_effect = _mock_headers_read
     client_mock.data_client.info.side_effect = _mock_get_file_info_1
     visit_mock.side_effect = _mock_visit
     test_state_fqn = f'{test_dir}/state.yml'
-    _write_state('28Apr2019 12:34', test_state_fqn)
+    _write_state('28Apr2019 12:34', test_state_fqn, test_config)
     query_mock.side_effect = test_data_source._query_quicklook_endpoint
     client_mock.metadata_client.read.return_value = None
     getcwd_orig = os.getcwd
     os.getcwd = Mock(return_value=test_dir)
     try:
         test_config, test_metadata_reader, test_source, test_name_builder, ignore_clients = composable._common_init()
-        test_source._max_time = datetime(2019, 5, 2, tzinfo=tz.gettz('US/Mountain'))
+        test_end_time = datetime(2019, 5, 2)
         test_metadata_reader._client = client_mock.data_client
         test_result = run_composable.run_by_state(
             config=test_config,
-            bookmark_name=VLASS_BOOKMARK,
             meta_visitors=composable.META_VISITORS,
             data_visitors=composable.DATA_VISITORS,
             name_builder=test_name_builder,
             source=test_source,
-            end_time=test_source.max_time,
+            end_time=test_end_time,
             store_transfer=transferrer_mock,
             metadata_reader=test_metadata_reader,
             clients=client_mock,

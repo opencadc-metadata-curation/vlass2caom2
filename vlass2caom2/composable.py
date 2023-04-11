@@ -76,13 +76,11 @@ from caom2pipe import manage_composable as mc
 from caom2pipe import name_builder_composable as nbc
 from caom2pipe import run_composable as rc
 from caom2pipe import transfer_composable as tc
-from vlass2caom2 import APPLICATION, time_bounds_augmentation, quality_augmentation
+from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
 from vlass2caom2 import data_source, reader, storage_name
 from vlass2caom2 import preview_augmentation, fits2caom2_augmentation
 
-
-VLASS_BOOKMARK = 'vlass_timestamp'
 
 META_VISITORS = [
     fits2caom2_augmentation,
@@ -96,16 +94,17 @@ DATA_VISITORS = [position_bounds_augmentation, preview_augmentation]
 def _common_init():
     config = mc.Config()
     config.get_executors()
+    rc.set_logging(config)
     mc.StorageName.collection = config.collection
     mc.StorageName.scheme = config.scheme
-    state = mc.State(config.state_fqn, data_source.QuicklookPage.timezone)
+    state = mc.State(config.state_fqn, config.time_zone)
     session = mc.get_endpoint_session()
     web_log_metadata = data_source.WebLogMetadata(state, session, config.data_sources)
     source = None
     metadata_reader = None
     clients = None
     if mc.TaskType.SCRAPE not in config.task_types and not config.use_local_files:
-        source = data_source.NraoPages(config)
+        source = data_source.NraoPages(config, state.get_bookmark(config.bookmark))
         clients = client_composable.ClientCollection(config)
         metadata_reader = reader.VlassStorageMetadataReader(clients.data_client, source, web_log_metadata)
 
@@ -124,7 +123,6 @@ def _run_state():
     config, metadata_reader, source, name_builder, clients = _common_init()
     return rc.run_by_state(
         config=config,
-        bookmark_name=VLASS_BOOKMARK,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         name_builder=name_builder,
@@ -133,7 +131,6 @@ def _run_state():
         store_transfer=tc.HttpTransfer(),
         metadata_reader=metadata_reader,
         clients=clients,
-        application=APPLICATION,
     )
 
 
@@ -181,7 +178,6 @@ def _run():
         store_transfer=tc.HttpTransfer(),
         metadata_reader=metadata_reader,
         clients=clients,
-        application=APPLICATION,
     )
 
 
