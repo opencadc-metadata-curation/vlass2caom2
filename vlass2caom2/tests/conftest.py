@@ -67,7 +67,6 @@
 # ***********************************************************************
 #
 
-from dateutil import tz
 from caom2pipe.manage_composable import Config, StorageName
 import pytest
 
@@ -84,7 +83,7 @@ def test_config():
     config.scheme = SCHEME
     config.logging_level = 'INFO'
     # Socorro, NM
-    config.time_zone = tz.gettz('US/Mountain')
+    config.time_zone = 'US/Mountain'
     StorageName.collection = config.collection
     StorageName.scheme = config.scheme
     StorageName.preview_scheme = config.preview_scheme

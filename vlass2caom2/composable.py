@@ -127,7 +127,7 @@ def _run_state():
         data_visitors=DATA_VISITORS,
         name_builder=name_builder,
         source=source,
-        end_time=source.max_time,
+        end_time=source.end_dt,
         store_transfer=tc.HttpTransfer(),
         metadata_reader=metadata_reader,
         clients=clients,
