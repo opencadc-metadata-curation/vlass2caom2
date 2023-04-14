@@ -68,10 +68,11 @@
 #
 
 from datetime import datetime
+from os import chdir, getcwd
 from os.path import dirname, join, realpath
 
-from caom2pipe.manage_composable import Config, ExecutionReporter, make_datetime, Observable, write_as_yaml
-from vlass2caom2.data_source import ContinuumImagingPage, NraoPages, WebLogMetadata
+from caom2pipe.manage_composable import Config, ExecutionReporter, make_datetime, Observable, State, write_as_yaml
+from vlass2caom2 import data_source
 from vlass2caom2 import storage_name
 
 from mock import Mock, patch
@@ -94,76 +95,95 @@ SPECIFIC_REJECTED = join(TEST_DATA_DIR, 'specific_rejected.html')
 SE_TOP_PAGE = join(TEST_DATA_DIR, 'se_top_page.html')
 
 
-def test_parse_functions():
-    # test _parse_* functions in the DataSource specializations
-    test_config = Config()
+def test_filter_functions(test_config, tmp_path):
+    # test filter functions in the DataSource specializations
+    test_config.change_working_directory(tmp_path)
+    test_config.data_sources = [storage_name.QL_URL]
     test_config.data_source_extensions = ['.fits', '.csv']
-    test_subject = ContinuumImagingPage(test_config, storage_name.QL_URL, make_datetime(TEST_START_TIME_STR))
+    session_mock = Mock()
+    test_start_key = storage_name.QL_URL
+    State.write_bookmark(test_config.state_fqn, test_start_key, make_datetime(TEST_START_TIME_STR))
+    test_subject = data_source.VlassImagePage(test_config, test_start_key, session_mock)
     assert test_subject is not None, 'ctor failure'
+    test_subject.initialize_start_dt()
 
     with open(SINGLE_TILE) as f:
         test_content = f.read()
-        test_result = test_subject._parse_id_page(test_content)
+        test_result = test_subject._parse_html_string(test_start_key, test_content, data_source.filter_by_epoch)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 3, 'wrong number of results'
         first_answer = next(iter(sorted(test_result.items())))
         assert len(first_answer) == 2, 'wrong number of results'
-        assert first_answer[0] == 'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
+        assert first_answer[0] == f'{test_start_key}VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
         assert first_answer[1] == datetime(2019, 4, 26, 15, 19)
 
     with open(REJECT_INDEX) as f:
         test_content = f.read()
-        test_epoch = 'VLASS1.2v2'
         test_url = 'https://localhost:8080/VLASS1.2/QA_REJECTED/'
-        test_result, test_max = test_subject._parse_rejected_page(test_content, test_epoch, test_url)
+        test_result = test_subject._parse_html_string(test_url, test_content, data_source.filter_by_epoch)
         assert test_result is not None, 'expect a result'
         assert len(test_result) == 1, 'wrong number of results'
-        temp = test_result.popitem()
+        first_answer = next(iter(sorted(test_result.items())))
+        assert len(first_answer) == 2, 'wrong number of results'
         assert (
-            temp[1][0] == 'https://localhost:8080/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
+            first_answer[0]
+            == 'https://localhost:8080/VLASS1.2/QA_REJECTED/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
         )
-        assert test_max is not None, 'expected max result'
-        assert test_max == datetime(2019, 5, 1, 10, 30), 'wrong date result'
+        assert first_answer[1] == datetime(2019, 5, 1, 10, 30), 'wrong date result'
 
     with open(ALL_FIELDS) as f:
         test_content = f.read()
-        test_result = test_subject._parse_tile_page(test_content)
+        test_result = test_subject._parse_html_string(test_start_key, test_content, data_source.filter_by_tile)
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 4, 'wrong number of results'
         first_answer = next(iter(test_result.items()))
         assert len(first_answer) == 2, 'wrong number of results'
-        assert first_answer[0] == 'T07t13/', 'wrong content'
+        assert first_answer[0] == f'{test_start_key}T07t13/', 'wrong content'
         assert first_answer[1] == datetime(2019, 4, 29, 8, 2)
 
     with open(SE_TOP_PAGE) as f:
         test_content = f.read()
-        test_result = test_subject._parse_top_page_no_date(test_content)
+        test_result = test_subject._parse_html_string(test_start_key, test_content, data_source.filter_by_epoch_name)
         assert test_result is not None, 'expect a top page result'
         assert len(test_result) == 1, 'wrong top page length'
-        assert 'VLASS2.1/' in test_result, 'wrong top page test result'
-        assert test_result['VLASS2.1/'] == datetime(2022, 7, 26, 16, 31), 'wrong top page value'
+        first_answer = next(iter(sorted(test_result.items())))
+        assert len(first_answer) == 2, 'wrong number of results'
+        assert first_answer[0] == f'{test_start_key}VLASS2.1/', 'wrong top page url'
+        assert first_answer[1] == datetime(2022, 7, 26, 16, 31), 'wrong top page datetime'
 
     with open(SE_SINGLE_PAGE) as f:
         test_content = f.read()
-        test_result = test_subject._parse_specific_file_list_page(test_content)
+        test_result = test_subject._parse_html_string(test_start_key, test_content, test_subject._filter_functions[-1])
         assert test_result is not None, 'expect a specific page result'
         assert len(test_result) == 7, 'wrong specific page length'
+        first_answer = next(iter(sorted(test_result.items())))
+        assert len(first_answer) == 2, 'wrong number of results'
+        assert (
+            first_answer[0] == f'{test_start_key}VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.catalog.csv'
+        ), 'wrong top page url'
+        assert first_answer[1] == datetime(2022, 5, 16, 16, 24), 'wrong top page datetime'
 
     with open(SPECIFIC_REJECTED) as f:
         test_content = f.read()
-        test_result = test_subject._parse_specific_rejected_page(test_content)
+        test_rejected_url = 'https://localhost:8080/VLASS1.2/QA_REJECTED/'
+        test_result = test_subject._parse_html_string(
+            test_rejected_url, test_content, test_subject._filter_functions[-1]
+        )
         assert test_result is not None, 'expected a result'
         assert len(test_result) == 2, 'wrong result'
+        first_answer = next(iter(sorted(test_result.items())))
+        assert len(first_answer) == 2, 'wrong number of results'
         assert (
-            'VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.'
-            'pbcor.tt0.rms.subim.fits' in test_result
-        ), 'wrong content'
+            first_answer[0]
+            == f'{test_rejected_url}VLASS1.2.ql.T08t19.J123816-103000.10.2048.v2.I.iter1.image.pbcor.tt0.rms.subim.fits'
+        ), 'wrong specific rejected content'
+        assert first_answer[1] == datetime(2019, 4, 27, 11, 10), 'wrong specific rejected datetime'
 
 
 def test_metadata_scrape():
     test_state = Mock()
     mock_session = Mock()
-    test_subject = WebLogMetadata(test_state, mock_session, [storage_name.QL_URL])
+    test_subject = data_source.WebLogMetadata(test_state, mock_session, [storage_name.QL_URL])
     assert test_subject is not None, 'ctor failure'
 
     with open(SINGLE_FIELD_DETAIL) as f:
@@ -183,60 +203,85 @@ def test_metadata_scrape():
         assert test_result['On Source'] == '0:03:54', 'wrong tos'
 
 
-@patch('vlass2caom2.data_source.query_endpoint_session')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_quicklook(query_endpoint_mock, test_config, tmp_path):
     query_endpoint_mock.side_effect = _query_quicklook_endpoint
     test_config.change_working_directory(tmp_path)
-    test_config.data_sources = [storage_name.QL_URL]
-    test_subject = NraoPages(test_config, make_datetime(TEST_START_TIME_STR))
-    assert test_subject is not None, 'ctor failure'
-    test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()))
-    test_subject.reporter = test_reporter
-    test_start_time = make_datetime(TEST_START_TIME_STR)
-    test_subject.set_start_time(test_start_time)
-    test_result = test_subject.get_time_box_work(test_start_time, datetime.fromtimestamp(1556311111))
-    assert test_result is not None, 'expected dict result'
-    assert len(test_result) == 24, 'wrong size results'
-    temp = sorted([ii.entry_name for ii in test_result])
-    assert (
-        temp[0]
-        == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/T07t13/'
-           'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1/'
-           'VLASS1.2.ql.T07t13.J080202-123000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
-    ), 'wrong result'
-    assert test_subject.end_dt is not None, 'expected date result'
-    assert test_subject.end_dt == datetime(2019, 4, 28, 15, 18), 'wrong date result'
-    assert test_reporter._summary._entries_sum == 24, f'wrong entries {test_reporter._summary.report()}'
+    test_start_key = storage_name.QL_URL
+    test_config.data_sources = [test_start_key]
+    test_start_time = datetime(2019, 4, 22)
+    State.write_bookmark(test_config.state_fqn, test_start_key, test_start_time)
+    session_mock = Mock()
+
+    orig_getcwd = getcwd()
+    try:
+        chdir(tmp_path)
+        Config.write_to_file(test_config)
+        test_subject = data_source.VlassImagePage(test_config, storage_name.QL_URL, session_mock)
+        assert test_subject is not None, 'ctor failure'
+        test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()))
+        test_subject.reporter = test_reporter
+        test_subject.initialize_start_dt()
+        test_subject.initialize_end_dt()
+        assert test_subject.end_dt is not None, 'expected date result'
+        assert test_subject.end_dt == datetime(2020, 4, 16, 16, 43), 'wrong date result'
+        assert len(test_subject._work) == 2, 'wrong amount of work'
+        time_box_end_time = datetime(2020, 4, 16, 15, 45)
+        test_result = test_subject.get_time_box_work(test_start_time, time_box_end_time)
+        assert test_result is not None, 'expected dict result'
+        assert len(test_result) == 1, 'wrong size results'
+        temp = sorted([ii.entry_name for ii in test_result])
+        assert (
+            temp[0]
+            == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/T01t01/'
+               'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1/'
+               'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
+        ), 'wrong result'
+        assert test_reporter._summary._entries_sum == 1, f'wrong entries {test_reporter._summary.report()}'
+    finally:
+        chdir(orig_getcwd)
 
 
-@patch('vlass2caom2.data_source.query_endpoint_session')
+@patch('caom2pipe.manage_composable.query_endpoint_session')
 def test_continuum(query_endpoint_mock, test_config, tmp_path):
     query_endpoint_mock.side_effect = _query_continuum_endpoint
     test_config.change_working_directory(tmp_path)
     test_config.data_sources = [storage_name.SE_URL]
-
     test_start_time = datetime(2022, 5, 15, 0, 0, 0)
-    test_subject = NraoPages(test_config, test_start_time)
-    assert test_subject is not None, 'ctor failure'
-    test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()))
-    test_subject.reporter = test_reporter
-    test_subject.set_start_time(test_start_time)
+    session_mock = Mock()
 
-    test_end_time = datetime(2022, 5, 16, 16, 24)
-    test_result = test_subject.get_time_box_work(test_start_time, test_end_time)
-    assert test_result is not None, 'expected dict result'
-    # 36 == the same 6 files returned for each of 3 observations * 2 tiles
-    assert len(test_result) == 36, 'wrong size results'
-    temp = sorted([ii.entry_name for ii in test_result])
-    assert (
-        temp[0]
-        == 'https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T10t01/'
-           'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1/'
-           'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.alpha.error.subim.fits'
-    ), f'wrong result {temp[0]}'
-    assert test_subject.end_dt is not None, 'expected date result'
-    assert test_subject.end_dt == test_end_time, 'wrong se date result'
-    assert test_reporter._summary._entries_sum == 36, f'wrong entries {test_reporter._summary.report()}'
+    orig_getcwd = getcwd()
+    try:
+        chdir(tmp_path)
+        Config.write_to_file(test_config)
+        State.write_bookmark(test_config.state_fqn, storage_name.SE_URL, test_start_time)
+
+        test_subject = data_source.VlassImagePage(test_config, storage_name.SE_URL, session_mock)
+        assert test_subject is not None, 'ctor failure'
+        test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()))
+        test_subject.reporter = test_reporter
+        test_subject.initialize_start_dt()
+        test_subject.initialize_end_dt()
+
+        assert test_subject.end_dt is not None, 'expected date result'
+        assert test_subject.end_dt == datetime(2022, 5, 16, 16, 24), 'wrong date result'
+        # 36 == the same 6 files returned for each of 3 observations * 2 tiles
+        assert len(test_subject._work) == 36, 'wrong amount of work'
+
+        time_box_end_time = datetime(2022, 5, 16, 16, 24)
+        test_result = test_subject.get_time_box_work(test_start_time, time_box_end_time)
+        assert test_result is not None, 'expected dict result'
+        assert len(test_result) == 36, 'wrong size results'
+        temp = sorted([ii.entry_name for ii in test_result])
+        assert (
+            temp[0]
+            == 'https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T10t01/'
+               'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1/'
+               'VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.alpha.error.subim.fits'
+        ), f'wrong result {temp[0]}'
+        assert test_reporter._summary._entries_sum == 36, f'wrong entries {test_reporter._summary.report()}'
+    finally:
+        chdir(orig_getcwd)
 
 
 def _close():
@@ -247,6 +292,8 @@ def _query_quicklook_endpoint(url, session, timeout=-1):
     result = type('response', (), {})
     result.text = None
     result.close = _close
+    # just need a reference that causes no action
+    result.raise_for_status = _close
 
     if (
         url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/'
@@ -288,6 +335,7 @@ def _query_quicklook_endpoint(url, session, timeout=-1):
         or url.endswith('VLASS2.1/')
         or url.endswith('VLASS2.2/')
         or url.endswith('VLASS1.2v2/')
+        or url.endswith('VLASS1.2/')
     ):
         with open(ALL_FIELDS) as f:
             result.text = f.read()
@@ -300,6 +348,8 @@ def _query_continuum_endpoint(url, session, timeout=-1):
     result = type('response', (), {})
     result.text = None
     result.close = _close
+    # just need a reference that causes no action
+    result.raise_for_status = _close
 
     # https://archive-new.nrao.edu/vlass/se_continuum_imaging/VLASS2.1/T10t01/
     # VLASS2.1.se.T10t01.J000200-013000.06.2048.v1/

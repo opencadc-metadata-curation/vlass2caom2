@@ -67,16 +67,38 @@
 # ***********************************************************************
 #
 
+"""
+NRAO introduced a directory named VLASS1.2v2, with this explanation:
+
+1-10-21 - forwarded email from Mark Lacy:
+The Epoch 1 VLASS quicklook images (VLASS1.1 and VLASS1.2) suffer from a systematic position error that is a function
+of the zenith distance of the observation, reaching up to 1" in the far south of the survey where zenith distances
+were largest. These errors are removed in the second epoch quicklook images. We have now applied a correction to
+the VLASS1.2 images that removes the errors in these too. Corrected images are available in the VLASS1.2v2 directory in
+archive-new.nrao.edu/vlass/quicklook. The old VLASS1.2 directory will be deprecated. Corrected VLASS1.1 images will be
+made available later this year.
+
+ER 18-10-21
+My understanding is that the headers were hacked to include updates to astrometry without any other information and
+the way to determine if v1 or v2 is whether they do-not-have (v1) or have (v2) the extra HISTORY cards.  It’s
+definitely a decision to not update the DATE card or give any other indication of the v1 or v2 but it is a definitive
+way to tell them apart.
+
+SGo - and because of these two things, ignore top-level directories that have names that start with the same value
+as other existing directories
+
+"""
+
 import re
 import requests
 
 from bs4 import BeautifulSoup
-from collections import defaultdict, deque, OrderedDict
+from collections import deque
 from datetime import datetime
 from logging import getLogger
 from lxml import etree
 
-from caom2pipe.data_source_composable import DataSource, StateRunnerMeta
+from caom2pipe.data_source_composable import DataSource, HttpDataSource, StateRunnerMeta
 from caom2pipe.manage_composable import (
     CadcException,
     get_endpoint_session,
@@ -87,9 +109,29 @@ from caom2pipe.manage_composable import (
 from vlass2caom2 import storage_name
 
 
-__all__ = ['ContinuumImagingPage', 'NraoPages', 'QuicklookPage', 'WebLogMetadata', 'VLASS_CONTEXT']
+__all__ = [
+    'filter_by_epoch',
+    'filter_by_epoch_name',
+    'filter_by_tile',
+    'NraoPages',
+    'VlassImagePage',
+    'WebLogMetadata',
+    'VLASS_CONTEXT',
+]
 
 VLASS_CONTEXT = 'vlass_context'
+
+
+def filter_by_epoch(href):
+    return re.search('VLASS[123]\\.[123]', href)
+
+
+def filter_by_epoch_name(href):
+    return href.startswith('VLASS') and href.endswith('/')
+
+
+def filter_by_tile(href):
+    return href.startswith('T') or href == 'QA_REJECTED'
 
 
 class NraoPages(DataSource):
@@ -192,392 +234,29 @@ class NraoPages(DataSource):
             data_source._start_dt = start_time
 
 
-class QuicklookPage(DataSource):
+class VlassImagePage(HttpDataSource):
 
-    def __init__(self, config, base_url, start_dt):
-        super().__init__(config, start_dt)
-        self._end_dt = None
+    def __init__(self, config, start_key, session):
+        temp = '|'.join(f'{ii}$' for ii in config.data_source_extensions).replace('.', '\\.')
+
+        def filter_by_extensions(href):
+            return re.search(temp, href)
+
+        # order: top page, tile/qa_rejected page, id (field centre) page, file listing page
+        filter_functions = [filter_by_epoch_name, filter_by_tile, filter_by_epoch, filter_by_extensions]
+        super().__init__(config, start_key, filter_functions, session)
         self._epochs = None
-        self._session = get_endpoint_session()
-        self._todo_list = defaultdict(list)
-        self._base_url = base_url
-        self._rejected = {}
+        self._session = session
+        # override the HttpdDataSource._data_sources so that it does not treat all the NRAO image pages the same.
+        self._data_sources = [start_key]
 
     def __str__(self):
         return (
-            f'\n           start time:: {self._start_dt}'
-            f'\n             end time:: {self._end_dt}'
-            f'\nnumber of files found:: {len(self._todo_list)}'
-            f'\n      number rejected:: {len(self._rejected)}'
+            f'\n           start time:: {self.start_dt}'
+            f'\n             end time:: {self.end_dt}'
+            f'\nnumber of files found:: {len(self.todo_list)}'
+            f'\n      number rejected:: {len(self.rejected)}'
         )
-
-    @property
-    def rejected(self):
-        return self._rejected
-
-    @property
-    def todo_list(self):
-        return self._todo_list
-
-    def append_work(self):
-        """Predict the URLs for the quicklook images."""
-        self._logger.debug('Begin append_work')
-        result = defaultdict(list)
-        todo_list, end_datetime = self._build_todo()
-        if len(todo_list) > 0:
-            for dt, urls in todo_list.items():
-                for url in urls:
-                    # -2 because NRAO URLs always end in /
-                    f_prefix = url.split('/')[-2]
-                    f1 = f'{url}{f_prefix}.I.iter1.image.pbcor.tt0.rms.subim.fits'
-                    f2 = f'{url}{f_prefix}.I.iter1.image.pbcor.tt0.subim.fits'
-                    result[dt].append(f1)
-                    result[dt].append(f2)
-        self._todo_list = result
-        self._end_dt = end_datetime
-        self._logger.debug('End append_work')
-
-    def _build_good_todo(self):
-        """Create the list of work, based on datetimes from the NRAO
-        Quicklook page.
-
-        :return a dict, where keys are datetimes, and values are lists
-           of URLs.
-        """
-        self._logger.debug('Begin _build_good_todo')
-        temp = defaultdict(list)
-        max_date = self._start_dt
-
-        response = None
-
-        try:
-            # get the last modified date on the quicklook images listing
-            response = query_endpoint_session(self._base_url, self._session)
-            if response is None:
-                self._logger.warning(f'Could not query {self._base_url}')
-            else:
-                self._epochs = self._parse_top_page_no_date(response.text)
-                self._logger.info(f'Found {len(self._epochs)} epochs on {self._base_url}.')
-                response.close()
-
-                for epoch in self._epochs:
-                    epoch_url = f'{self._base_url}{epoch}'
-                    self._logger.debug(f'Checking epoch {epoch} on date {self._epochs[epoch]}')
-                    response = query_endpoint_session(epoch_url, self._session)
-                    if response is None:
-                        self._logger.warning(f'Could not query epoch {epoch_url}')
-                    else:
-                        tiles = self._parse_tile_page(response.text)
-                        response.close()
-                        self._logger.info(f'Found {len(tiles)} tiles on {epoch_url}.')
-
-                        # get the list of tiles
-                        for tile in tiles:
-                            self._logger.debug(f'Checking tile {tile} with date {tiles[tile]}')
-                            tile_url = f'{epoch_url}{tile}'
-                            response = query_endpoint_session(tile_url, self._session)
-                            if response is None:
-                                self._logger.warning(f'Could not query {tile_url}')
-                            else:
-                                observations = self._parse_id_page(response.text)
-                                self._logger.info(f'Found {len(observations)} observations on {tile_url}.')
-                                response.close()
-
-                                max_date = self._build_obs_list(temp, observations, max_date, tile_url)
-        finally:
-            if response is not None:
-                response.close()
-        self._logger.debug('End _build_good_todo')
-        return temp, max_date
-
-    def _build_obs_list(self, temp, observations, max_date, tile_url):
-        """
-        :param temp: dict with key: datetime, value: list of fully-qualified URLs
-        :param observations: list of partials URLs to look through
-        :param max_date: datetime: track the max date that's going to be processed
-        :param tile_url: str the initial bit of the URL for looking through
-        :return: datetime: max_date found in this list of observations
-        """
-        # for each tile, get the list of observations
-        for observation in observations:
-            obs_url = f'{tile_url}{observation}'
-            dt = observations[observation]
-            temp[dt].append(obs_url)
-        if len(observations.values()) > 0:
-            max_date = max(max_date, max(observations.values()))
-        return max_date
-
-    def build_qa_rejected_todo(self):
-        """
-        :return a dict, where keys are datetimes, and values are lists
-           of URLs.
-        """
-        max_date = self._start_dt
-        response = None
-        try:
-            for epoch in self._epochs:
-                epoch_name = epoch.split('/')[-2]
-                epoch_rejected_url = f'{storage_name.QL_URL}{epoch}QA_REJECTED/'
-                self._logger.info(f'Checking epoch {epoch_name} on date {self._epochs[epoch]}')
-                try:
-                    response = query_endpoint_session(epoch_rejected_url, self._session)
-                    if response is None:
-                        self._logger.warning(f'Could not query epoch {epoch_rejected_url}')
-                    else:
-                        temp, rejected_max = self._parse_rejected_page(
-                            response.text, epoch_name, epoch_rejected_url
-                        )
-                        max_date = max(max_date, rejected_max)
-                        response.close()
-                        temp_rejected = self._rejected
-                        self._rejected = {**temp, **temp_rejected}
-                except CadcException as e:
-                    if 'Not Found for url' in str(e):
-                        self._logger.info(f'No QA_REJECTED directory for ' f'{epoch_name}. Continuing.')
-                    else:
-                        raise e
-        finally:
-            if response is not None:
-                response.close()
-        return max_date
-
-    def _build_todo(self):
-        """Take the list of good files, and the list of rejected files,
-        and make them into one todo list.
-
-        :return a dict, where keys are datetimes, and values are lists
-           of URLs.
-        """
-        self._logger.debug(f'Begin build_todo with date {self._start_dt}')
-        good, good_date = self._build_good_todo()
-        self._logger.info(f'{len(good)} good records to process. Check for rejected.')
-        rejected_date = self.build_qa_rejected_todo()
-        self._logger.info(f'{len(self._rejected)} rejected records to process, date will be {rejected_date}')
-        result = OrderedDict()
-        for k, v in sorted(sorted(good.items()) + sorted(self._rejected.items())):
-            temp = result.setdefault(k, [])
-            result[k] = temp + list(set(v))
-
-        if good_date != self._start_dt and rejected_date != self._start_dt:
-            # return the min of the two, because a date from the good list
-            # has not necessarily been encountered on the rejected list, and
-            # vice-versa
-            return_date = min(good_date, rejected_date)
-        else:
-            return_date = max(good_date, rejected_date)
-        num_records = 0
-        for key, value in result.items():
-            num_records += len(value)
-        self._logger.debug(f'End build_todo with {num_records} records total, date {return_date}')
-        return result, return_date
-
-    def _parse_id_page(self, html_string):
-        """
-        :return a dict, where keys are URLs, and values are datetimes
-        """
-        result = {}
-        soup = BeautifulSoup(html_string, features='lxml')
-        hrefs = soup.find_all('a', string=re.compile('^VLASS[123]\\.[123]'))
-        for ii in hrefs:
-            y = ii.get('href')
-            z = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = make_datetime(z)
-            if dt >= self._start_dt:
-                self._logger.debug(f'Adding ID Page: {y}')
-                result[y] = dt
-        return result
-
-    def _parse_rejected_page(self, html_string, epoch, url):
-        """
-        :return a dict, where keys are datetimes, and values are lists
-           of URLs.
-        """
-        result = defaultdict(list)
-        max_date = self._start_dt
-        soup = BeautifulSoup(html_string, features='lxml')
-        rejected = soup.find_all('a', string=re.compile(epoch.replace('v2', '')))
-        for ii in rejected:
-            temp = ii.next_element.next_element.string.replace('-', '').strip()
-            dt = make_datetime(temp)
-            if dt >= self._start_dt:
-                new_url = f'{url}{ii.get_text()}'
-                self._logger.debug(f'Adding rejected {new_url}')
-                result[dt].append(new_url)
-                max_date = max(max_date, dt)
-        return result, max_date
-
-    def _parse_specific_rejected_page(self, html_string):
-        temp = []
-        soup = BeautifulSoup(html_string, features='lxml')
-        hrefs = soup.find_all('a', string=re.compile('.fits'))
-        for ii in hrefs:
-            temp.append(ii.get('href'))
-        return temp
-
-    def _parse_tile_page(self, html_string):
-        """
-        Parse the page which lists the tiles viewed during an epoch.
-
-        :return a dict, where keys are URLs, and values are datetimes
-        """
-        result = {}
-        soup = BeautifulSoup(html_string, features='lxml')
-        hrefs = soup.find_all('a')
-        for ii in hrefs:
-            y = ii.get('href')
-            if y.startswith('T'):
-                z = ii.next_element.next_element.string.replace('-', '').strip()
-                dt = make_datetime(z)
-                if dt >= self._start_dt:
-                    self._logger.debug(f'Adding Tile Page: {y}')
-                    result[y] = dt
-        return result
-
-    def _parse_top_page_no_date(self, html_string):
-        """
-        Parse the page which lists the epochs.
-
-        :return a dict, where keys are URLs, and values are datetimes
-        """
-        result = {}
-        soup = BeautifulSoup(html_string, features='lxml')
-        hrefs = soup.find_all('a')
-        for ii in hrefs:
-            y = ii.get('href')
-            if y.startswith('VLASS') and y.endswith('/'):
-                z = ii.next_element.next_element.string.replace('-', '').strip()
-                dt = make_datetime(z)
-                result[y] = dt
-
-        # NRAO introduced a directory named VLASS1.2v2, with this explanation:
-        # 1-10-21 - forwarded email from Mark Lacy:
-        # The Epoch 1 VLASS quicklook images (VLASS1.1 and VLASS1.2) suffer from
-        # a systematic position error that is a function of the zenith distance
-        # of the observation, reaching up to 1" in the far south of the survey
-        # where zenith distances were largest. These errors are removed in the
-        # second epoch quicklook images. We have now applied a correction to
-        # the VLASS1.2 images that removes the errors in these too. Corrected
-        # images are available in the VLASS1.2v2 directory in
-        # archive-new.nrao.edu/vlass/quicklook. The old VLASS1.2 directory will
-        # be deprecated. Corrected VLASS1.1 images will be made available later
-        # this year.
-
-        # ER 18-10-21
-        # My understanding is that the headers were hacked to include updates to
-        # astrometry without any other information and the way to determine if
-        # v1 or v2 is whether they do-not-have (v1) or have (v2) the extra
-        # HISTORY cards.  It’s definitely a decision to not update the DATE card
-        # or give any other indication of the v1 or v2 but it is a definitive
-        # way to tell them apart.
-
-        # SGo - and because of these two things, ignore top-level directories
-        # that have names that start with the same value as other existing
-        # directories
-        delete_these = []
-        for check_this in result:
-            for against_this in result:
-                if check_this == against_this:
-                    continue
-                if against_this.startswith(check_this.replace('/', '')):
-                    delete_these.append(check_this)
-
-        for entry in delete_these:
-            self._logger.warning(f'Ignore content in {entry}')
-            del result[entry]
-
-        for entry in result:
-            self._logger.info(f'Adding epoch: {entry}')
-
-        return result
-
-
-class ContinuumImagingPage(QuicklookPage):
-    """
-    Unlike the quicklook pages, can't reliably predict the Continuum Imaging file names or the URLs for those files. Therefore this class builds
-    the list of work to be done by reading the individual
-    """
-
-    def __init__(self, config, url, start_dt):
-        super().__init__(config, url, start_dt)
-
-    def append_work(self):
-        """Find the exact URLs for the continuum images."""
-        self._logger.debug('Begin append_work')
-        self._todo_list, self._end_dt = self._build_todo()
-        self._logger.debug('End append_work')
-
-    def _build_obs_list(self, temp, observations, max_date, tile_url):
-        """
-        :param temp: dict with key: datetime, value: list of fully-qualified URLs
-        :param observations: list of partials URLs to look through
-        :param max_date: datetime: track the max date that's going to be processed
-        :param tile_url: str the initial bit of the URL for looking through
-        :return: datetime: max_date found in this list of observations
-        """
-        for observation in observations:
-            obs_url = f'{tile_url}{observation}'
-            # observations is a dict with key = obs_id, value = datetime
-            if observations[observation] >= self._start_dt:
-                x = self._list_files_on_page(obs_url)
-                for key, value in x.items():
-                    # switch dict structure from:
-                    # key: url, datetime: value
-                    # to
-                    # key:datetime, value: list of urls
-                    temp[value].append(f'{obs_url}{key}')
-                    max_date = max(max_date, value)
-        return max_date
-
-    def _build_todo(self):
-        """
-        :return a dict, where keys are datetimes, and values are lists
-           of URLs.
-        """
-        self._logger.debug(f'Begin _build_todo with date {self._start_dt}')
-        good, good_date = self._build_good_todo()
-        result = defaultdict(list)
-        for dt, urls in good.items():
-            result[dt] += list(set(urls))
-        self._logger.debug(f'End _build_todo with {len(result)} records, date {good_date}')
-        return result, good_date
-
-    def _list_files_on_page(self, url):
-        """:return a dict, where keys are URLS, and values are datetimes, from
-        a specific page listing at NRAO."""
-        response = None
-        try:
-            self._logger.debug(f'Querying {url}')
-            response = query_endpoint_session(url, self._session)
-            if response is None:
-                raise CadcException(f'Could not query {url}')
-            else:
-                result = self._parse_specific_file_list_page(response.text)
-                response.close()
-                self._logger.info(f'Found {len(result)} files on {url}.')
-                return result
-        finally:
-            if response is not None:
-                response.close()
-
-    def _parse_specific_file_list_page(self, html_string):
-        """
-        :return: a dict, where keys are URLS, and values are datetime
-        """
-        result = {}
-        soup = BeautifulSoup(html_string, features='lxml')
-        for ext in self._extensions:
-            files_list = soup.find_all('a', string=re.compile(f'{ext}'))
-            for ii in files_list:
-                # looks like 16-Apr-2018 15:43   53M, make it into a datetime
-                # for comparison
-                temp = ii.next_element.next_element.string.split()
-                dt = make_datetime(f'{temp[0]} {temp[1]}')
-                if dt >= self._start_dt:
-                    # the hrefs are fully-qualified URLS
-                    f_url = ii.get('href')
-                    self._logger.debug(f'Adding {f_url} at {dt}')
-                    result[f_url] = dt
-        return result
 
 
 class WebLogMetadata:
