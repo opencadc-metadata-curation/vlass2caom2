@@ -155,6 +155,12 @@ class VlassName(mc.StorageName):
     def version(self):
         return self._version
 
+    def is_qa_rejected(self):
+        if self._source_names[0].startswith('http'):
+            return 'QA_REJECTED' in self.source_names[0]
+        else:
+            raise mc.CadcException(f'Cannot tell REJECT status for {self}')
+
     def set_obs_id(self, **kwargs):
         """The obs id is made of the VLASS epoch, tile name, and image centre
         from the file name.

@@ -71,7 +71,6 @@ import os
 import pytest
 import shutil
 
-from datetime import datetime
 from mock import Mock, patch
 
 from caom2 import Status
@@ -116,8 +115,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock, test_config):
     test_file = os.path.join(TEST_DATA_DIR, 'aug_visit_works_start.xml')
     test_obs = read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
-    test_source = data_source.NraoPages(test_config)
-    test_metadata_reader = reader.VlassStorageMetadataReader(Mock(), test_source, test_web_log)
+    test_metadata_reader = reader.VlassStorageMetadataReader(Mock(), test_web_log)
     kwargs = {
         'metadata_reader': test_metadata_reader,
         'storage_name': test_name,
@@ -146,22 +144,11 @@ def test_aug_visit_quality_works(query_endpoint_mock, get_mock, test_config):
     test_file = os.path.join(TEST_DATA_DIR, 'aug_visit_quality_start.xml')
     test_obs = read_obs_from_file(test_file)
     assert test_obs is not None, 'unexpected None'
-    test_config.state_file_name = 'state.yml'
-    test_config.state_fqn = f'{TEST_DATA_DIR}/state.yml'
-    test_config.data_sources = [storage_name.QL_URL]
-    test_state = State(test_config.state_fqn, test_config.time_zone)
-    test_web_log = data_source.WebLogMetadata(test_state, Mock(), [storage_name.QL_URL])
-    test_web_log.init_web_log()
-    test_source = data_source.NraoPages(test_config, test_config.time_zone)
-    test_start_time = make_datetime(test_data_source.TEST_START_TIME_STR)
-    test_source.set_start_time(test_start_time)
-    test_source.initialize_end_dt()
-    test_metadata_reader = reader.VlassStorageMetadataReader(Mock(), test_source, test_web_log)
     test_name = storage_name.VlassName(
+        'https://localhost/VLASS1.2/QA_REJECTED/'
         'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
     )
     kwargs = {
-        'metadata_reader': test_metadata_reader,
         'storage_name': test_name,
     }
     test_obs = quality_augmentation.visit(test_obs, **kwargs)

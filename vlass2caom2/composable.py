@@ -100,16 +100,16 @@ def _common_init():
     state = mc.State(config.state_fqn, config.time_zone)
     session = mc.get_endpoint_session()
     web_log_metadata = data_source.WebLogMetadata(state, session, config.data_sources)
-    source = None
+    data_sources = None
     metadata_reader = None
     clients = None
     if mc.TaskType.SCRAPE not in config.task_types and not config.use_local_files:
-        source = data_source.NraoPages(config, state.get_bookmark(config.bookmark))
+        data_sources = data_source.NraoPages(config, session).data_sources
         clients = client_composable.ClientCollection(config)
-        metadata_reader = reader.VlassStorageMetadataReader(clients.data_client, source, web_log_metadata)
+        metadata_reader = reader.VlassStorageMetadataReader(clients.data_client, web_log_metadata)
 
     name_builder = nbc.EntryBuilder(storage_name.VlassName)
-    return config, metadata_reader, source, name_builder, clients
+    return config, metadata_reader, data_sources, name_builder, clients
 
 
 def _run_state():
@@ -120,14 +120,13 @@ def _run_state():
     'QA_REJECTED' is the only way to tell if the attribute 'requirements'
     should be set to 'fail', or not.
     """
-    config, metadata_reader, source, name_builder, clients = _common_init()
+    config, metadata_reader, data_sources, name_builder, clients = _common_init()
     return rc.run_by_state(
         config=config,
         meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         name_builder=name_builder,
-        source=source,
-        end_time=source.end_dt,
+        sources=data_sources,
         store_transfer=tc.HttpTransfer(),
         metadata_reader=metadata_reader,
         clients=clients,
@@ -155,7 +154,7 @@ def _run():
     :return 0 if successful, -1 if there's any sort of failure. Return status
         is used by airflow for task instance management and reporting.
     """
-    config, metadata_reader, ignore_source, name_builder, clients = _common_init()
+    config, metadata_reader, ignore_sources, name_builder, clients = _common_init()
 
     # time_bounds_augmentation and quality_augmentation depend on
     # metadata scraped from the NRAO site, but that only changes if a new

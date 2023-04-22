@@ -82,9 +82,8 @@ class VlassStorageMetadataReader(reader_composable.DelayedClientReader):
     Don't clear the web_log_metadata during 'reset'.
     """
 
-    def __init__(self, client, data_source, web_log_metadata):
+    def __init__(self, client, web_log_metadata):
         super().__init__(client)
-        self._data_source = data_source
         self._web_log_metadata = web_log_metadata
         self._web_log_info = {}
 
@@ -92,9 +91,6 @@ class VlassStorageMetadataReader(reader_composable.DelayedClientReader):
         # this is meant to be the laziest possible initialization, so that this is only called if it's going to be used
         self.set_web_log_metadata_info(storage_name)
         return self._web_log_info.get(storage_name.obs_id)
-
-    def is_qa_rejected(self, storage_name):
-        return self._data_source.is_qa_rejected(storage_name.obs_id)
 
     def set_web_log_metadata_info(self, storage_name):
         """

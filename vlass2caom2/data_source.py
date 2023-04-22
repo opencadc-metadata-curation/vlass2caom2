@@ -93,19 +93,13 @@ import re
 import requests
 
 from bs4 import BeautifulSoup
-from collections import deque
 from datetime import datetime
 from logging import getLogger
 from lxml import etree
 
-from caom2pipe.data_source_composable import DataSource, HttpDataSource, StateRunnerMeta
-from caom2pipe.manage_composable import (
-    CadcException,
-    get_endpoint_session,
-    make_datetime,
-    query_endpoint_session,
-    State,
-)
+from caom2pipe.data_source_composable import DataSource
+from caom2pipe import html_data_source
+from caom2pipe.manage_composable import make_datetime, query_endpoint_session
 from vlass2caom2 import storage_name
 
 
@@ -114,7 +108,7 @@ __all__ = [
     'filter_by_epoch_name',
     'filter_by_tile',
     'NraoPages',
-    'VlassImagePage',
+    'VlassPages',
     'WebLogMetadata',
     'VLASS_CONTEXT',
 ]
@@ -136,127 +130,154 @@ def filter_by_tile(href):
 
 class NraoPages(DataSource):
     """
-    Put the NRAO page scraping behind the API for state file-based CAOM record
-    creation.
+    The collection of VlassImagePage instances that are used to scrape the NRAO VLASS site.
     """
 
-    def __init__(self, config, start_dt=datetime(year=2018, month=1, day=1)):
-        #  01-Jan-2018 00:00 is the start time for epoch VLASS1.1
-        super(NraoPages, self).__init__(config, start_dt)
+    def __init__(self, config, session):
+        super().__init__(config)
         self._data_sources = []
         self._end_dt = None
+        templates = VlassHtmlTemplate(config)
         for url in config.data_sources:
-            if 'quicklook' in url:
-                self._data_sources.append(QuicklookPage(config, url, start_dt))
-            else:
-                self._data_sources.append(ContinuumImagingPage(config, url, start_dt))
+            self._data_sources.append(VlassPages(config, url, templates, session))
 
-    def __str__(self):
-        msg = ''
-        for data_source in self._data_sources:
-            msg = f'{msg}\n{data_source.__class__.__name__}{data_source.__str__()}'
-        return msg
-
-    def _capture_todo(self, todo_count):
-        self._reporter.capture_todo(todo_count, self._rejected_files, self._skipped_files)
-        self._rejected_files = 0
-        self._skipped_files = 0
-
-    def initialize_end_dt(self):
-        for data_source in self._data_sources:
-            # initialize only once
-            if len(data_source.todo_list) == 0:
-                data_source.append_work()
-                if len(data_source.todo_list) > 0:
-                    # pick the earliest max_time among the data sources that change their max_time?
-                    self._end_dt = (
-                        data_source.end_dt if self._end_dt is None else min(self._end_dt, data_source.end_dt)
-                    )
+    @property
+    def data_sources(self):
+        return self._data_sources
 
     def get_all_file_urls(self):
         """API for Validation.
         :returns dict with key: fully-qualified url to a file, value: datetime"""
+        # want all the files, so set the start times to VLASS survey beginning timezone is Socorro, NM, USA
+        start_dates = {
+            # 01-Jan-2018 00:00 is the start time for epoch VLASS1.1
+            storage_name.QL_URL: datetime(2018, 1, 1),
+            # 01-Jun-2022 - there are files in July at the time I checked this (2023-04-18)
+            storage_name.SE_URL: datetime(2022, 6, 1),
+        }
         self._logger.debug('Begin get_all_file_urls')
-        self.initialize_end_dt()
         result = {}
         for data_source in self._data_sources:
-            # change a defaultdict(list) with key:datetime, value list[urls]
-            # into a dict with key: url, value: datetime
-            for dt, urls in data_source.todo_list.items():
-                for url in urls:
-                    result[url] = dt
-        self._logger.debug('End get_all_file_urls')
+            data_source.start_dt = start_dates.get(data_source.start_key)
+            # use the private methods to get the dict with key: URL, value: datetime
+            data_source._descend_html_hierarchy(data_source._tree.get_node('root'))
+            result = dict(result, **data_source._todo_list)
+        self._logger.debug(f'End get_all_file_urls with {len(result)} entries.')
         return result
 
-    def get_time_box_work(self, prev_exec_dt, exec_dt):
-        """
-        Time-boxing the file url list returned from the site scrape.
 
-        :param prev_exec_dt datetime start of the time-box chunk
-        :param exec_dt datetime end of the time-box chunk
-        :return: a list of StateRunnerMeta instances, for file names with
-            time they were modified
-        """
-        self._logger.debug('Begin get_time_box_work')
-        self.initialize_end_dt()
-        self._logger.debug(self)
+class VlassHtmlTemplate(html_data_source.HtmlFilteredPagesTemplate):
+    """
+    Structure:
+    TOP
+     | - Quicklook Images
+           | - EPOCH (e.g. VLASS1.1)
+                 | - QA_REJECTED (one)
+                       | - field centre page (many)
+                            | - file listing page (many)
+                 | - Tiles (many)
+                       | - field centre page (many)
+                            | - file listing page (many)
+     | - Continuum Images
+           | - EPOCH (e.g. VLASS1.1)
+                 | - Tiles (many)
+                       | - field centre page (many)
+                            | - file listing page (many)
 
-        temp = deque()
-        for data_source in self._data_sources:
-            for dt in data_source.todo_list:
-                if prev_exec_dt < dt <= exec_dt:
-                    for entry in data_source.todo_list[dt]:
-                        temp.append(StateRunnerMeta(entry, dt))
-        self._capture_todo(len(temp))
-        self._logger.debug('End get_time_box_work')
-        return temp
+    """
 
-    def is_qa_rejected(self, obs_id):
-        result = False
-        for data_source in self._data_sources:
-            for values in data_source.rejected.values():
-                for value in values:
-                    if obs_id == storage_name.VlassName.get_obs_id_from_file_name(value.split('/')[-2]):
-                        result = True
-                        break
-                if result:
-                    break
-            if result:
-                break
-        return result
+    def __init__(self, config):
+        super().__init__(config)
+        # True - always check all the epochs
+        self._top_page_epoch_filter = html_data_source.HtmlFilter(filter_by_epoch, True)
+        # True - always check the tile pages
+        self._tile_filter = html_data_source.HtmlFilter(filter_by_tile, True)
+        # False - check only new field centre pages
+        self._field_centre_epoch_filter = html_data_source.HtmlFilter(filter_by_epoch_name, False)
+        self._logger = getLogger(self.__class__.__name__)
 
-    def set_start_time(self, start_time):
-        """
-        Validation requires over-riding the start time from the default value obtained from the bookmark file.
-        :param start_time datetime
-        """
-        for data_source in self._data_sources:
-            data_source._start_dt = start_time
-
-
-class VlassImagePage(HttpDataSource):
-
-    def __init__(self, config, start_key, session):
-        temp = '|'.join(f'{ii}$' for ii in config.data_source_extensions).replace('.', '\\.')
-
-        def filter_by_extensions(href):
-            return re.search(temp, href)
-
+    def add_children(self, to_node, in_tree, from_entries):
+        self._logger.debug(f'Begin add_children for {to_node.tag} with {len(from_entries)} children.')
+        # which template filter to use
         # order: top page, tile/qa_rejected page, id (field centre) page, file listing page
-        filter_functions = [filter_by_epoch_name, filter_by_tile, filter_by_epoch, filter_by_extensions]
-        super().__init__(config, start_key, filter_functions, session)
+        if in_tree.parent(to_node.identifier).is_root():
+            # for the links scraped from the top page
+            self._filter_out_versions(from_entries)
+            template_filter = self._tile_filter
+        else:
+            if to_node.tag.endswith('QA_REJECTED') or to_node.tag.endswith('QA_REJECTED/'):
+                template_filter = self._file_filter
+            elif (
+                re.search('/T[0-9][0-9]t[0-9][0-9]$', to_node.tag)
+                or re.search('/T[0-9][0-9]t[0-9][0-9]/$', to_node.tag)
+            ):
+                # tile/qa_rejected page
+                template_filter = self._file_filter
+            else:
+                # id (field centre) pages
+                template_filter = self._field_centre_epoch_filter
+
+        self._logger.debug(f'Set child filter to {template_filter.fn.__name__}.')
+        for url in from_entries:
+            in_tree.create_node(url, parent=to_node.identifier, data=template_filter)
+        self._logger.debug('End add_children')
+
+    def first_filter(self):
+        return self._top_page_epoch_filter
+
+    def is_leaf(self, url_tree, url_node):
+        return url_tree.depth(url_node) == 4
+
+    def _filter_out_versions(self, from_entries):
+        """
+        NRAO introduced a directory named VLASS1.2v2, with this explanation:
+        1-10-21 - forwarded email from Mark Lacy:
+        The Epoch 1 VLASS quicklook images (VLASS1.1 and VLASS1.2) suffer from a systematic position error that is a
+        function of the zenith distance of the observation, reaching up to 1" in the far south of the survey
+        where zenith distances were largest. These errors are removed in the second epoch quicklook images. We have
+        now applied a correction to the VLASS1.2 images that removes the errors in these too. Corrected images are
+        available in the VLASS1.2v2 directory in archive-new.nrao.edu/vlass/quicklook. The old VLASS1.2 directory will
+        be deprecated. Corrected VLASS1.1 images will be made available later this year.
+
+        ER 18-10-21
+        My understanding is that the headers were hacked to include updates to astrometry without any other
+        information and the way to determine if v1 or v2 is whether they do-not-have (v1) or have (v2) the extra
+        HISTORY cards.  It’s definitely a decision to not update the DATE card or give any other indication of the v1
+        or v2 but it is a definitive way to tell them apart.
+
+        SGo - and because of these two things, ignore top-level directories that have names that start with the same
+        value as other existing directories
+
+        :param from_entries:
+        :return:
+        """
+        delete_these = []
+        for check_this in from_entries:
+            for against_this in from_entries:
+                if check_this == against_this:
+                    continue
+                temp = check_this
+                if check_this.rindex('/') + 1 == len(check_this):
+                    temp = check_this[:-1]
+                if against_this.startswith(temp):
+                    delete_these.append(check_this)
+
+        for entry in delete_these:
+            self._logger.warning(f'Ignore content in {entry}')
+            del from_entries[entry]
+
+        if len(delete_these) > 0:
+            self._logger.warning(f'Removed {len(delete_these)} URLs from list.')
+
+
+class VlassPages(html_data_source.HttpDataSource):
+
+    def __init__(self, config, start_key, html_filters, session):
+        super().__init__(config, start_key, html_filters, session)
         self._epochs = None
         self._session = session
         # override the HttpdDataSource._data_sources so that it does not treat all the NRAO image pages the same.
         self._data_sources = [start_key]
-
-    def __str__(self):
-        return (
-            f'\n           start time:: {self.start_dt}'
-            f'\n             end time:: {self.end_dt}'
-            f'\nnumber of files found:: {len(self.todo_list)}'
-            f'\n      number rejected:: {len(self.rejected)}'
-        )
 
 
 class WebLogMetadata:
