@@ -68,41 +68,57 @@
 #
 
 import os
+import pandas as pd
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from treelib import Tree
 
 from caom2 import SimpleObservation, Algorithm
 from caom2pipe import manage_composable as mc
-from vlass2caom2 import composable, data_source, storage_name, validator
+from vlass2caom2 import data_source, storage_name
+from vlass2caom2.validator import get_file_url_list_max_versions, NRAO_STATE, VlassValidator
 
 from mock import patch, Mock
-import test_data_source
 import test_main_app
 
 
-@patch('caom2pipe.client_composable.repo_get')
-@patch('cadcutils.net.BaseWsClient.post')
-@patch('cadcutils.net.ws.WsCapabilities.get_access_url')
-@patch('vlass2caom2.data_source.query_endpoint_session')
-def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, tmp_path):
-    caps_mock.return_value = 'https://sc2.canfar.net/sc2repo'
-    response = Mock()
-    response.status_code = 200
+@patch('caom2pipe.validator_composable.query_tap_pandas')
+@patch('vlass2caom2.data_source.NraoPages.get_all_file_urls')
+def test_validator(all_urls, tap_mock, test_config, tmp_path):
+    # 0 - correct
+    # 1 - older at CADC
+    # 2 - not at NRAO
+    cadc_answer = {
+        'uri':             [
+            'nrao:VLASS/VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits',
+            'nrao:VLASS/VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits',
+            'nrao:VLASS/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits',
+        ],
+        'contentLastModified': ['2019-12-12 00:00:00.000', '2017-12-12 00:00:00.000', '2017-12-11 00:00:00.000'],
+    }
 
-    # the first entry should be the last entry from the source list
-    # the second entry is a made-up one to make sure the DATA -> SOURCE check finds something
-    storage_answer = [
-        b'uri\tcontentLastModified\n'
-        b'nrao:VLASS/VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-        b'\t2019-12-12 00:00:00.000\n'
-        b'nrao:VLASS/VLASS1.2.ql.T00t00.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-        b'\t2017-12-12 00:00:00.000'
-    ]
+    tap_mock.return_value = pd.DataFrame(cadc_answer)
 
-    response.iter_content.side_effect = [storage_answer]
-    post_mock.return_value.__enter__.return_value = response
-    repo_get_mock.side_effect = _mock_repo_read
-    http_mock.side_effect = test_data_source._query_quicklook_endpoint
+    url1 = (
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T01t01/VLASS3.1.ql.T01t01.J000228-363000.10.2048.v1/'
+        'VLASS3.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
+    )
+    url2 = (
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1/'
+        'VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
+    )
+    url3 = (
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1/'
+        'VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+    )
+    ts1 = datetime.now() - timedelta(hours=1)
+    ts2 = datetime(year=2018, month=12, day=12)
+    ts3 = datetime(year=2019, month=12, day=11)
+    all_urls.return_value = {
+        url1: ts1,  # not at CADC
+        url2: ts2,  # older at CADC
+        url3: ts3,  # correct at CADC, so the timestamp at CADC is newer than at NRAO
+    }
 
     orig_cwd = os.getcwd()
     try:
@@ -117,32 +133,31 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
         with open(test_config.proxy_fqn, 'w') as f:
             f.write('proxy content')
         # need the state.yml file for the DataSource specializations, timestamp gets over-ridden
-        mc.State.write_bookmark(test_config.state_fqn, composable.VLASS_BOOKMARK, datetime.utcnow())
+        mc.State.write_bookmark(test_config.state_fqn, test_config.bookmark, datetime.utcnow())
 
-        test_subject = validator.VlassValidator()
+        test_subject = VlassValidator()
         test_listing_fqn = f'{test_subject._config.working_directory}/not_at_cadc.txt'
-        test_source_list_fqn = f'{test_subject._config.working_directory}/{validator.NRAO_STATE}'
+        test_source_list_fqn = f'{test_subject._config.working_directory}/{NRAO_STATE}'
 
         test_source_missing, test_data_missing, test_data_older = test_subject.validate()
         assert test_source_missing is not None, 'expected source result'
         assert test_data_missing is not None, 'expected destination result'
-        # 176 is the number of entries returned by the mock doing tile count * file name count
-        # 175 is the answer, because DATA claims to have one of those files
-        assert len(test_source_missing) == 175, f'wrong number of source results {len(test_source_missing)}'
+        assert len(test_source_missing) == 1, f'wrong number of source results {len(test_source_missing)}'
         assert (
-            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
-            == test_source_missing.loc[174, 'f_name']
-        ), f'wrong source content {test_source_missing.loc[174, "f_name"]}'
+            'VLASS3.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
+            == test_source_missing.loc[0, 'f_name']
+        ), f'wrong source content {test_source_missing.loc[0, "f_name"]}'
         assert len(test_data_missing) == 1, 'wrong # of destination results'
+        # loc index 2 is the original index
         assert (
-            'VLASS1.2.ql.T00t00.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-            == test_data_missing.loc[1, 'f_name']
-        ), f'wrong destination content {test_data_missing.loc[1, "f_name"]}'
+            'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+            == test_data_missing.loc[2, 'f_name']
+        ), f'wrong destination content {test_data_missing.loc[2, "f_name"]}'
         assert len(test_data_older) == 1, 'wrong # of destination older results'
         assert (
-            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+            'VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits'
             == test_data_older.loc[0, 'f_name']
-        ), f'wrong destination data content {test_data_older.loc[0, "f_name"]}'
+        ), f'wrong destination older content {test_data_older.loc[0, "f_name"]}'
         assert os.path.exists(test_listing_fqn), 'should create file record'
         test_source_fqn = f'{test_subject._config.working_directory}/not_at_NRAO.txt'
         test_newer_fqn = f'{test_subject._config.working_directory}/newer_at_NRAO.txt'
@@ -158,41 +173,44 @@ def test_validator(http_mock, caps_mock, post_mock, repo_get_mock, test_config, 
 
         with open(store_fqn, 'r') as f:
             content = f.readlines()
-        assert len(content) == 175, 'wrong number of entries'
+        assert len(content) == 1, 'wrong number of store entries'
         compare = (
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/QA_REJECTED/'
-            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1/'
-            'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits\n'
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T01t01/VLASS3.1.ql.T01t01.J000228-363000.10.2048.v1/'
+            'VLASS3.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits\n'
         )
         assert compare in content, 'unexpected content'
         with open(ingest_fqn, 'r') as f:
             content = f.readlines()
         assert len(content) == 1, 'wrong number of ingest entries'
-        compare = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits\n'
+        compare = 'VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.rms.subim.fits\n'
         assert compare in content, 'unexpected ingest content'
 
         # does the cached list work too?
         assert os.path.exists(test_source_list_fqn), 'cache should exist'
         test_cache = test_subject.read_from_source()
         assert test_cache is not None, 'expected cached source result'
-        compare = 'VLASS1.2.ql.T21t15.J141833+413000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
-        assert len(test_cache) == 176, 'wrong amount of cache content'
-        assert compare == test_cache.loc[175, 'f_name'], 'wrong cached result'
+        compare = 'VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+        assert len(test_cache) == 3, 'wrong amount of cache content'
+        assert compare == test_cache.loc[2, 'f_name'], 'wrong cached result'
     finally:
         os.chdir(orig_cwd)
 
 
-def test_multiple_versions():
-    with open(
-        f'{test_main_app.TEST_DATA_DIR}/multiple_versions_tile.html', 'r'
-    ) as f:
+def test_multiple_versions(test_config, tmp_path):
+    test_config.change_working_directory(tmp_path)
+    with open(f'{test_main_app.TEST_DATA_DIR}/multiple_versions_tile.html', 'r') as f:
         test_string = f.read()
-    test_start_date = mc.make_datetime_tz('2018-01-01 00:00', data_source.QuicklookPage.timezone)
-    test_config = mc.Config()
-    test_config.state_fqn = os.path.join(test_main_app.TEST_DATA_DIR, 'state.yml')
-    test_subject = data_source.QuicklookPage(test_config, storage_name.QL_URL)
-    test_subject._start_time = test_start_date
-    start_content = test_subject._parse_id_page(test_string)
+    test_start_date = mc.make_datetime('2018-01-01 00:00')
+    mc.State.write_bookmark(test_config.state_fqn, storage_name.QL_URL, test_start_date)
+    test_config.data_sources = [storage_name.QL_URL]
+    session_mock = Mock()
+    test_subject = data_source.NraoPages(test_config, session_mock)
+    test_subject.data_sources[0].initialize_start_dt()
+    test_tree = Tree()
+    test_url = 'https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1/T23T13/'
+    test_tree.create_node(tag=test_url, identifier=test_url, data=test_subject.data_sources[0]._html_filters._field_centre_epoch_filter)
+    test_node = test_tree.get_node(test_url)
+    start_content = test_subject.data_sources[0]._parse_html_string(test_node, test_string)
     test_content = {}
     for key, value in start_content.items():
         test_key1 = (
@@ -210,7 +228,7 @@ def test_multiple_versions():
     (
         test_result,
         test_validate_dict_result,
-    ) = validator.get_file_url_list_max_versions(test_content)
+    ) = get_file_url_list_max_versions(test_content)
     assert test_result is not None, 'expect a test result'
     assert test_validate_dict_result is not None, 'expect a test result'
     assert len(test_result) == 82, 'wrong test result len'

@@ -78,20 +78,18 @@ from caom2pipe import caom_composable as cc
 from caom2pipe import manage_composable as mc
 
 
-__all__ = ['APPLICATION', 'mapping_factory']
-
-APPLICATION = 'vlass2caom2'
+__all__ = ['mapping_factory']
 
 
 class BlueprintMapping(cc.TelescopeMapping):
     def __init__(self, storage_name, headers, clients):
         super().__init__(storage_name, headers, clients)
 
-    def accumulate_blueprint(self, bp, application=None):
+    def accumulate_blueprint(self, bp):
         """Configure the VLASS-specific ObsBlueprint for the CAOM model
         SpatialWCS."""
-        self._logger.debug('Begin accumulate_wcs.')
-        super().accumulate_blueprint(bp, APPLICATION)
+        self._logger.debug('Begin accumulate_blueprint.')
+        super().accumulate_blueprint(bp)
 
         # observation level
         bp.set('Observation.type', 'OBJECT')
@@ -123,10 +121,10 @@ class QuicklookMapping(BlueprintMapping):
     def __init__(self, storage_name, headers, clients):
         super().__init__(storage_name, headers, clients)
 
-    def accumulate_blueprint(self, bp, application=None):
+    def accumulate_blueprint(self, bp):
         """Configure the Quicklook ObsBlueprint for the CAOM model SpatialWCS."""
         self._logger.debug('Begin accumulate_wcs.')
-        super().accumulate_blueprint(bp, APPLICATION)
+        super().accumulate_blueprint(bp)
         bp.configure_position_axes((1, 2))
         bp.configure_energy_axis(3)
         bp.configure_polarization_axis(4)
@@ -173,8 +171,8 @@ class QuicklookMapping(BlueprintMapping):
         bp.set('Chunk.energy.bandpassName', 'S-band')
 
     def get_position_resolution(self, ext):
-        bmaj = self._headers[ext]['BMAJ']
-        bmin = self._headers[ext]['BMIN']
+        bmaj = self._headers[ext].get('BMAJ')
+        bmin = self._headers[ext].get('BMIN')
         # From
         # https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
         # Clare Chandler via JJK - 21-08-18
@@ -211,8 +209,10 @@ class QuicklookMapping(BlueprintMapping):
                     if artifact.uri != self._storage_name.file_uri:
                         continue
                     update_artifact_meta(artifact, file_info)
+                    delete_these_parts = []
                     for part in artifact.parts.values():
-                        for chunk in part.chunks:
+                        delete_these_chunks = []
+                        for index, chunk in enumerate(part.chunks):
                             if chunk.position is not None:
                                 chunk.position.resolution = (
                                     self.get_position_resolution(0)
@@ -223,6 +223,26 @@ class QuicklookMapping(BlueprintMapping):
                                 # blueprint is implemented to not set WCS
                                 # information to None
                                 chunk.energy.restfrq = None
+
+                            if (
+                                chunk.naxis == 2
+                                and chunk.position is None
+                                and chunk.energy is None
+                                and chunk.polarization is None
+                            ):
+                                # rms has a second HDU with BINTABLE extensions, and no WCS description (?)
+                                delete_these_chunks.append(index)
+
+                        for entry in delete_these_chunks:
+                            self._logger.debug(f'Removing chunk index {entry} because it has no WCS.')
+                            part.chunks.pop(entry)
+
+                        if len(part.chunks) == 0:
+                            delete_these_parts.append(part.name)
+
+                    for entry in delete_these_parts:
+                        self._logger.debug(f'Removing part {entry} because it has no chunks.')
+                        artifact.parts.pop(entry)
 
             self._logger.debug('Done update.')
             return observation
@@ -259,10 +279,22 @@ class ContinuumMapping(QuicklookMapping):
         bp.add_attribute('Chunk.energy.restfrq', 'RESTFREQ')
 
 
+class ChannelCubeMapping(ContinuumMapping):
+    def __init__(self, storage_name, headers, clients):
+        super().__init__(storage_name, headers, clients)
+
+    def accumulate_blueprint(self, bp, application=None):
+        super().accumulate_blueprint(bp)
+        bp.clear('Observation.target.name')
+        bp.add_attribute('Observation.target.name', 'FILNAM05')
+
+
 def mapping_factory(storage_name, headers, clients):
-    if storage_name.is_catalog():
+    if storage_name.is_catalog:
         return BlueprintMapping(storage_name, headers, clients)
-    elif storage_name.is_quicklook():
+    elif storage_name.is_quicklook:
         return QuicklookMapping(storage_name, headers, clients)
+    elif storage_name.is_channel_cube:
+        return ChannelCubeMapping(storage_name, headers, clients)
     else:
         return ContinuumMapping(storage_name, headers, clients)

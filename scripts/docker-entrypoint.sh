@@ -7,16 +7,19 @@ fi
 
 if [[ ! -e ${PWD}/state.yml ]]
 then
-  yesterday=$(date -d yesterday "+%d-%b-%Y %H:%M")
+  yesterday=$(date -d yesterday "+%Y-%m-%d %H:%M:%S")
   echo "bookmarks:
-  vlass_timestamp:
+  https://archive-new.nrao.edu/vlass/quicklook/:
+    last_record: $yesterday
+  https://archive-new.nrao.edu/vlass/se_continuum_imaging/:
     last_record: $yesterday
 context:
   vlass_context:
-    VLASS1.1v2: 01-Jan-2018 00:00
-    VLASS1.2v2: 01-Nov-2018 00:00
-    VLASS2.1: 01-Jul-2020 00:00
-    VLASS2.2: 01-Sep-2021 00:00
+    VLASS1.1v2: 2018-01-01 00:00
+    VLASS1.2v2: 2018-11-01 00:00
+    VLASS2.1: 2020-07-01 00:00
+    VLASS2.2: 2021-09-01 00:00
+    VLASS3.1: 2022-06-01 00:00
 " > ${PWD}/state.yml
 fi
 
