@@ -89,6 +89,10 @@ def visit(observation, **kwargs):
     storage_name = kwargs.get('storage_name')
     if storage_name is None:
         raise mc.CadcException('Require a storage name.')
+    clients = kwargs.get('clients')
+    if clients is None:
+        logging.warning(f'Scraping, so no access to Temporal metadata inputs.')
+        return observation
 
     count = 0
     for plane in observation.planes.values():

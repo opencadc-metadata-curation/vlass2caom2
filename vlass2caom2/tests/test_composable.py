@@ -70,6 +70,7 @@
 import logging
 import os
 import traceback
+import shutil
 
 from collections import deque
 from datetime import datetime, timedelta
@@ -78,9 +79,10 @@ from unittest.mock import ANY, patch, Mock, PropertyMock
 from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe.data_source_composable import StateRunnerMeta
+from caom2pipe.astro_composable import make_headers_from_file
 from caom2pipe import execute_composable as ec
 from caom2pipe.manage_composable import (
-    Config, Metrics, Observable, read_obs_from_file, Rejected, State, write_obs_to_file
+    Config, Metrics, Observable, read_obs_from_file, Rejected, State, TaskType, write_obs_to_file
 )
 from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
@@ -468,6 +470,33 @@ def test_store(test_config):
         f'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/{test_f_name}',
         f'/tmp/VLASS2.1.T10t12.J073401-033000/{test_f_name}',
     ), 'wrong transferrer args'
+
+
+@patch('vlass2caom2.preview_augmentation.visit')
+@patch('vlass2caom2.position_bounds_augmentation.visit')
+@patch('caom2utils.data_util.get_local_headers_from_fits')
+def test_run_scrape_modify(headers_mock, footprint_mock, preview_mock, test_config, tmp_path):
+    footprint_mock.side_effect = _mock_visit
+    preview_mock.side_effect = _mock_visit
+    headers_mock.side_effect = make_headers_from_file
+    getcwd_orig = os.getcwd()
+    test_config.change_working_directory(tmp_path)
+    test_config.task_types = [TaskType.SCRAPE, TaskType.MODIFY]
+    test_config.use_local_files = True
+    test_config.data_sources = ['/tmp']
+    test_f_name = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+
+    try:
+        os.chdir(tmp_path)
+        Config.write_to_file(test_config)
+        _write_state('2202-01-01 01:01:01', test_config.state_fqn, test_config)
+        shutil.copy(os.path.join(test_main_app.TEST_DATA_DIR, f'{test_f_name}.header'), f'/tmp/{test_f_name}')
+
+        # execution
+        test_result = composable._run()
+        assert test_result == 0, 'wrong result'
+    finally:
+        os.chdir(getcwd_orig)
 
 
 def _mock_service_query():

@@ -94,10 +94,15 @@ def visit(observation, **kwargs):
 
     count = 0
     original = observation.requirements
-    if storage_name.is_qa_rejected():
-        observation.requirements = Requirements(Status.FAIL)
-    else:
-        observation.requirements = None
+    try:
+        rejected = storage_name.is_qa_rejected()
+        if rejected:
+            observation.requirements = Requirements(Status.FAIL)
+        else:
+            observation.requirements = None
+    except mc.CadcException as e:
+        logging.warning(f'Cannot check REJECT status for {observation.observation_id}. Leaving the original value.')
+
     if observation.requirements != original:
         logging.warning(
             f'Changed requirements to {observation.requirements} '
@@ -106,7 +111,3 @@ def visit(observation, **kwargs):
         count = 1
     logging.info(f'Updated {count} as quality augmentation for {observation.observation_id}.')
     return observation
-
-
-def _set_failed(observation):
-    observation.requirements = Requirements(Status.FAIL)
