@@ -155,24 +155,10 @@ def _run():
         is used by airflow for task instance management and reporting.
     """
     config, metadata_reader, ignore_sources, name_builder, clients = _common_init()
-
-    # time_bounds_augmentation and quality_augmentation depend on
-    # metadata scraped from the NRAO site, but that only changes if a new
-    # file is created, a new version of a file is created, or an old version
-    # of a file is replaced. If the pipeline isn't STORE'ing information from
-    # the source, files aren't changing, and the related metadata isn't
-    # changing, so be polite to the NRAO site, and don't scrape if it's not
-    # necessary.
-    meta_visitors = [fits2caom2_augmentation, cleanup_augmentation]
-    if (
-        mc.TaskType.STORE in config.task_types
-        and mc.TaskType.INGEST in config.task_types
-    ):
-        meta_visitors = META_VISITORS
     return rc.run_by_todo(
         config=config,
         name_builder=name_builder,
-        meta_visitors=meta_visitors,
+        meta_visitors=META_VISITORS,
         data_visitors=DATA_VISITORS,
         store_transfer=tc.HttpTransfer(),
         metadata_reader=metadata_reader,

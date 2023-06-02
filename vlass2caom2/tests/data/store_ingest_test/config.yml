@@ -24,12 +24,13 @@ failure_log_file_name: failure_log.txt
 #
 # this file is created in the logs directory, default is 'retries.txt'
 retry_file_name: retries.txt
-retry_failures: False
+retry_failures: True
 retry_count: 1
+retry_decay: 0
 collection: VLASS
 scheme: nrao
 state_file_name: state.yml
-interval: 600
+interval: 1800
 data_sources:
   - https://archive-new.nrao.edu/vlass/quicklook/
 data_source_extensions:
