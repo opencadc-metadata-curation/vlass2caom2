@@ -134,6 +134,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock, test_config):
     ), 'wrong amount of bounds info'
     # if exposure == 206, that's the original, unchanged (so the test didn't work) value
     assert chunk.time.exposure == 234.0, 'wrong exposure value'
+    assert chunk.time.timesys == 'UTC', 'wrong timesys value'
 
 
 @patch('vlass2caom2.data_source.requests.get')

@@ -132,6 +132,8 @@ def _augment_artifact(obs_id, artifact, metadata_reader, storage_name):
         time_axis.bounds = bounds
         chunk.time = TemporalWCS(time_axis)
         chunk.time.exposure = exposure
+        # JJK TIMESYS=UTC, which is in the headers of the VLASS2.1 files at least
+        chunk.time.timesys = 'UTC'
         chunk.time_axis = None
         version = obs_metadata.get('Pipeline Version')
         reference = obs_metadata.get('reference')
