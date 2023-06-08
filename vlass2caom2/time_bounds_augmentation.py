@@ -89,6 +89,10 @@ def visit(observation, **kwargs):
     storage_name = kwargs.get('storage_name')
     if storage_name is None:
         raise mc.CadcException('Require a storage name.')
+    clients = kwargs.get('clients')
+    if clients is None:
+        logging.warning(f'Scraping, so no access to Temporal metadata inputs.')
+        return observation
 
     count = 0
     for plane in observation.planes.values():
@@ -128,6 +132,7 @@ def _augment_artifact(obs_id, artifact, metadata_reader, storage_name):
         time_axis.bounds = bounds
         chunk.time = TemporalWCS(time_axis)
         chunk.time.exposure = exposure
+        # JJK TIMESYS=UTC, which is in the headers of the VLASS2.1 files at least
         chunk.time.timesys = 'UTC'
         chunk.time_axis = None
         version = obs_metadata.get('Pipeline Version')

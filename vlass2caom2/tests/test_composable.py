@@ -70,6 +70,7 @@
 import logging
 import os
 import traceback
+import shutil
 
 from collections import deque
 from datetime import datetime, timedelta
@@ -78,9 +79,10 @@ from unittest.mock import ANY, patch, Mock, PropertyMock
 from cadcutils import exceptions
 from cadcdata import FileInfo
 from caom2pipe.data_source_composable import StateRunnerMeta
+from caom2pipe.astro_composable import make_headers_from_file
 from caom2pipe import execute_composable as ec
 from caom2pipe.manage_composable import (
-    Config, Metrics, Observable, read_obs_from_file, Rejected, State, write_obs_to_file
+    Config, Metrics, Observable, read_obs_from_file, Rejected, State, TaskType, write_obs_to_file
 )
 from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
@@ -344,18 +346,22 @@ info_count = 0
 
 
 @patch(
-    'caom2pipe.html_data_source.HttpDataSource.end_dt', new_callable=PropertyMock(return_value=datetime(2020, 5, 2))
+    'caom2pipe.html_data_source.HttpDataSource.end_dt', new_callable=PropertyMock(return_value=datetime(2020, 4, 19))
 )
+@patch('vlass2caom2.preview_augmentation.visit')
 @patch('vlass2caom2.time_bounds_augmentation.visit')
 @patch('caom2pipe.transfer_composable.HttpTransfer')
 @patch('caom2pipe.html_data_source.query_endpoint_session')
 @patch('caom2pipe.client_composable.ClientCollection')
-def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit_mock, end_dt_mock, test_config):
+def test_run_state_store_ingest(
+    client_mock, query_mock, transferrer_mock, visit_mock, preview_mock, end_dt_mock, test_config
+):
     test_dir = f'{test_main_app.TEST_DATA_DIR}/store_ingest_test'
     transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
     client_mock.data_client.get_head.side_effect = _mock_headers_read
     client_mock.data_client.info.side_effect = _mock_get_file_info_1
     visit_mock.side_effect = _mock_visit
+    preview_mock.side_effect = _mock_visit
     test_state_fqn = f'{test_dir}/state.yml'
     test_config.data_sources = [QL_URL]
     _write_state('22Apr2019 12:34', test_state_fqn, test_config)
@@ -365,7 +371,6 @@ def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit
     os.getcwd = Mock(return_value=test_dir)
     try:
         test_config, test_metadata_reader, test_sources, test_name_builder, ignore_clients = composable._common_init()
-        test_end_time = datetime(2019, 5, 2)
         test_metadata_reader._client = client_mock.data_client
         test_result = run_composable.run_by_state(
             config=test_config,
@@ -378,9 +383,10 @@ def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit
             clients=client_mock,
         )
         assert test_result is not None, 'expect result'
-        assert test_result == 0, 'expect success'
+        assert test_result == -1, 'expect failure, because of the retries'
         assert client_mock.metadata_client.read.called, 'read called'
-        assert client_mock.metadata_client.read.call_count == 2, 'read call count'
+        # 3 => 2 files, 1 success + 1 failure + 1 retry
+        assert client_mock.metadata_client.read.call_count == 3, 'read call count'
         assert query_mock.called, 'query endpoint session calls'
         assert query_mock.call_count == 15, 'wrong endpoint session call count'
         query_mock.assert_called_with(
@@ -390,27 +396,25 @@ def test_run_state_store_ingest(client_mock, query_mock, transferrer_mock, visit
         ), 'query mock call args'
         # make sure data is not being written to CADC storage :)
         assert client_mock.data_client.put.called, 'put should be called'
-        assert client_mock.data_client.put.call_count == 2, 'wrong number of puts'
+        assert client_mock.data_client.put.call_count == 3, 'wrong number of puts'
         client_mock.data_client.put.assert_called_with(
             '/usr/src/app/vlass2caom2/vlass2caom2/tests/data/store_ingest_test/VLASS1.1.T01t01.J000228-363000',
             f'{test_config.scheme}:{test_config.collection}/VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.'
-            f'iter1.image.pbcor.tt0.subim.fits',
+            f'iter1.image.pbcor.tt0.rms.subim.fits',
         )
 
         test_obs_output = read_obs_from_file(f'{test_dir}/logs/VLASS1.1.T01t01.J000228-363000.xml')
+        found = False
         for plane in test_obs_output.planes.values():
             for artifact in plane.artifacts.values():
                 assert artifact.content_checksum.uri == 'md5:abc', 'artifact metadata not updated'
+                found = True
+        assert found, 'should have found the correct md5sum'
 
         assert client_mock.data_client.get_head.called, 'get_head called'
-        # there are four unique file names in this test, so the 8 is for the failure the first time around, and the
-        # success the second time around - using the DelayedClientReader in the inheritance tree
-        # assert client_mock.data_client.get_head.call_count == 8, 'get_head call count'
-        assert client_mock.data_client.get_head.call_count == 4, 'get_head call count'
+        assert client_mock.data_client.get_head.call_count == 3, 'get_head call count'
         assert client_mock.data_client.info.called, 'info called'
-        # TODO  when retry with state is working properly, this should be 8 again
-        # assert client_mock.data_client.info.call_count == 8, 'info call count'
-        assert client_mock.data_client.info.call_count == 4, 'info call count'
+        assert client_mock.data_client.info.call_count == 3, 'info call count'
     finally:
         os.getcwd = getcwd_orig
         test_rejected_fqn = f'{test_dir}/rejected.yml'
@@ -445,9 +449,9 @@ def test_store(test_config):
     test_subject = ec.Store(
         test_config,
         observable,
-        transferrer,
         clients_mock,
         test_metadata_reader,
+        transferrer,
     )
     test_subject.execute({'storage_name': test_storage_name})
     assert clients_mock.data_client.put.called, 'expect a call'
@@ -466,6 +470,33 @@ def test_store(test_config):
         f'VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/{test_f_name}',
         f'/tmp/VLASS2.1.T10t12.J073401-033000/{test_f_name}',
     ), 'wrong transferrer args'
+
+
+@patch('vlass2caom2.preview_augmentation.visit')
+@patch('vlass2caom2.position_bounds_augmentation.visit')
+@patch('caom2utils.data_util.get_local_headers_from_fits')
+def test_run_scrape_modify(headers_mock, footprint_mock, preview_mock, test_config, tmp_path):
+    footprint_mock.side_effect = _mock_visit
+    preview_mock.side_effect = _mock_visit
+    headers_mock.side_effect = make_headers_from_file
+    getcwd_orig = os.getcwd()
+    test_config.change_working_directory(tmp_path)
+    test_config.task_types = [TaskType.SCRAPE, TaskType.MODIFY]
+    test_config.use_local_files = True
+    test_config.data_sources = ['/tmp']
+    test_f_name = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+
+    try:
+        os.chdir(tmp_path)
+        Config.write_to_file(test_config)
+        _write_state('2202-01-01 01:01:01', test_config.state_fqn, test_config)
+        shutil.copy(os.path.join(test_main_app.TEST_DATA_DIR, f'{test_f_name}.header'), f'/tmp/{test_f_name}')
+
+        # execution
+        test_result = composable._run()
+        assert test_result == 0, 'wrong result'
+    finally:
+        os.chdir(getcwd_orig)
 
 
 def _mock_service_query():
@@ -546,13 +577,5 @@ def _mock_headers_read(ignore):
         raise exceptions.UnexpectedException(f'{ignore} UnexpectedException')
 
 
-def _mock_visit(
-    obs,
-    working_directory=None,
-    clients=None,
-    stream=None,
-    storage_name=None,
-    metadata_reader=None,
-    observable=None,
-):
+def _mock_visit(obs, **kwargs):
     return obs

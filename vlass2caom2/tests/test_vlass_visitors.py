@@ -75,7 +75,7 @@ from mock import Mock, patch
 
 from caom2 import Status
 from caom2pipe.manage_composable import (
-    CadcException, Config, make_datetime, read_obs_from_file, State, StorageName
+    CadcException, make_datetime, read_obs_from_file, State, StorageName
 )
 
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
@@ -119,6 +119,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock, test_config):
     kwargs = {
         'metadata_reader': test_metadata_reader,
         'storage_name': test_name,
+        'clients': Mock(),
     }
     test_obs = time_bounds_augmentation.visit(test_obs, **kwargs)
     assert test_obs is not None, 'unexpected modification'
@@ -133,6 +134,7 @@ def test_aug_visit_works(query_endpoint_mock, get_mock, test_config):
     ), 'wrong amount of bounds info'
     # if exposure == 206, that's the original, unchanged (so the test didn't work) value
     assert chunk.time.exposure == 234.0, 'wrong exposure value'
+    assert chunk.time.timesys == 'UTC', 'wrong timesys value'
 
 
 @patch('vlass2caom2.data_source.requests.get')
