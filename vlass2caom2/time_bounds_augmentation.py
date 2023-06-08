@@ -128,6 +128,7 @@ def _augment_artifact(obs_id, artifact, metadata_reader, storage_name):
         time_axis.bounds = bounds
         chunk.time = TemporalWCS(time_axis)
         chunk.time.exposure = exposure
+        chunk.time.timesys = 'UTC'
         chunk.time_axis = None
         version = obs_metadata.get('Pipeline Version')
         reference = obs_metadata.get('reference')
