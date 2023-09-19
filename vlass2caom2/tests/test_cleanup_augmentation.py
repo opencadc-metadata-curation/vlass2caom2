@@ -69,19 +69,18 @@
 
 from caom2pipe import manage_composable as mc
 from vlass2caom2 import cleanup_augmentation
-import test_main_app
 
 
-def test_visit(test_config, tmp_path):
+def test_visit(test_config, test_data_dir, tmp_path):
     test_config.change_working_directory(tmp_path.as_posix())
     test_product_id = 'VLASS1.2.T20t12.J092604+383000.quicklook'
-    test_fname = f'{test_main_app.TEST_DATA_DIR}/visit_start.xml'
+    test_fname = f'{test_data_dir}/visit_start.xml'
     test_obs = mc.read_obs_from_file(test_fname)
 
     test_artifacts = test_obs.planes[test_product_id].artifacts
     assert len(test_artifacts) == 4, 'wrong starting conditions'
 
-    test_observable = mc.Observable(mc.Rejected(test_config.rejected_fqn), mc.Metrics(test_config))
+    test_observable = mc.Observable(test_config)
     kwargs = {'observable': test_observable}
     test_obs = cleanup_augmentation.visit(test_obs, **kwargs)
     assert test_obs is not None, 'wrong return value'
@@ -93,16 +92,16 @@ def test_visit(test_config, tmp_path):
     assert test_uri2 in test_observable.rejected.content['old_version'], 'uri2 rejection tracking'
 
 
-def test_clean_up_old_thumbnails_visit(test_config, tmp_path):
+def test_clean_up_old_thumbnails_visit(test_config, test_data_dir, tmp_path):
     test_config.change_working_directory(tmp_path.as_posix())
     test_product_id = 'VLASS1.1.T06t32.J211902-193000.quicklook'
-    test_fname = f'{test_main_app.TEST_DATA_DIR}/too_many_artifacts.xml'
+    test_fname = f'{test_data_dir}/too_many_artifacts.xml'
     test_obs = mc.read_obs_from_file(test_fname)
 
     test_artifacts = test_obs.planes[test_product_id].artifacts
     assert len(test_artifacts) == 6, 'wrong pre-conditions'
 
-    test_observable = mc.Observable(mc.Rejected(test_config.rejected_fqn), mc.Metrics(test_config))
+    test_observable = mc.Observable(test_config)
     kwargs = {'observable': test_observable}
     test_obs = cleanup_augmentation.visit(test_obs, **kwargs)
     assert test_obs is not None, 'wrong return value'

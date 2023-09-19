@@ -359,7 +359,7 @@ def test_run_state_store_ingest(
     test_dir = f'{test_main_app.TEST_DATA_DIR}/store_ingest_test'
     transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
     client_mock.data_client.get_head.side_effect = _mock_headers_read
-    client_mock.data_client.info.side_effect = _mock_get_file_info_1
+    client_mock.data_client.info.side_effect = lambda x: FileInfo(id=x, md5sum='abc')
     visit_mock.side_effect = _mock_visit
     preview_mock.side_effect = _mock_visit
     test_state_fqn = f'{test_dir}/state.yml'
@@ -432,7 +432,7 @@ def test_run_state_store_ingest(
 
 def test_store(test_config):
     test_config.logging_level = 'ERROR'
-    test_config.working_directory = '/tmp'
+    test_config.change_working_directory('/tmp')
     test_url = (
         'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/'
         'T10t12/VLASS2.1.ql.T10t12.J073401-033000.10.2048.v1/'
@@ -442,9 +442,7 @@ def test_store(test_config):
     test_storage_name = VlassName(test_url)
     transferrer = Mock()
     clients_mock = Mock()
-    observable = Observable(
-        Rejected('/tmp/rejected.yml'), Metrics(test_config)
-    )
+    observable = Observable(test_config)
     test_metadata_reader = Mock()
     test_subject = ec.Store(
         test_config,

@@ -75,7 +75,7 @@ class VLASSFits2caom2Visitor(cc.Fits2caom2Visitor):
         super().__init__(observation, **kwargs)
 
     def _get_mapping(self, headers):
-        return main_app.mapping_factory(self._storage_name, headers, self._clients)
+        return main_app.mapping_factory(self._storage_name, headers, self._clients, self._observable, self._observation)
 
 
 def visit(observation, **kwargs):
