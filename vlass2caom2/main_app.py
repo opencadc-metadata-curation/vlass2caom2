@@ -82,8 +82,8 @@ __all__ = ['mapping_factory']
 
 
 class BlueprintMapping(cc.TelescopeMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation):
-        super().__init__(storage_name, headers, clients, observable, observation)
+    def __init__(self, storage_name, headers, clients, observable, observation, config):
+        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp):
         """Configure the VLASS-specific ObsBlueprint for the CAOM model
@@ -118,8 +118,8 @@ class BlueprintMapping(cc.TelescopeMapping):
 
 
 class QuicklookMapping(BlueprintMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation):
-        super().__init__(storage_name, headers, clients, observable, observation)
+    def __init__(self, storage_name, headers, clients, observable, observation, config):
+        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp):
         """Configure the Quicklook ObsBlueprint for the CAOM model SpatialWCS."""
@@ -257,8 +257,8 @@ class QuicklookMapping(BlueprintMapping):
 
 
 class ContinuumMapping(QuicklookMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation):
-        super().__init__(storage_name, headers, clients, observable, observation)
+    def __init__(self, storage_name, headers, clients, observable, observation, config):
+        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp, application=None):
         super().accumulate_blueprint(bp)
@@ -280,8 +280,8 @@ class ContinuumMapping(QuicklookMapping):
 
 
 class ChannelCubeMapping(ContinuumMapping):
-    def __init__(self, storage_name, headers, clients, observable, observation):
-        super().__init__(storage_name, headers, clients, observable, observation)
+    def __init__(self, storage_name, headers, clients, observable, observation, config):
+        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp, application=None):
         super().accumulate_blueprint(bp)
@@ -289,12 +289,12 @@ class ChannelCubeMapping(ContinuumMapping):
         bp.add_attribute('Observation.target.name', 'FILNAM05')
 
 
-def mapping_factory(storage_name, headers, clients, observable, observation):
+def mapping_factory(storage_name, headers, clients, observable, observation, config):
     if storage_name.is_catalog:
-        return BlueprintMapping(storage_name, headers, clients, observable, observation)
+        return BlueprintMapping(storage_name, headers, clients, observable, observation, config)
     elif storage_name.is_quicklook:
-        return QuicklookMapping(storage_name, headers, clients, observable, observation)
+        return QuicklookMapping(storage_name, headers, clients, observable, observation, config)
     elif storage_name.is_channel_cube:
-        return ChannelCubeMapping(storage_name, headers, clients, observable, observation)
+        return ChannelCubeMapping(storage_name, headers, clients, observable, observation, config)
     else:
-        return ContinuumMapping(storage_name, headers, clients, observable, observation)
+        return ContinuumMapping(storage_name, headers, clients, observable, observation, config)

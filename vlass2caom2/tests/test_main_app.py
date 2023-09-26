@@ -243,6 +243,7 @@ def test_visit(header_mock, test_files, test_config):
         kwargs = {
             'storage_name': vlass_name,
             'metadata_reader': metadata_reader,
+            'config': test_config,
         }
         observation = fits2caom2_augmentation.visit(observation, **kwargs)
     try:

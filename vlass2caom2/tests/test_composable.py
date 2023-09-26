@@ -82,7 +82,7 @@ from caom2pipe.data_source_composable import StateRunnerMeta
 from caom2pipe.astro_composable import make_headers_from_file
 from caom2pipe import execute_composable as ec
 from caom2pipe.manage_composable import (
-    Config, Metrics, Observable, read_obs_from_file, Rejected, State, TaskType, write_obs_to_file
+    Config, make_datetime, Observable, read_obs_from_file, State, TaskType, write_obs_to_file
 )
 from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
@@ -90,21 +90,19 @@ from caom2 import SimpleObservation, Algorithm
 from vlass2caom2 import composable, VlassName
 from vlass2caom2.data_source import VlassPages
 from vlass2caom2.storage_name import QL_URL, SE_URL
-import test_data_source
-import test_main_app
 from vlass2caom2.tests.test_data_source import _write_state
 
-STATE_FILE = os.path.join(test_main_app.TEST_DATA_DIR, 'state.yml')
+import test_data_source
 
 
 @patch('caom2pipe.client_composable.ClientCollection')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run_by_builder(exec_mock, clients_mock, test_config):
+def test_run_by_builder(exec_mock, clients_mock, test_config, test_data_dir):
     # clients_mock - avoid initialization errors against real services
     exec_mock.return_value = 0
 
     getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    os.getcwd = Mock(return_value=test_data_dir)
 
     test_config.get_executors()
 
@@ -162,7 +160,7 @@ b = datetime(year=2019, month=4, day=25, hour=12, minute=34)
 @patch('caom2pipe.html_data_source.HttpDataSource._initialize_end_dt')
 @patch('caom2pipe.client_composable.ClientCollection')
 @patch('caom2pipe.execute_composable.OrganizeExecutes.do_one')
-def test_run_state(run_mock, client_mock, init_end_dt_mock, get_work_mock, test_config):
+def test_run_state(run_mock, client_mock, init_end_dt_mock, get_work_mock, test_config, test_data_dir):
 
     # the test case where one URL has updated files, and one URL does not
     # QuicklookPage has new files, ContinuumPage has no updates
@@ -171,15 +169,16 @@ def test_run_state(run_mock, client_mock, init_end_dt_mock, get_work_mock, test_
     run_mock.return_value = 0
     client_mock.data_client.info.side_effect = _mock_get_file_info
     getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    os.getcwd = Mock(return_value=test_data_dir)
 
     test_obs_id = 'VLASS2.2.T07t13.J083838-153000'
     test_product_id = 'VLASS2.2.T07t13.J083838-153000.quicklook'
     test_f_name = 'VLASS2.2.ql.T07t13.J083838-153000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits'
+    state_fqn = os.path.join(test_data_dir, 'state.yml')
     try:
         # execution
         test_config.data_sources = [QL_URL]
-        _write_state('24Apr2019 12:34', STATE_FILE, test_config)
+        _write_state('24Apr2019 12:34', state_fqn, test_config)
         test_config, test_metadata_reader, test_sources, test_name_builder, ignore_clients = composable._common_init()
         test_metadata_reader._client = client_mock.data_client
         test_result = run_composable.run_by_state(
@@ -301,16 +300,19 @@ zero_records_test_time = datetime(2019, 4, 27)
 @patch(
     'caom2pipe.html_data_source.HttpDataSource.end_dt', new_callable=PropertyMock(return_value=zero_records_test_time)
 )
-def test_run_state_zero_records(end_dt_mock, run_mock, init_end_mock, get_work_mock, client_mock, test_config):
+def test_run_state_zero_records(
+    end_dt_mock, run_mock, init_end_mock, get_work_mock, client_mock, test_config, test_data_dir
+):
 
     test_config.data_sources = [QL_URL]
-    _write_state(zero_records_test_time, STATE_FILE, test_config)
+    state_fqn = os.path.join(test_data_dir, 'state.yml')
+    _write_state(zero_records_test_time, state_fqn, test_config)
     # no records returned
     get_work_mock.return_value = deque()
     run_mock.return_value = 0
     client_mock.data_client.info.side_effect = _mock_get_file_info
     getcwd_orig = os.getcwd
-    os.getcwd = Mock(return_value=test_main_app.TEST_DATA_DIR)
+    os.getcwd = Mock(return_value=test_data_dir)
 
     try:
         # execution
@@ -354,9 +356,9 @@ info_count = 0
 @patch('caom2pipe.html_data_source.query_endpoint_session')
 @patch('caom2pipe.client_composable.ClientCollection')
 def test_run_state_store_ingest(
-    client_mock, query_mock, transferrer_mock, visit_mock, preview_mock, end_dt_mock, test_config
+    client_mock, query_mock, transferrer_mock, visit_mock, preview_mock, end_dt_mock, test_config, test_data_dir
 ):
-    test_dir = f'{test_main_app.TEST_DATA_DIR}/store_ingest_test'
+    test_dir = f'{test_data_dir}/store_ingest_test'
     transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
     client_mock.data_client.get_head.side_effect = _mock_headers_read
     client_mock.data_client.info.side_effect = lambda x: FileInfo(id=x, md5sum='abc')
@@ -473,7 +475,7 @@ def test_store(test_config):
 @patch('vlass2caom2.preview_augmentation.visit')
 @patch('vlass2caom2.position_bounds_augmentation.visit')
 @patch('caom2utils.data_util.get_local_headers_from_fits')
-def test_run_scrape_modify(headers_mock, footprint_mock, preview_mock, test_config, tmp_path):
+def test_run_scrape_modify(headers_mock, footprint_mock, preview_mock, test_config, test_data_dir, tmp_path):
     footprint_mock.side_effect = _mock_visit
     preview_mock.side_effect = _mock_visit
     headers_mock.side_effect = make_headers_from_file
@@ -488,13 +490,105 @@ def test_run_scrape_modify(headers_mock, footprint_mock, preview_mock, test_conf
         os.chdir(tmp_path)
         Config.write_to_file(test_config)
         _write_state('2202-01-01 01:01:01', test_config.state_fqn, test_config)
-        shutil.copy(os.path.join(test_main_app.TEST_DATA_DIR, f'{test_f_name}.header'), f'/tmp/{test_f_name}')
+        shutil.copy(os.path.join(test_data_dir, f'{test_f_name}.header'), f'/tmp/{test_f_name}')
 
         # execution
         test_result = composable._run()
         assert test_result == 0, 'wrong result'
     finally:
         os.chdir(getcwd_orig)
+
+
+@patch(
+    'caom2pipe.html_data_source.HttpDataSource.end_dt', new_callable=PropertyMock(return_value=datetime(2023, 6, 5, 13, 54))
+)
+@patch('vlass2caom2.preview_augmentation.visit')
+@patch('vlass2caom2.time_bounds_augmentation.visit')
+@patch('caom2pipe.transfer_composable.HttpTransfer')
+@patch('caom2pipe.html_data_source.query_endpoint_session')
+@patch('caom2pipe.client_composable.ClientCollection')
+def test_run_state_cross_timebox(
+    client_mock,
+    query_mock,
+    transferrer_mock,
+    visit_mock,
+    preview_mock,
+    end_dt_mock,
+    test_config,
+    test_data_dir,
+    tmp_path,
+):
+    # 30 records found, 28 records processed - the records found cross a time-box
+    transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
+    client_mock.data_client.get_head.side_effect = _mock_headers_read_1
+    client_mock.data_client.info.side_effect = lambda x: FileInfo(id=x, md5sum='abc')
+    visit_mock.side_effect = _mock_visit
+    preview_mock.side_effect = _mock_visit
+    test_config.data_sources = [SE_URL, QL_URL]
+    test_config.interval = 360
+    test_config.task_types = [TaskType.STORE, TaskType.INGEST, TaskType.MODIFY]
+    test_config.log_to_file = True
+    test_config.change_working_directory(tmp_path)
+    State.write_bookmark(test_config.state_fqn, QL_URL, make_datetime('2023-06-03 3:33'))
+    test_state = State(test_config.state_fqn, test_config.time_zone)
+    test_state.add_bookmark(QL_URL, make_datetime('2023-06-03 3:33'))
+    test_state.add_bookmark(SE_URL, make_datetime('2023-06-03 2:22'))
+    test_state.write_bookmarks(test_config.state_fqn)
+    query_mock.side_effect = _query_two_timeboxes_endpoint
+    client_mock.metadata_client.read.return_value = None
+    cwd_orig = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        Config.write_to_file(test_config)
+        test_config, test_metadata_reader, test_sources, test_name_builder, ignore_clients = composable._common_init()
+        test_metadata_reader._client = client_mock.data_client
+        test_result = run_composable.run_by_state(
+            config=test_config,
+            meta_visitors=composable.META_VISITORS,
+            data_visitors=composable.DATA_VISITORS,
+            name_builder=test_name_builder,
+            sources=test_sources,
+            store_transfer=transferrer_mock,
+            metadata_reader=test_metadata_reader,
+            clients=client_mock,
+        )
+        assert test_result is not None, 'expect result'
+        assert test_result == 0, 'expect success'
+        assert client_mock.metadata_client.read.called, 'read called'
+        # 4 => 4 files, 4 successes
+        assert client_mock.metadata_client.read.call_count == 4, 'read call count'
+        assert query_mock.called, 'query endpoint session calls'
+        # 9 = 1 * top page + 4 * epoch + 2 * tile + 2 * field
+        assert query_mock.call_count == 9, f'wrong endpoint session call count {query_mock.call_count}'
+        query_mock.assert_called_with(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/'
+            'VLASS3.1.ql.T32t02.J234412+853000.10.2048.v1/',
+            ANY,
+        ), 'query mock call args'
+        # make sure data is not being written to CADC storage :)
+        assert client_mock.data_client.put.called, 'put should be called'
+        assert client_mock.data_client.put.call_count == 4, 'wrong number of puts'
+        client_mock.data_client.put.assert_called_with(
+            f'{tmp_path}/VLASS3.1.T32t02.J234412+853000',
+            f'{test_config.scheme}:{test_config.collection}/'
+            'VLASS3.1.ql.T32t02.J234412+853000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits',
+        )
+
+        test_obs_output = read_obs_from_file(f'{tmp_path}/logs/VLASS3.1.T32t02.J234412+853000.xml')
+        found = False
+        for plane in test_obs_output.planes.values():
+            for artifact in plane.artifacts.values():
+                assert artifact.content_checksum.uri == 'md5:abc', 'artifact metadata not updated'
+                found = True
+        assert found, 'should have found the correct md5sum'
+
+        assert client_mock.data_client.get_head.called, 'get_head called'
+        assert client_mock.data_client.get_head.call_count == 4, 'get_head call count'
+        assert client_mock.data_client.info.called, 'info called'
+        assert client_mock.data_client.info.call_count == 4, 'info call count'
+    finally:
+        os.chdir(cwd_orig)
+    assert False
 
 
 def _mock_service_query():
@@ -575,5 +669,58 @@ def _mock_headers_read(ignore):
         raise exceptions.UnexpectedException(f'{ignore} UnexpectedException')
 
 
+def _mock_headers_read_1(ignore):
+    return _mock_x(None, None, None, None)
+
+
 def _mock_visit(obs, **kwargs):
     return obs
+
+
+def _query_two_timeboxes_endpoint(url, session, timeout=-1):
+    import logging
+    logging.error(url)
+    from os.path import join
+    from test_main_app import TEST_DATA_DIR
+
+    QL_INDEX = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'top_page.html'))
+    page_21 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'vlass_quicklook_VLASS2.1.html'))
+    page_31 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'vlass_quicklook_VLASS3.1.html'))
+    tile_21 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'tile_21.html'))
+    tile_31 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'tile_31.html'))
+    single_21 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'single_21.html'))
+    single_31 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'single_31.html'))
+
+    result = type('response', (), {})
+    result.text = None
+    result.close = lambda: None
+    result.raise_for_status = lambda: None
+
+    if (url == QL_URL):
+        with open(QL_INDEX) as f:
+            result.text = f.read()
+    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/':
+        with open(page_21) as f:
+            result.text = f.read()
+    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/':
+        with open(page_31) as f:
+            result.text = f.read()
+    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/':
+        with open(tile_21) as f:
+            result.text = f.read()
+    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/':
+        with open(tile_31) as f:
+            result.text = f.read()
+    elif url.startswith(
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1/'
+    ):
+        with open(single_21) as f:
+            result.text = f.read()
+    elif url.startswith(
+        'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/VLASS3.1.ql.T32t02.J234412+853000.10.2048.v1/'
+    ):
+        with open(single_31) as f:
+            result.text = f.read()
+    else:
+        result.text = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><html></html>'
+    return result
