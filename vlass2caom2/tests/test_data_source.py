@@ -231,7 +231,7 @@ def test_quicklook(query_endpoint_mock, test_config, tmp_path):
         test_templates = data_source.VlassHtmlTemplate(test_config)
         test_subject = data_source.VlassPages(test_config, storage_name.QL_URL, test_templates, session_mock)
         assert test_subject is not None, 'ctor failure'
-        test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()))
+        test_reporter = ExecutionReporter(test_config, Observable(test_config))
         test_subject.reporter = test_reporter
         test_subject.initialize_start_dt()
         test_subject.initialize_end_dt()
@@ -271,7 +271,7 @@ def test_continuum(query_endpoint_mock, test_config, tmp_path):
         test_templates = data_source.VlassHtmlTemplate(test_config)
         test_subject = data_source.VlassPages(test_config, storage_name.SE_URL, test_templates, session_mock)
         assert test_subject is not None, 'ctor failure'
-        test_reporter = ExecutionReporter(test_config, Observable(rejected=Mock(), metrics=Mock()))
+        test_reporter = ExecutionReporter(test_config, Observable(test_config))
         test_subject.reporter = test_reporter
         test_subject.initialize_start_dt()
         test_subject.initialize_end_dt()

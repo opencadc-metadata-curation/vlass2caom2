@@ -372,7 +372,7 @@ class WebLogMetadata:
                         latest_key = key
 
         if latest_key is None:
-            self._logger.warning(f'Found not observation like {obs_id}.')
+            self._logger.warning(f'Found no observation like {obs_id}.')
         else:
             obs_url = latest_key
             self._logger.debug(f'Querying {obs_url}')

@@ -82,8 +82,8 @@ __all__ = ['mapping_factory']
 
 
 class BlueprintMapping(cc.TelescopeMapping):
-    def __init__(self, storage_name, headers, clients):
-        super().__init__(storage_name, headers, clients)
+    def __init__(self, storage_name, headers, clients, observable, observation, config):
+        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp):
         """Configure the VLASS-specific ObsBlueprint for the CAOM model
@@ -94,7 +94,7 @@ class BlueprintMapping(cc.TelescopeMapping):
         # observation level
         bp.set('Observation.type', 'OBJECT')
         bp.set('Observation.target.type', 'field')
-        # Clare Chandler via JJK - 21-08-18
+        # Claire Chandler via JJK - 21-08-18
         bp.set('Observation.instrument.name', 'S-WIDAR')
         # From JJK - 27-08-18 - slack
         bp.set('Observation.proposal.title', 'VLA Sky Survey')
@@ -118,8 +118,8 @@ class BlueprintMapping(cc.TelescopeMapping):
 
 
 class QuicklookMapping(BlueprintMapping):
-    def __init__(self, storage_name, headers, clients):
-        super().__init__(storage_name, headers, clients)
+    def __init__(self, storage_name, headers, clients, observable, observation, config):
+        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp):
         """Configure the Quicklook ObsBlueprint for the CAOM model SpatialWCS."""
@@ -141,7 +141,7 @@ class QuicklookMapping(BlueprintMapping):
         bp.set('Plane.calibrationLevel', '2')
         bp.clear('Plane.dataProductType')
         bp.add_attribute('Plane.dataProductType', 'TYPE')
-        # Clare Chandler via slack - 28-08-18
+        # Claire Chandler via slack - 28-08-18
         bp.clear('Plane.provenance.name')
         bp.add_attribute('Plane.provenance.name', 'ORIGIN')
         bp.clear('Plane.provenance.runID')
@@ -167,7 +167,7 @@ class QuicklookMapping(BlueprintMapping):
         bp.set('Chunk.position.axis.function.cd21', 0.0)
         bp.add_attribute('Chunk.position.axis.function.cd22', 'CDELT2')
 
-        # Clare Chandler via JJK - 21-08-18
+        # Claire Chandler via JJK - 21-08-18
         bp.set('Chunk.energy.bandpassName', 'S-band')
 
     def get_position_resolution(self, ext):
@@ -175,7 +175,7 @@ class QuicklookMapping(BlueprintMapping):
         bmin = self._headers[ext].get('BMIN')
         # From
         # https://open-confluence.nrao.edu/pages/viewpage.action?pageId=13697486
-        # Clare Chandler via JJK - 21-08-18
+        # Claire Chandler via JJK - 21-08-18
         result = None
         if bmaj is not None and bmaj != 'INF' and bmin is not None and bmin != 'INF':
             result = 3600.0 * sqrt(bmaj * bmin)
@@ -198,13 +198,13 @@ class QuicklookMapping(BlueprintMapping):
             else:
                 return None
 
-    def update(self, observation, file_info):
+    def update(self, file_info):
         """Called to fill multiple CAOM model elements and/or attributes, must
         have this signature for import_module loading and execution.
         """
         self._logger.debug('Begin update.')
         try:
-            for plane in observation.planes.values():
+            for plane in self._observation.planes.values():
                 for artifact in plane.artifacts.values():
                     if artifact.uri != self._storage_name.file_uri:
                         continue
@@ -245,20 +245,20 @@ class QuicklookMapping(BlueprintMapping):
                         artifact.parts.pop(entry)
 
             self._logger.debug('Done update.')
-            return observation
+            return self._observation
         except mc.CadcException as e:
             tb = traceback.format_exc()
             self._logger.debug(tb)
             self._logger.error(e)
             self._logger.error(
-                f'Terminating ingestion for {observation.observation_id}'
+                f'Terminating ingestion for {self._observation.observation_id}'
             )
             return None
 
 
 class ContinuumMapping(QuicklookMapping):
-    def __init__(self, storage_name, headers, clients):
-        super().__init__(storage_name, headers, clients)
+    def __init__(self, storage_name, headers, clients, observable, observation, config):
+        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp, application=None):
         super().accumulate_blueprint(bp)
@@ -280,8 +280,8 @@ class ContinuumMapping(QuicklookMapping):
 
 
 class ChannelCubeMapping(ContinuumMapping):
-    def __init__(self, storage_name, headers, clients):
-        super().__init__(storage_name, headers, clients)
+    def __init__(self, storage_name, headers, clients, observable, observation, config):
+        super().__init__(storage_name, headers, clients, observable, observation, config)
 
     def accumulate_blueprint(self, bp, application=None):
         super().accumulate_blueprint(bp)
@@ -289,12 +289,12 @@ class ChannelCubeMapping(ContinuumMapping):
         bp.add_attribute('Observation.target.name', 'FILNAM05')
 
 
-def mapping_factory(storage_name, headers, clients):
+def mapping_factory(storage_name, headers, clients, observable, observation, config):
     if storage_name.is_catalog:
-        return BlueprintMapping(storage_name, headers, clients)
+        return BlueprintMapping(storage_name, headers, clients, observable, observation, config)
     elif storage_name.is_quicklook:
-        return QuicklookMapping(storage_name, headers, clients)
+        return QuicklookMapping(storage_name, headers, clients, observable, observation, config)
     elif storage_name.is_channel_cube:
-        return ChannelCubeMapping(storage_name, headers, clients)
+        return ChannelCubeMapping(storage_name, headers, clients, observable, observation, config)
     else:
-        return ContinuumMapping(storage_name, headers, clients)
+        return ContinuumMapping(storage_name, headers, clients, observable, observation, config)

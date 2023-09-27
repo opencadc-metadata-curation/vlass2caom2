@@ -68,26 +68,22 @@
 #
 
 from caom2pipe.caom_composable import get_all_artifact_keys
-from caom2pipe.manage_composable import (
-    Metrics, Observable, read_obs_from_file, Rejected, StorageName
-)
+from caom2pipe.manage_composable import Observable, read_obs_from_file
 from vlass2caom2 import preview_augmentation
 from vlass2caom2.storage_name import VlassName
 
 from mock import patch
-from test_main_app import TEST_DATA_DIR
 
 
 @patch('cadcutils.net.ws.WsCapabilities.get_access_url')
-def test_preview_augmentation(access_mock, test_config):
+def test_preview_augmentation(access_mock, test_data_dir, test_config):
     access_mock.return_value = 'https://localhost'
-    test_fqn = f'{TEST_DATA_DIR}/preview_augmentation_start.xml'
+    test_fqn = f'{test_data_dir}/preview_augmentation_start.xml'
     test_science_f_name = 'VLASS1.1.ql.T01t01.J000228-363000.10.2048.v1.I.iter1.image.pbcor.' 'tt0.subim.fits'
     test_storage_name = VlassName(test_science_f_name)
     test_obs = read_obs_from_file(test_fqn)
-    test_rejected = Rejected(f'{TEST_DATA_DIR}/rejected.yml')
-    test_metrics = Metrics(test_config)
-    test_observable = Observable(test_rejected, test_metrics)
+    test_config.change_working_directory(test_data_dir)
+    test_observable = Observable(test_config)
     kwargs = {
         'stream': None,
         'observable': test_observable,
