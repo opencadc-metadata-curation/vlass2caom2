@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -67,8 +66,6 @@
 # ***********************************************************************
 #
 
-import traceback
-
 from math import sqrt
 
 from caom2 import CalibrationLevel, DataProductType, ProductType
@@ -115,6 +112,40 @@ class BlueprintMapping(cc.TelescopeMapping):
         caom_name = mc.CaomName(self._storage_name.file_uri)
         bits = caom_name.file_name.split('.')
         return f'{bits[0]}.{bits[1]}'
+
+    def _update_artifact(self, artifact):
+        delete_these_parts = []
+        for part in artifact.parts.values():
+            delete_these_chunks = []
+            for index, chunk in enumerate(part.chunks):
+                if chunk.position is not None:
+                    chunk.position.resolution = self.get_position_resolution(0)
+                if chunk.energy is not None:
+                    # A value of None per Chris, 2018-07-26
+                    # Set the value to None here, because the
+                    # blueprint is implemented to not set WCS
+                    # information to None
+                    chunk.energy.restfrq = None
+
+                if (
+                    chunk.naxis == 2
+                    and chunk.position is None
+                    and chunk.energy is None
+                    and chunk.polarization is None
+                ):
+                    # rms has a second HDU with BINTABLE extensions, and no WCS description (?)
+                    delete_these_chunks.append(index)
+
+            for entry in delete_these_chunks:
+                self._logger.debug(f'Removing chunk index {entry} because it has no WCS.')
+                part.chunks.pop(entry)
+
+            if len(part.chunks) == 0:
+                delete_these_parts.append(part.name)
+
+        for entry in delete_these_parts:
+            self._logger.debug(f'Removing part {entry} because it has no chunks.')
+            artifact.parts.pop(entry)
 
 
 class QuicklookMapping(BlueprintMapping):
@@ -197,63 +228,6 @@ class QuicklookMapping(BlueprintMapping):
                 return result.mjd
             else:
                 return None
-
-    def update(self, file_info):
-        """Called to fill multiple CAOM model elements and/or attributes, must
-        have this signature for import_module loading and execution.
-        """
-        self._logger.debug('Begin update.')
-        try:
-            for plane in self._observation.planes.values():
-                for artifact in plane.artifacts.values():
-                    if artifact.uri != self._storage_name.file_uri:
-                        continue
-                    update_artifact_meta(artifact, file_info)
-                    delete_these_parts = []
-                    for part in artifact.parts.values():
-                        delete_these_chunks = []
-                        for index, chunk in enumerate(part.chunks):
-                            if chunk.position is not None:
-                                chunk.position.resolution = (
-                                    self.get_position_resolution(0)
-                                )
-                            if chunk.energy is not None:
-                                # A value of None per Chris, 2018-07-26
-                                # Set the value to None here, because the
-                                # blueprint is implemented to not set WCS
-                                # information to None
-                                chunk.energy.restfrq = None
-
-                            if (
-                                chunk.naxis == 2
-                                and chunk.position is None
-                                and chunk.energy is None
-                                and chunk.polarization is None
-                            ):
-                                # rms has a second HDU with BINTABLE extensions, and no WCS description (?)
-                                delete_these_chunks.append(index)
-
-                        for entry in delete_these_chunks:
-                            self._logger.debug(f'Removing chunk index {entry} because it has no WCS.')
-                            part.chunks.pop(entry)
-
-                        if len(part.chunks) == 0:
-                            delete_these_parts.append(part.name)
-
-                    for entry in delete_these_parts:
-                        self._logger.debug(f'Removing part {entry} because it has no chunks.')
-                        artifact.parts.pop(entry)
-
-            self._logger.debug('Done update.')
-            return self._observation
-        except mc.CadcException as e:
-            tb = traceback.format_exc()
-            self._logger.debug(tb)
-            self._logger.error(e)
-            self._logger.error(
-                f'Terminating ingestion for {self._observation.observation_id}'
-            )
-            return None
 
 
 class ContinuumMapping(QuicklookMapping):
