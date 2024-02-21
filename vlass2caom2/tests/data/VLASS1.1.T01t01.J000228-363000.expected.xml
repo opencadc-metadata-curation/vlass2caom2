@@ -14,7 +14,7 @@
     <caom2:title>VLA Sky Survey</caom2:title>
   </caom2:proposal>
   <caom2:target>
-    <caom2:name>T01t01</caom2:name>
+    <caom2:name>J000228-363000</caom2:name>
     <caom2:type>field</caom2:type>
   </caom2:target>
   <caom2:telescope>

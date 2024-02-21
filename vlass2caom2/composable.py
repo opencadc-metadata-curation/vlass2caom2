@@ -78,7 +78,7 @@ from caom2pipe import transfer_composable as tc
 from vlass2caom2 import time_bounds_augmentation, quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
 from vlass2caom2 import data_source, reader, storage_name
-from vlass2caom2 import preview_augmentation, fits2caom2_augmentation
+from vlass2caom2 import catalog_augmentation, fits2caom2_augmentation, preview_augmentation
 
 
 META_VISITORS = [
@@ -87,7 +87,9 @@ META_VISITORS = [
     quality_augmentation,
     cleanup_augmentation,
 ]
-DATA_VISITORS = [position_bounds_augmentation, preview_augmentation]
+# cleanup is in both META and DATA because it also needs to be run after preview generation,
+# to clean up previews that are no longer required
+DATA_VISITORS = [catalog_augmentation, position_bounds_augmentation, preview_augmentation, cleanup_augmentation]
 
 
 def _common_init():
