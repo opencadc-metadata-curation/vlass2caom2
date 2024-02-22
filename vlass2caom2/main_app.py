@@ -67,7 +67,6 @@
 #
 
 import logging
-from datetime import datetime, timezone
 from math import sqrt
 
 from caom2 import CalibrationLevel, DataProductType, ObservationURI, PlaneURI, ProductType, TypedSet
@@ -270,6 +269,7 @@ class Catalog(BlueprintMapping):
     def __init__(self, storage_name, headers, clients, observable, observation, config):
         super().__init__(storage_name, headers, clients, observable, observation, config)
         self._config = config
+        self._provenance_storage_name = None
 
     def accumulate_blueprint(self, bp):
         """
@@ -297,6 +297,7 @@ class Catalog(BlueprintMapping):
         # VLASS data is public
         bp.set('Plane.dataRelease', 'get_provenance_last_executed()')
         bp.set('Plane.metaRelease', 'get_provenance_last_executed()')
+        bp.set('Artifact.productType', ProductType.SCIENCE)
 
     def get_provenance_inputs(self, ext):
         # 'Gaussian list for VLASS2.1.se.T13t10.J063820+113000.06.2048.v1.I.iter3.image.pbcor.tt0.subim.fits'
@@ -307,12 +308,12 @@ class Catalog(BlueprintMapping):
                 if 'Gaussian list for' in line:
                     temp = line.split()[-1]
                     if temp is not None:
-                        temp_storage_name = VlassName(temp)
+                        self._provenance_storage_name = VlassName(temp)
                         obs_member_uri_str = mc.CaomName.make_obs_uri_from_obs_id(
-                            self._storage_name.collection, temp_storage_name.obs_id
+                            self._storage_name.collection, self._provenance_storage_name.obs_id
                         )
                         obs_member_uri = ObservationURI(obs_member_uri_str)
-                        plane_uri = PlaneURI.get_plane_uri(obs_member_uri, temp_storage_name.product_id)
+                        plane_uri = PlaneURI.get_plane_uri(obs_member_uri, self._provenance_storage_name.product_id)
                         plane_inputs.add(plane_uri)
                         self._logger.debug(f'Adding PlaneURI {plane_uri}')
                     break
@@ -351,6 +352,25 @@ class Catalog(BlueprintMapping):
                     result = f'{bits[3]} {bits[4]} {bits[5]} {bits[6]}'
                     break
         return result
+
+    def _update_artifact(self, artifact):
+        for plane in self._observation.planes.values():
+            if plane.product_id == self._provenance_storage_name.product_id:
+                for provenance_artifact in plane.artifacts.values():
+                    if provenance_artifact.uri == self._provenance_storage_name.file_uri:
+                        for part in provenance_artifact.parts.values():
+                            copied_part = cc.copy_part(part)
+                            artifact.parts.add(copied_part)
+                            for chunk in part.chunks:
+                                copied_chunk = cc.copy_chunk(chunk)
+                                copied_part.chunks.append(copied_chunk)
+                                # no cutouts to be done from the CSV file, so null out those bits
+                                copied_chunk.naxis = None
+                                copied_chunk.polarization_axis = None
+                                copied_chunk.energy_axis = None
+                                copied_chunk.position_axis_1 = None
+                                copied_chunk.position_axis_2 = None
+                                copied_chunk.time_axis = None
 
 
 def mapping_factory(storage_name, headers, clients, observable, observation, config):

@@ -67,7 +67,7 @@
 #
 
 from caom2pipe import astro_composable as ac
-from caom2pipe.manage_composable import Features, read_obs_from_file, StorageName, write_obs_to_file
+from caom2pipe.manage_composable import read_obs_from_file, write_obs_to_file
 from caom2pipe import reader_composable as rdc
 from vlass2caom2 import catalog_augmentation, fits2caom2_augmentation, storage_name
 from caom2.diff import get_differences
@@ -243,7 +243,9 @@ def test_visit(header_mock, test_files, test_config, test_data_dir):
         vlass_name = storage_name.VlassName(entry=temp_fqn)
         metadata_reader = rdc.FileMetadataReader()
         metadata_reader.set(vlass_name)
-        file_type = 'application/fits'
+        file_type = 'text/csv'
+        if '.fits' in temp_fqn:
+            file_type = 'application/fits'
         metadata_reader.file_info[vlass_name.file_uri].file_type = file_type
         kwargs = {
             'storage_name': vlass_name,

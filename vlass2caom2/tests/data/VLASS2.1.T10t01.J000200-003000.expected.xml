@@ -597,11 +597,87 @@
       <caom2:artifacts>
         <caom2:artifact caom2:id="84c7ca12-ba31-4655-a6ea-6055e529453c" caom2:metaProducer="vlass2caom2/0.11">
           <caom2:uri>nrao:VLASS/VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.catalog.csv</caom2:uri>
-          <caom2:productType>auxiliary</caom2:productType>
+          <caom2:productType>science</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
-          <caom2:contentType>application/fits</caom2:contentType>
+          <caom2:contentType>text/csv</caom2:contentType>
           <caom2:contentLength>4635</caom2:contentLength>
-          <caom2:parts/>
+          <caom2:parts>
+            <caom2:part caom2:id="366cf143-fb7d-4fc8-9dff-02894ab29b61">
+              <caom2:name>0</caom2:name>
+              <caom2:chunks>
+                <caom2:chunk caom2:id="39f5a7e2-74c1-42ac-9bea-616f8ae5d202">
+                  <caom2:position>
+                    <caom2:axis>
+                      <caom2:axis1>
+                        <caom2:ctype>RA---SIN</caom2:ctype>
+                        <caom2:cunit>deg</caom2:cunit>
+                      </caom2:axis1>
+                      <caom2:axis2>
+                        <caom2:ctype>DEC--SIN</caom2:ctype>
+                        <caom2:cunit>deg</caom2:cunit>
+                      </caom2:axis2>
+                      <caom2:function>
+                        <caom2:dimension>
+                          <caom2:naxis1>6202</caom2:naxis1>
+                          <caom2:naxis2>6202</caom2:naxis2>
+                        </caom2:dimension>
+                        <caom2:refCoord>
+                          <caom2:coord1>
+                            <caom2:pix>3101.0</caom2:pix>
+                            <caom2:val>0.499993379290412</caom2:val>
+                          </caom2:coord1>
+                          <caom2:coord2>
+                            <caom2:pix>3101.0</caom2:pix>
+                            <caom2:val>-0.500047762078505</caom2:val>
+                          </caom2:coord2>
+                        </caom2:refCoord>
+                        <caom2:cd11>-0.0001666666666667</caom2:cd11>
+                        <caom2:cd12>0.0</caom2:cd12>
+                        <caom2:cd21>0.0</caom2:cd21>
+                        <caom2:cd22>0.0001666666666667</caom2:cd22>
+                      </caom2:function>
+                    </caom2:axis>
+                    <caom2:coordsys>ICRS</caom2:coordsys>
+                    <caom2:equinox>2000.0</caom2:equinox>
+                    <caom2:resolution>2.470016376213491</caom2:resolution>
+                  </caom2:position>
+                  <caom2:energy>
+                    <caom2:axis>
+                      <caom2:axis>
+                        <caom2:ctype>FREQ</caom2:ctype>
+                        <caom2:cunit>Hz</caom2:cunit>
+                      </caom2:axis>
+                      <caom2:function>
+                        <caom2:naxis>1</caom2:naxis>
+                        <caom2:delta>2072349616.162</caom2:delta>
+                        <caom2:refCoord>
+                          <caom2:pix>1.0</caom2:pix>
+                          <caom2:val>3000000000.0</caom2:val>
+                        </caom2:refCoord>
+                      </caom2:function>
+                    </caom2:axis>
+                    <caom2:specsys>LSRK</caom2:specsys>
+                    <caom2:bandpassName>S-band</caom2:bandpassName>
+                  </caom2:energy>
+                  <caom2:polarization>
+                    <caom2:axis>
+                      <caom2:axis>
+                        <caom2:ctype>STOKES</caom2:ctype>
+                      </caom2:axis>
+                      <caom2:function>
+                        <caom2:naxis>1</caom2:naxis>
+                        <caom2:delta>1.0</caom2:delta>
+                        <caom2:refCoord>
+                          <caom2:pix>1.0</caom2:pix>
+                          <caom2:val>1.0</caom2:val>
+                        </caom2:refCoord>
+                      </caom2:function>
+                    </caom2:axis>
+                  </caom2:polarization>
+                </caom2:chunk>
+              </caom2:chunks>
+            </caom2:part>
+          </caom2:parts>
         </caom2:artifact>
       </caom2:artifacts>
     </caom2:plane>
