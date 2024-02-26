@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -74,7 +73,7 @@ import shutil
 
 from collections import deque
 from datetime import datetime, timedelta
-from unittest.mock import ANY, patch, Mock, PropertyMock
+from unittest.mock import ANY, call, patch, Mock, PropertyMock
 
 from cadcutils import exceptions
 from cadcdata import FileInfo
@@ -82,11 +81,10 @@ from caom2pipe.data_source_composable import StateRunnerMeta
 from caom2pipe.astro_composable import make_headers_from_file
 from caom2pipe import execute_composable as ec
 from caom2pipe.manage_composable import (
-    Config, make_datetime, Observable, read_obs_from_file, State, TaskType, write_obs_to_file
+    Config, make_datetime, Observable, read_obs_from_file, State, TaskType
 )
 from caom2pipe import run_composable, transfer_composable
 from caom2utils import get_gen_proc_arg_parser
-from caom2 import SimpleObservation, Algorithm
 from vlass2caom2 import composable, VlassName
 from vlass2caom2.data_source import VlassPages
 from vlass2caom2.storage_name import QL_URL, SE_URL
@@ -519,6 +517,50 @@ def test_run_state_cross_timebox(
     tmp_path,
 ):
     # 30 records found, 28 records processed - the records found cross a time-box
+
+    def _query_two_timeboxes_endpoint(url, session, timeout=-1):
+        QL_INDEX = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'top_page.html'))
+        page_21 = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'vlass_quicklook_VLASS2.1.html'))
+        page_31 = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'vlass_quicklook_VLASS3.1.html'))
+        tile_21 = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'tile_21.html'))
+        tile_31 = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'tile_31.html'))
+        single_21 = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'single_21.html'))
+        single_31 = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'single_31.html'))
+
+        result = type('response', (), {})
+        result.text = None
+        result.close = lambda: None
+        result.raise_for_status = lambda: None
+
+        if (url == QL_URL):
+            with open(QL_INDEX) as f:
+                result.text = f.read()
+        elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/':
+            with open(page_21) as f:
+                result.text = f.read()
+        elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/':
+            with open(page_31) as f:
+                result.text = f.read()
+        elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/':
+            with open(tile_21) as f:
+                result.text = f.read()
+        elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/':
+            with open(tile_31) as f:
+                result.text = f.read()
+        elif url.startswith(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1/'
+        ):
+            with open(single_21) as f:
+                result.text = f.read()
+        elif url.startswith(
+            'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/VLASS3.1.ql.T32t02.J234412+853000.10.2048.v1/'
+        ):
+            with open(single_31) as f:
+                result.text = f.read()
+        else:
+            result.text = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><html></html>'
+        return result
+
     transferrer_mock.return_value.get.side_effect = _mock_retrieve_file
     client_mock.data_client.get_head.side_effect = _mock_headers_read_1
     client_mock.data_client.info.side_effect = lambda x: FileInfo(id=x, md5sum='abc')
@@ -556,15 +598,34 @@ def test_run_state_cross_timebox(
         assert test_result == 0, 'expect success'
         assert client_mock.metadata_client.read.called, 'read called'
         # 4 => 4 files, 4 successes
-        assert client_mock.metadata_client.read.call_count == 4, 'read call count'
+        assert (
+            client_mock.metadata_client.read.call_count == 4
+        ), f'read call count {client_mock.metadata_client.read.call_count}'
         assert query_mock.called, 'query endpoint session calls'
-        # 9 = 1 * top page + 4 * epoch + 2 * tile + 2 * field
-        assert query_mock.call_count == 9, f'wrong endpoint session call count {query_mock.call_count}'
-        query_mock.assert_called_with(
-            'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/'
-            'VLASS3.1.ql.T32t02.J234412+853000.10.2048.v1/',
-            ANY,
-        ), 'query mock call args'
+        # 10 = 2 * top page + 4 * epoch + 2 * tile + 2 * field
+        # top page == 2 entries in test_config.data_sources
+        assert query_mock.call_count == 10, f'wrong endpoint session call count {query_mock.call_count}'
+        query_mock_calls = [
+            call('https://archive-new.nrao.edu/vlass/quicklook/', ANY),
+            call('https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1v2/', ANY),
+            call('https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/', ANY),
+            call('https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/', ANY),
+            call('https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/', ANY),
+            call(
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/'
+                'VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1/',
+                ANY,
+            ),
+            call('https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/', ANY),
+            call('https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/', ANY),
+            call(
+                'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/'
+                'VLASS3.1.ql.T32t02.J234412+853000.10.2048.v1/',
+                ANY,
+            ),
+            call('https://archive-new.nrao.edu/vlass/se_continuum_imaging/', ANY),
+        ]
+        query_mock.assert_has_calls(query_mock_calls, any_order=True), 'query mock call args'
         # make sure data is not being written to CADC storage :)
         assert client_mock.data_client.put.called, 'put should be called'
         assert client_mock.data_client.put.call_count == 4, 'wrong number of puts'
@@ -588,42 +649,11 @@ def test_run_state_cross_timebox(
         assert client_mock.data_client.info.call_count == 4, 'info call count'
     finally:
         os.chdir(cwd_orig)
-    assert False
-
-
-def _mock_service_query():
-    return None
 
 
 def _mock_get_file_info(arg1, arg2):
     # arg2 is the file name
     return FileInfo(id=arg2, md5sum='abc')
-
-
-def _mock_get_file_info_1(arg2):
-    global info_count
-    if info_count == 1:
-        info_count = 0
-        return _mock_get_file_info(None, arg2)
-    else:
-        info_count = 1
-        return None
-
-
-def _mock_get_file():
-    return None
-
-
-def _mock_repo_read(arg1, arg2):
-    return None
-
-
-def _mock_repo_update():
-    assert True
-
-
-def _mock_get_cadc_headers(archive, file_id):
-    return {'md5sum': 'md5:abc123'}
 
 
 def _mock_x(archive, file_id, b, fhead):
@@ -642,16 +672,6 @@ END
     extensions = [e + delim for e in x.split(delim) if e.strip()]
     headers = [fits.Header.fromstring(e, sep='\n') for e in extensions]
     return headers
-
-
-def _write_obs_mock():
-    args = get_gen_proc_arg_parser().parse_args()
-    obs = SimpleObservation(
-        collection=args.observation[0],
-        observation_id=args.observation[1],
-        algorithm=Algorithm(name='exposure'),
-    )
-    write_obs_to_file(obs, args.out_obs_xml)
 
 
 def _mock_retrieve_file(ignore, local_fqn):
@@ -675,52 +695,3 @@ def _mock_headers_read_1(ignore):
 
 def _mock_visit(obs, **kwargs):
     return obs
-
-
-def _query_two_timeboxes_endpoint(url, session, timeout=-1):
-    import logging
-    logging.error(url)
-    from os.path import join
-    from test_main_app import TEST_DATA_DIR
-
-    QL_INDEX = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'top_page.html'))
-    page_21 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'vlass_quicklook_VLASS2.1.html'))
-    page_31 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'vlass_quicklook_VLASS3.1.html'))
-    tile_21 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'tile_21.html'))
-    tile_31 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'tile_31.html'))
-    single_21 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'single_21.html'))
-    single_31 = join(TEST_DATA_DIR, join('two_timebox_endpoint', 'single_31.html'))
-
-    result = type('response', (), {})
-    result.text = None
-    result.close = lambda: None
-    result.raise_for_status = lambda: None
-
-    if (url == QL_URL):
-        with open(QL_INDEX) as f:
-            result.text = f.read()
-    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/':
-        with open(page_21) as f:
-            result.text = f.read()
-    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/':
-        with open(page_31) as f:
-            result.text = f.read()
-    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/':
-        with open(tile_21) as f:
-            result.text = f.read()
-    elif url == 'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/':
-        with open(tile_31) as f:
-            result.text = f.read()
-    elif url.startswith(
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1/'
-    ):
-        with open(single_21) as f:
-            result.text = f.read()
-    elif url.startswith(
-        'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/VLASS3.1.ql.T32t02.J234412+853000.10.2048.v1/'
-    ):
-        with open(single_31) as f:
-            result.text = f.read()
-    else:
-        result.text = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><html></html>'
-    return result

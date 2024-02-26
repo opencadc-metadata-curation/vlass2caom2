@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -147,3 +146,14 @@ def test_single_epoch_cube_name(test_config):
     assert test_result.product_id == f'{test_obs_id}.channel_cube', 'product id'
     assert test_result.file_uri == f'{test_config.scheme}:{test_config.collection}/{test_f_name}', 'uri'
     assert test_result.prev_uri == f'{test_config.preview_scheme}:{test_config.collection}/{test_prev_name}', 'prev'
+
+
+def test_catalog(test_config):
+    test_f_name = 'VLASS2.1.se.T13t10.J063820+113000.06.2048.v1.I.catalog.csv'
+    test_obs_id = 'VLASS2.1.T13t10.J063820+113000'
+    test_subject = nbc.EntryBuilder(VlassName)
+    test_result = test_subject.build(test_f_name)
+    assert test_result is not None, 'expected a result'
+    assert test_result.obs_id == test_obs_id, 'obs id'
+    assert test_result.product_id == f'{test_obs_id}.continuum_catalog', 'product id'
+    assert test_result.file_uri == f'{test_config.scheme}:{test_config.collection}/{test_f_name}', 'uri'

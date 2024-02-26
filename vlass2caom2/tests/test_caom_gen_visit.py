@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -68,9 +67,9 @@
 #
 
 from caom2pipe import astro_composable as ac
-from caom2pipe.manage_composable import Features, read_obs_from_file, StorageName, write_obs_to_file
+from caom2pipe.manage_composable import read_obs_from_file, write_obs_to_file
 from caom2pipe import reader_composable as rdc
-from vlass2caom2 import storage_name, fits2caom2_augmentation
+from vlass2caom2 import catalog_augmentation, fits2caom2_augmentation, storage_name
 from caom2.diff import get_differences
 
 import os
@@ -189,6 +188,10 @@ gw = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw15.IQU.iter3.image.pbcor.t
 gx = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw9.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
 gy = 'VLASS2.1.cc.T10t29.J184200-033000.06.2048.v1.spw15.IQU.iter3.image.pbcor.tt0.subim.com.fits.header'
 
+la = 'VLASS2.1.se.T13t10.J063820+113000.06.2048.v1.I.iter3.alpha.error.subim.fits.header'
+lb = 'VLASS2.1.ql.T13t10.J063820+113000.10.2048.v1.I.iter1.image.pbcor.tt0.subim.fits.header'
+lc = 'VLASS2.1.se.T13t10.J063820+113000.06.2048.v1.I.catalog.csv'
+
 obs_id_a = 'VLASS1.1.T01t01.J000228-363000'
 obs_id_c = 'VLASS1.1.T10t12.J075402-033000'
 obs_id_e = 'VLASS1.1.T29t05.J110448+763000'
@@ -198,6 +201,7 @@ obs_id_r = 'VLASS1.1.T06t24.J152614-163000'
 obs_id_s = 'VLASS2.1.T10t02.J005000-023000'
 obs_id_d = 'VLASS2.1.T10t35.J230600-003000'
 obs_id_g = 'VLASS2.1.T10t29.J184200-033000'
+obs_id_l = 'VLASS2.1.T13t10.J063820+113000'
 
 test_obs = [
     [obs_id_a, a, b],
@@ -212,12 +216,13 @@ test_obs = [
     [obs_id_d, da, db, dc, dd, de, df, dg, dh, di, dj, dk, dl, dm, dn, do, dp, dq, dr, ds, dt, du, dv, dw, dx],
     # no minmaxrej file in the 'g' list
     [obs_id_g, gb, gc, gd, ge, gf, gg, gh, gi, gj, gk, gl, gm, gn, go, gp, gq, gr, gs, gt, gu, gv, gw, gx],
+    [obs_id_l, la, lb, lc],
 ]
 
 
 @pytest.mark.parametrize('test_files', test_obs)
 @patch('caom2utils.data_util.get_local_headers_from_fits')
-def test_visit(header_mock, test_files, test_config):
+def test_visit(header_mock, test_files, test_config, test_data_dir):
     obs_id = test_files[0]
     header_mock.side_effect = ac.make_headers_from_file
     expected_fqn = f'{TEST_DATA_DIR}/{obs_id}.expected.xml'
@@ -228,7 +233,7 @@ def test_visit(header_mock, test_files, test_config):
     actual_fqn = expected_fqn.replace('expected.xml', 'actual.xml')
     if os.path.exists(actual_fqn):
         os.unlink(actual_fqn)
-
+    test_config.working_directory = test_data_dir
     observation = None
     if os.path.exists(in_fqn):
         observation = read_obs_from_file(in_fqn)
@@ -238,14 +243,19 @@ def test_visit(header_mock, test_files, test_config):
         vlass_name = storage_name.VlassName(entry=temp_fqn)
         metadata_reader = rdc.FileMetadataReader()
         metadata_reader.set(vlass_name)
-        file_type = 'application/fits'
+        file_type = 'text/csv'
+        if '.fits' in temp_fqn:
+            file_type = 'application/fits'
         metadata_reader.file_info[vlass_name.file_uri].file_type = file_type
         kwargs = {
             'storage_name': vlass_name,
             'metadata_reader': metadata_reader,
             'config': test_config,
         }
-        observation = fits2caom2_augmentation.visit(observation, **kwargs)
+        if vlass_name.is_catalog:
+            observation = catalog_augmentation.visit(observation, **kwargs)
+        else:
+            observation = fits2caom2_augmentation.visit(observation, **kwargs)
     try:
         if expected is None:
             write_obs_to_file(observation, actual_fqn)

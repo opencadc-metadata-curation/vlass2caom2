@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -106,6 +105,7 @@ class VlassName(mc.StorageName):
         super().__init__(file_name=file_name, source_names=[entry])
         self.set_root_url()
         self.set_version()
+        self.set_run_id()
 
     @property
     def epoch(self):
@@ -123,6 +123,10 @@ class VlassName(mc.StorageName):
     @property
     def root_url(self):
         return self._root_url
+
+    @property
+    def run_id(self):
+        return self._run_id
 
     @property
     def thumb(self):
@@ -147,6 +151,10 @@ class VlassName(mc.StorageName):
     @property
     def is_quicklook(self):
         return '.ql.' in self._file_name
+
+    @property
+    def is_single_epoch(self):
+        return '.se.' in self._file_name
 
     def is_valid(self):
         return True
@@ -174,12 +182,18 @@ class VlassName(mc.StorageName):
         elif self.is_channel_cube:
             self._product_id = f'{self._obs_id}.channel_cube'
         else:
-            self._product_id = f'{self._obs_id}.continuum_imaging'
+            if self.is_catalog:
+                self._product_id = f'{self._obs_id}.continuum_catalog'
+            else:
+                self._product_id = f'{self._obs_id}.continuum_imaging'
 
     def set_root_url(self):
         self._root_url = SE_URL
         if self.is_quicklook:
             self._root_url = QL_URL
+
+    def set_run_id(self):
+        self._run_id = self._file_name.split('.')[7]
 
     def set_version(self):
         """The parameter may be a URI, or just the file name."""

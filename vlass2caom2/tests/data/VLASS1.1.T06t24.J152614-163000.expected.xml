@@ -14,7 +14,7 @@
     <caom2:title>VLA Sky Survey</caom2:title>
   </caom2:proposal>
   <caom2:target>
-    <caom2:name>T06t24</caom2:name>
+    <caom2:name>J152614-163000</caom2:name>
     <caom2:type>field</caom2:type>
   </caom2:target>
   <caom2:telescope>

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -70,7 +69,7 @@
 import os
 import pandas as pd
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from treelib import Tree
 
 from caom2 import SimpleObservation, Algorithm
@@ -79,7 +78,6 @@ from vlass2caom2 import data_source, storage_name
 from vlass2caom2.validator import get_file_url_list_max_versions, NRAO_STATE, VlassValidator
 
 from mock import patch, Mock
-import test_main_app
 
 
 @patch('caom2pipe.validator_composable.query_tap_pandas')
@@ -133,7 +131,7 @@ def test_validator(all_urls, tap_mock, test_config, tmp_path):
         with open(test_config.proxy_fqn, 'w') as f:
             f.write('proxy content')
         # need the state.yml file for the DataSource specializations, timestamp gets over-ridden
-        mc.State.write_bookmark(test_config.state_fqn, test_config.bookmark, datetime.utcnow())
+        mc.State.write_bookmark(test_config.state_fqn, test_config.bookmark, datetime.now(tz=timezone.utc))
 
         test_subject = VlassValidator()
         test_listing_fqn = f'{test_subject._config.working_directory}/not_at_cadc.txt'
@@ -196,9 +194,9 @@ def test_validator(all_urls, tap_mock, test_config, tmp_path):
         os.chdir(orig_cwd)
 
 
-def test_multiple_versions(test_config, tmp_path):
+def test_multiple_versions(test_data_dir, test_config, tmp_path):
     test_config.change_working_directory(tmp_path)
-    with open(f'{test_main_app.TEST_DATA_DIR}/multiple_versions_tile.html', 'r') as f:
+    with open(f'{test_data_dir}/multiple_versions_tile.html', 'r') as f:
         test_string = f.read()
     test_start_date = mc.make_datetime('2018-01-01 00:00')
     mc.State.write_bookmark(test_config.state_fqn, storage_name.QL_URL, test_start_date)
