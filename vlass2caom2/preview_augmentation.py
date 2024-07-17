@@ -96,10 +96,11 @@ class VlassPreview(mc.PreviewVisitor):
         if '.fits' not in self._science_file:
             # '.csv' => no previews
             return 0
-        if '.rms.' in self._science_file or '.alpha' in self._science_file:
+        if '.rms.' in self._science_file or '.alpha' in self._science_file or '.tt1' in self._science_file:
             # '.rms.' => there's two files (artifacts) per plane, the non-rms one to
             # generates 'more dense' preview/thumbnail images
             # '.alpha' => no previews
+            # '.tt1' => auxiliary, no previews
             return 0
 
         self._logger.debug(f'Begin generate_plots for {obs_id}')

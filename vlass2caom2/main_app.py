@@ -215,12 +215,18 @@ class QuicklookMapping(BlueprintMapping):
         return result
 
     def get_product_type(self, ext):
-        if '.rms.' in self._storage_name.file_uri:
-            return ProductType.NOISE
-        elif self._storage_name.file_uri.endswith('.csv'):
-            return ProductType.AUXILIARY
+        result = ProductType.AUXILIARY
+        if self._storage_name.product_id.endswith('continuum_imaging'):
+            if '.tt0.' in self._storage_name.file_uri and '.rms.' not in self._storage_name.file_uri:
+                result = ProductType.SCIENCE
         else:
-            return ProductType.SCIENCE
+            if '.rms.' in self._storage_name.file_uri:
+                result = ProductType.NOISE
+            elif self._storage_name.file_uri.endswith('.csv'):
+                result = ProductType.AUXILIARY
+            else:
+                result = ProductType.SCIENCE
+        return result
 
     def get_time_refcoord_value(self, ext):
         dateobs = self._headers[ext].get('DATE-OBS')
