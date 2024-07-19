@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
@@ -68,7 +67,8 @@
 #
 
 from os.path import dirname, join, realpath
-from caom2pipe.manage_composable import Config, StorageName
+from caom2pipe.manage_composable import Config, StorageName, TaskType
+from vlass2caom2.storage_name import QL_URL
 import pytest
 
 COLLECTION = 'VLASS'
@@ -83,11 +83,13 @@ def test_config():
     config.preview_scheme = PREVIEW_SCHEME
     config.scheme = SCHEME
     config.logging_level = 'INFO'
-    # Socorro, NM
-    config.time_zone = 'US/Mountain'
+    config.task_types = [TaskType.INGEST]
+    config.data_sources = [QL_URL]
+    config.time_zone = 'US/Mountain'  # Socorro, NM
     StorageName.collection = config.collection
     StorageName.scheme = config.scheme
     StorageName.preview_scheme = config.preview_scheme
+    StorageName.data_source_extensions = ['.fits', 'catalog.csv']
     return config
 
 
@@ -96,3 +98,8 @@ def test_data_dir():
     this_dir = dirname(realpath(__file__))
     fqn = join(this_dir, 'data')
     return fqn
+
+
+@pytest.fixture()
+def change_test_dir(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)

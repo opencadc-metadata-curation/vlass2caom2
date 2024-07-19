@@ -43,7 +43,7 @@
       <caom2:artifacts>
         <caom2:artifact caom2:id="ea815e88-4f69-4e53-aac3-2173ec268c46" caom2:metaProducer="vlass2caom2/0.11">
           <caom2:uri>nrao:VLASS/VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.alpha.error.subim.fits</caom2:uri>
-          <caom2:productType>science</caom2:productType>
+          <caom2:productType>auxiliary</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
           <caom2:contentLength>12400</caom2:contentLength>
@@ -132,7 +132,7 @@
         </caom2:artifact>
         <caom2:artifact caom2:id="58abe4a8-c1f6-4fb6-8ba1-e3d4bc0239f3" caom2:metaProducer="vlass2caom2/0.11">
           <caom2:uri>nrao:VLASS/VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.alpha.subim.fits</caom2:uri>
-          <caom2:productType>science</caom2:productType>
+          <caom2:productType>auxiliary</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
           <caom2:contentLength>12313</caom2:contentLength>
@@ -221,7 +221,7 @@
         </caom2:artifact>
         <caom2:artifact caom2:id="6aa62bc8-c799-4eef-be5d-1b074d73d206" caom2:metaProducer="vlass2caom2/0.11">
           <caom2:uri>nrao:VLASS/VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt0.rms.subim.fits</caom2:uri>
-          <caom2:productType>noise</caom2:productType>
+          <caom2:productType>auxiliary</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
           <caom2:contentLength>18969</caom2:contentLength>
@@ -399,7 +399,7 @@
         </caom2:artifact>
         <caom2:artifact caom2:id="c3398fd7-2172-4458-9bd5-f4403e24ba90" caom2:metaProducer="vlass2caom2/0.11">
           <caom2:uri>nrao:VLASS/VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt1.rms.subim.fits</caom2:uri>
-          <caom2:productType>noise</caom2:productType>
+          <caom2:productType>auxiliary</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
           <caom2:contentLength>17754</caom2:contentLength>
@@ -488,7 +488,7 @@
         </caom2:artifact>
         <caom2:artifact caom2:id="74c7ca12-ba31-4655-a6ea-6055e529453c" caom2:metaProducer="vlass2caom2/0.11">
           <caom2:uri>nrao:VLASS/VLASS2.1.se.T10t01.J000200-003000.06.2048.v1.I.iter3.image.pbcor.tt1.subim.fits</caom2:uri>
-          <caom2:productType>science</caom2:productType>
+          <caom2:productType>auxiliary</caom2:productType>
           <caom2:releaseType>data</caom2:releaseType>
           <caom2:contentType>application/fits</caom2:contentType>
           <caom2:contentLength>16373</caom2:contentLength>
