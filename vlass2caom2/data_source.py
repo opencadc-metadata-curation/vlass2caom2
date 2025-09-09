@@ -87,6 +87,10 @@ way to tell them apart.
 SGo - and because of these two things, ignore top-level directories that have names that start with the same value
 as other existing directories
 
+ML 09-09-25
+A VLASS4.1  was added to replace data from VLASS1.1 (which had a calibration issue that would need a lot of computing to 
+fully fix)
+
 """
 
 import re
@@ -117,7 +121,7 @@ VLASS_CONTEXT = 'vlass_context'
 
 
 def filter_by_epoch(href):
-    return re.search('VLASS[123]\\.[123]', href)
+    return re.search('VLASS[1234]\\.[1234]', href)
 
 
 def filter_by_epoch_name(href):
