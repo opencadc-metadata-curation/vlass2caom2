@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2024.                            (c) 2024.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,10 +66,10 @@
 # ***********************************************************************
 #
 
-from caom2pipe.caom_composable import Fits2caom2Visitor
+from caom2pipe.caom_composable import Fits2caom2Visitor2
 from vlass2caom2.main_app import mapping_factory
 
-class VLASSCatalogVisitor(Fits2caom2Visitor):
+class VLASSCatalogVisitor(Fits2caom2Visitor2):
     def __init__(self, observation, **kwargs):
         super().__init__(observation, **kwargs)
 
