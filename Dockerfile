@@ -13,7 +13,7 @@ RUN chmod 644 ${FINDER_PATH}
 WORKDIR /usr/src/app
 
 ARG OPENCADC_BRANCH=main
-ARG OPENCADC_REPO=opencadc
+ARG OPENCADC_REPO=opencadc-metadata-curation
 
 RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git && \
     cd caom2tools && \
