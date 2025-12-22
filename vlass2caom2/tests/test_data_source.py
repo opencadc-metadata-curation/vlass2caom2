@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # ***********************************************************************
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -301,7 +300,7 @@ def _close():
     pass
 
 
-def _query_quicklook_endpoint(url, session, timeout=-1):
+def _query_quicklook_endpoint(url, session, timeout=-1, verify=True):
     result = type('response', (), {})
     result.text = None
     result.close = _close
@@ -357,7 +356,7 @@ def _query_quicklook_endpoint(url, session, timeout=-1):
     return result
 
 
-def _query_continuum_endpoint(url, session, timeout=-1):
+def _query_continuum_endpoint(url, session, timeout=-1, verify=True):
     result = type('response', (), {})
     result.text = None
     result.close = _close

@@ -2,7 +2,7 @@
 # ******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
 # *************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
 #
-#  (c) 2020.                            (c) 2020.
+#  (c) 2025.                            (c) 2025.
 #  Government of Canada                 Gouvernement du Canada
 #  National Research Council            Conseil national de recherches
 #  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -394,6 +394,7 @@ def test_run_state_store_ingest(
         'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.2/T26t15/'
         'VLASS1.2.ql.T07t13.J083838-153000.10.2048.v1/',
         ANY,
+        verify=True,
     ), 'query mock call args'
     # make sure data is not being written to CADC storage :)
     assert client_mock.data_client.put.called, 'put should be called'
@@ -503,7 +504,7 @@ def test_run_state_cross_timebox(
 ):
     # 30 records found, 28 records processed - the records found cross a time-box
 
-    def _query_two_timeboxes_endpoint(url, session, timeout=-1):
+    def _query_two_timeboxes_endpoint(url, session, timeout=-1, verify=True):
         QL_INDEX = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'top_page.html'))
         page_21 = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'vlass_quicklook_VLASS2.1.html'))
         page_31 = os.path.join(test_data_dir, os.path.join('two_timebox_endpoint', 'vlass_quicklook_VLASS3.1.html'))
@@ -588,24 +589,26 @@ def test_run_state_cross_timebox(
     # top page == 2 entries in test_config.data_sources
     assert query_mock.call_count == 10, f'wrong endpoint session call count {query_mock.call_count}'
     query_mock_calls = [
-        call('https://archive-new.nrao.edu/vlass/quicklook/', ANY),
-        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1v2/', ANY),
-        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/', ANY),
-        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/', ANY),
-        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/', ANY),
+        call('https://archive-new.nrao.edu/vlass/quicklook/', ANY, verify=True),
+        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS1.1v2/', ANY, verify=True),
+        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS1.2v2/', ANY, verify=True),
+        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/', ANY, verify=True),
+        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/', ANY, verify=True),
         call(
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS2.1/T01t01/'
             'VLASS2.1.ql.T01t01.J000228-363000.10.2048.v1/',
             ANY,
+            verify=True,
         ),
-        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/', ANY),
-        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/', ANY),
+        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/', ANY, verify=True),
+        call('https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/', ANY, verify=True),
         call(
             'https://archive-new.nrao.edu/vlass/quicklook/VLASS3.1/T32t02/'
             'VLASS3.1.ql.T32t02.J234412+853000.10.2048.v1/',
             ANY,
+            verify=True,
         ),
-        call('https://archive-new.nrao.edu/vlass/se_continuum_imaging/', ANY),
+        call('https://archive-new.nrao.edu/vlass/se_continuum_imaging/', ANY, verify=True),
     ]
     query_mock.assert_has_calls(query_mock_calls, any_order=True), 'query mock call args'
     # make sure data is not being written to CADC storage :)
