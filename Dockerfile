@@ -1,5 +1,5 @@
 ARG OPENCADC_PYTHON_VERSION=3.12
-FROM opencadc-metadata-curation/matplotlib:${OPENCADC_PYTHON_VERSION}-slim as builder
+FROM opencadc/matplotlib:${OPENCADC_PYTHON_VERSION}-slim as builder
 ARG OPENCADC_PYTHON_VERSION
 
 RUN apt-get update --no-install-recommends && \
@@ -15,7 +15,7 @@ WORKDIR /usr/src/app
 ARG OPENCADC_BRANCH=main
 ARG OPENCADC_REPO=opencadc-metadata-curation
 
-RUN git clone https://github.com/${OPENCADC_REPO}/caom2tools.git && \
+RUN git clone https://github.com/opencadc/caom2tools.git && \
     cd caom2tools && \
     git checkout ${OPENCADC_BRANCH} && \
     pip install ./caom2utils && \
