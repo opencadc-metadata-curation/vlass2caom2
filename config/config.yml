@@ -32,9 +32,9 @@ scheme: nrao
 state_file_name: state.yml
 interval: 600
 data_sources:
-  - https://archive-new.nrao.edu/vlass/quicklook/
-  - https://archive-new.nrao.edu/vlass/se_continuum_imaging/
-  - https://archive-new.nrao.edu/vlass/se_calibration/
+  - https://vlass-dl.nrao.edu/vlass/quicklook/
+  - https://vlass-dl.nrao.edu/vlass/se_continuum_imaging/
+  - https://vlass-dl.nrao.edu/vlass/se_calibration/
 data_source_extensions:
   - .fits
   - .catalog.csv
