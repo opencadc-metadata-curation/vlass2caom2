@@ -75,15 +75,15 @@ from caom2pipe import manage_composable as mc
 from caom2pipe import name_builder_composable as nbc
 from caom2pipe import run_composable as rc
 from caom2pipe import transfer_composable as tc
-from vlass2caom2 import time_bounds_augmentation, quality_augmentation
+from caom2pipe.reader_composable import DelayedClientReader
+from vlass2caom2 import quality_augmentation
 from vlass2caom2 import position_bounds_augmentation, cleanup_augmentation
-from vlass2caom2 import data_source, reader, storage_name
+from vlass2caom2 import data_source, storage_name
 from vlass2caom2 import catalog_augmentation, fits2caom2_augmentation, preview_augmentation
 
 
 META_VISITORS = [
     fits2caom2_augmentation,
-    time_bounds_augmentation,
     quality_augmentation,
     cleanup_augmentation,
 ]
@@ -100,14 +100,13 @@ def _common_init():
     mc.StorageName.scheme = config.scheme
     state = mc.State(config.state_fqn, config.time_zone)
     session = mc.get_endpoint_session()
-    web_log_metadata = data_source.WebLogMetadata(state, session, config.data_sources)
     data_sources = None
     metadata_reader = None
     clients = None
     if mc.TaskType.SCRAPE not in config.task_types and not config.use_local_files:
         data_sources = data_source.NraoPages(config, session).data_sources
         clients = client_composable.ClientCollection(config)
-        metadata_reader = reader.VlassStorageMetadataReader(clients.data_client, web_log_metadata)
+        metadata_reader = DelayedClientReader(clients.data_client)
 
     name_builder = nbc.EntryBuilder(storage_name.VlassName)
     return config, metadata_reader, data_sources, name_builder, clients
