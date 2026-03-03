@@ -9,9 +9,9 @@ if [[ ! -e ${PWD}/state.yml ]]
 then
   yesterday=$(date -d yesterday "+%Y-%m-%d %H:%M:%S")
   echo "bookmarks:
-  https://archive-new.nrao.edu/vlass/quicklook/:
+  https://vlass-dl.nrao.edu/vlass/quicklook/:
     last_record: $yesterday
-  https://archive-new.nrao.edu/vlass/se_continuum_imaging/:
+  https://vlass-dl.nrao.edu/vlass/se_continuum_imaging/:
     last_record: $yesterday
 context:
   vlass_context:
@@ -21,6 +21,7 @@ context:
     VLASS2.2: 2021-09-01 00:00
     VLASS3.1: 2022-06-01 00:00
     VLASS3.2: 2024-04-01 00:00
+    VLASS4.1: 2025-09-01 00:00
 " > ${PWD}/state.yml
 fi
 
