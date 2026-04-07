@@ -72,6 +72,7 @@ from vlass2caom2.storage_name import QL_URL
 import pytest
 
 COLLECTION = 'VLASS'
+NAMESPACE = 'VLASS'
 SCHEME = 'nrao'
 PREVIEW_SCHEME = 'cadc'
 
@@ -80,6 +81,7 @@ PREVIEW_SCHEME = 'cadc'
 def test_config():
     config = Config()
     config.collection = COLLECTION
+    config.namespace = NAMESPACE
     config.preview_scheme = PREVIEW_SCHEME
     config.scheme = SCHEME
     config.logging_level = 'INFO'
@@ -88,6 +90,7 @@ def test_config():
     config.time_zone = 'US/Mountain'  # Socorro, NM
     config.rate_limit_delay = 0.0  # tests should go fast
     StorageName.collection = config.collection
+    StorageName.namespace = config.namespace
     StorageName.scheme = config.scheme
     StorageName.preview_scheme = config.preview_scheme
     StorageName.data_source_extensions = ['.fits', 'catalog.csv']
